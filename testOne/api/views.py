@@ -1,8 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from base.models import Courses,Learners
-from .serializers import CourseSerializer,LearnerSerializer
-
+from base.models import Courses,Learners,Batch
+from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer
 # courses api functions
 
 @api_view(['GET'])
@@ -37,6 +36,18 @@ def getLearners(request):
 
 def addLearners(request):
     serializer = LearnerSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+    return Response(serializer.data)
+
+
+
+#batch api
+
+@api_view(['POST'])
+
+def addBatches(request):
+    serializer = BatchSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
     return Response(serializer.data)

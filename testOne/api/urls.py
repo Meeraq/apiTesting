@@ -5,4 +5,5 @@ urlpatterns = [
     path('addcourses/', views.addCourses),
     path('learners/', views.getLearners),
     path('addlearners/', views.addLearners),
+    path('addBatchs/', views.addBatches),
 ]
