@@ -29,6 +29,8 @@ class Batch(models.Model):
     batchFrequency = models.CharField(max_length=200)
     batchNoOfSessions = models.IntegerField()
 
+class CourseCategorys(models.Model):
+    courseCategoryName = models.CharField(max_length=200)
 
 def __str__(self):
     return self.courseName
@@ -36,6 +38,7 @@ def __str__(self):
 # Courses Model
 class Courses(models.Model):
     courseName = models.CharField(max_length=200)
+    # courseCategory = models.ForeignKey(CourseCategorys,null=True,on_delete=models.SET_NULL)
     courseCategory = models.CharField(max_length=200)
     batch = models.ForeignKey(Batch,null=True,on_delete=models.SET_NULL)
     created = models.DateTimeField(auto_now_add=True)
