@@ -6,4 +6,6 @@ urlpatterns = [
     path('learners/', views.getLearners),
     path('addlearners/', views.addLearners),
     path('addBatchs/', views.addBatches),
+    path('coaches/', views.getcoach),
+    path('addcoaches/', views.addcoach),
 ]
