@@ -66,3 +66,18 @@ class Coach(models.Model):
     def __str__(self):
         return self.Name
 
+
+
+# Faculty Modal
+
+class Faculty(models.Model): 
+    Name = models.CharField(max_length=200)
+    email = models.CharField(max_length=200)
+    phone = models.IntegerField()
+    dob = models.CharField(max_length=200)
+    gender = models.CharField(max_length=200)
+    fee = models.IntegerField()
+    activeSince = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.Name

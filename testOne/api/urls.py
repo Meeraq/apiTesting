@@ -8,4 +8,6 @@ urlpatterns = [
     path('addBatchs/', views.addBatches),
     path('coaches/', views.getcoach),
     path('addcoaches/', views.addcoach),
+    path('faculty/', views.getfaculty),
+    path('addfaculty/', views.addfaculty),
 ]
