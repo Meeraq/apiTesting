@@ -1,6 +1,6 @@
 from dataclasses import field
 from rest_framework import serializers
-from base.models import Courses,Learners,Batch
+from base.models import Courses,Learners,Batch,Coach,Faculty
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,4 +17,15 @@ class LearnerSerializer(serializers.ModelSerializer):
 class BatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Batch
+        fields = '__all__'
+
+
+class CoachSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Coach
+        fields = '__all__'
+
+class FacultySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Faculty
         fields = '__all__'

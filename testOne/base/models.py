@@ -1,8 +1,7 @@
 from django.db import models
 
 
-def __str__(self):
-    return self.learnerName
+
 # Learner Modal
 
 class Learners(models.Model):
@@ -17,28 +16,68 @@ class Learners(models.Model):
     learnerCourse = models.CharField(max_length=100)
     learnerBatch = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.learnerName
 
+class CourseCategorys(models.Model):
+    courseCategoryName = models.CharField(max_length=200)
+    def __str__(self):
+        return self.courseCategoryName
+
+
+
+
+# Courses Model
+class Courses(models.Model):
+    courseName = models.CharField(max_length=200)
+    courseCategory = models.ForeignKey(CourseCategorys,null=True,on_delete=models.SET_NULL)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.courseName
 
 # batch Modal
 
 class Batch(models.Model):
-    batchStartDate= models.CharField(max_length=200)
+    batchStartDate= models.CharField(max_length=200) 
     batchName = models.CharField(max_length=200)
     batchFaculty = models.CharField(max_length=200)
     batchFees = models.CharField(max_length=200)
     batchFrequency = models.CharField(max_length=200)
     batchNoOfSessions = models.IntegerField()
+    course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
 
-class CourseCategorys(models.Model):
-    courseCategoryName = models.CharField(max_length=200)
+    def __str__(self):
+        return self.batchName
 
-def __str__(self):
-    return self.courseName
 
-# Courses Model
-class Courses(models.Model):
-    courseName = models.CharField(max_length=200)
-    # courseCategory = models.ForeignKey(CourseCategorys,null=True,on_delete=models.SET_NULL)
-    courseCategory = models.CharField(max_length=200)
-    batch = models.ForeignKey(Batch,null=True,on_delete=models.SET_NULL)
-    created = models.DateTimeField(auto_now_add=True)
+
+# coach Modal
+
+class Coach(models.Model): 
+    Name = models.CharField(max_length=200)
+    email = models.CharField(max_length=200)
+    phone = models.IntegerField()
+    dob = models.CharField(max_length=200)
+    gender = models.CharField(max_length=200)
+    fee = models.IntegerField()
+    activeSince = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.Name
+
+
+
+# Faculty Modal
+
+class Faculty(models.Model): 
+    Name = models.CharField(max_length=200)
+    email = models.CharField(max_length=200)
+    phone = models.IntegerField()
+    dob = models.CharField(max_length=200)
+    gender = models.CharField(max_length=200)
+    fee = models.IntegerField()
+    activeSince = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.Name

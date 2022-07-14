@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from base.models import Courses,Learners,Batch
-from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer
+from base.models import Courses,Learners,Batch,Coach,Faculty
+from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer
 # courses api functions
 
 @api_view(['GET'])
@@ -52,3 +52,40 @@ def addBatches(request):
         serializer.save()
     return Response(serializer.data)
 
+
+
+#coach api
+
+@api_view(['GET'])
+
+def getcoach(request):
+    coaches = Coach.objects.all()
+    serializer = CoachSerializer(coaches,many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+
+def addcoach(request):
+    serializer = CoachSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+    return Response(serializer.data)
+
+#faculty api
+
+@api_view(['GET'])
+
+def getfaculty(request):
+    coaches = Faculty.objects.all()
+    serializer = FacultySerializer(coaches,many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+
+def addfaculty(request):
+    serializer = FacultySerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+    return Response(serializer.data)
