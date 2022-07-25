@@ -5,19 +5,19 @@ from django.db import models
 # Learner Modal
 
 class Learners(models.Model):
-    learnerName = models.CharField(max_length=200)
-    learnerEmail = models.CharField(max_length=100)
-    learnerPhoneNumber = models.IntegerField()
-    learnerCompany = models.CharField(max_length=100)
-    learnerIndustry = models.CharField(max_length=100)
-    learnerDesignation = models.CharField(max_length=100)
-    learnerDOB = models.CharField(max_length=100)
-    learnerGender = models.CharField(max_length=100)
-    learnerCourse = models.CharField(max_length=100)
-    learnerBatch = models.CharField(max_length=100)
+    Name = models.CharField(max_length=200)
+    Email = models.CharField(max_length=100)
+    PhoneNumber = models.CharField(max_length=1000,default="7880647282")
+    Company = models.CharField(max_length=100)
+    Industry = models.CharField(max_length=100)
+    Designation = models.CharField(max_length=100)
+    DOB = models.DateField(blank=True,default="2000-01-01")
+    Gender = models.CharField(max_length=100)
+    Course = models.CharField(max_length=100)
+    Batch = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.learnerName
+        return self.Name
 
 class CourseCategorys(models.Model):
     courseCategoryName = models.CharField(max_length=200)
@@ -29,55 +29,64 @@ class CourseCategorys(models.Model):
 
 # Courses Model
 class Courses(models.Model):
-    courseName = models.CharField(max_length=200)
-    courseCategory = models.ForeignKey(CourseCategorys,null=True,on_delete=models.SET_NULL)
+    Name = models.CharField(max_length=200)
+    Category = models.ForeignKey(CourseCategorys,null=True,on_delete=models.SET_NULL)
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.courseName
+        return self.Name
 
 # batch Modal
 
 class Batch(models.Model):
-    batchStartDate= models.CharField(max_length=200) 
-    batchName = models.CharField(max_length=200)
-    batchFaculty = models.CharField(max_length=200)
-    batchFees = models.CharField(max_length=200)
-    batchFrequency = models.CharField(max_length=200)
-    batchNoOfSessions = models.IntegerField()
+    StartDate= models.DateField(blank=True,default="2000-01-01")
+    Name = models.CharField(max_length=200)
+    Faculty = models.CharField(max_length=200)
+    Fees = models.CharField(max_length=200)
+    Frequency = models.CharField(max_length=200)
+    NoOfSessions = models.IntegerField()
     course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
 
     def __str__(self):
-        return self.batchName
+        return self.Name
 
 
 
 # coach Modal
 
 class Coach(models.Model): 
-    Name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200)
     email = models.CharField(max_length=200)
-    phone = models.IntegerField()
-    dob = models.CharField(max_length=200)
+    phone = models.CharField(max_length=2000)
+    dob = models.DateField(blank=True,default="2000-01-01")
     gender = models.CharField(max_length=200)
     fee = models.IntegerField()
-    activeSince = models.CharField(max_length=200)
+    activeSince = models.DateField(blank=True,default="2000-01-01")
 
     def __str__(self):
-        return self.Name
+        return self.name
 
 
 
 # Faculty Modal
 
 class Faculty(models.Model): 
-    Name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200)
     email = models.CharField(max_length=200)
-    phone = models.IntegerField()
-    dob = models.CharField(max_length=200)
+    phone = models.CharField(max_length=2000)
+    dob = models.DateField(blank=True,default="2000-01-01")
     gender = models.CharField(max_length=200)
     fee = models.IntegerField()
-    activeSince = models.CharField(max_length=200)
+    activeSince = models.DateField(blank=True,default="2000-01-01")
 
     def __str__(self):
-        return self.Name
+        return self.name
+
+
+# slots modal 
+
+
+class slot(models.Model): 
+    duration = models.IntegerField()
+    date = models.DateField(blank=True,default="2000-01-01")
+    time = models.TimeField()

@@ -10,4 +10,6 @@ urlpatterns = [
     path('addcoaches/', views.addcoach),
     path('faculty/', views.getfaculty),
     path('addfaculty/', views.addfaculty),
+    path('avilableslot/', views.getslot),
+    path('addslots/', views.addslot),
 ]

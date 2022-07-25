@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from base.models import Courses,Learners,Batch,Coach,Faculty
-from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer
+from base.models import Courses,Learners,Batch,Coach,Faculty,slot
+from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer
 # courses api functions
 
 @api_view(['GET'])
@@ -18,6 +18,8 @@ def addCourses(request):
     serializer = CourseSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
+    else:
+        return Response(status='500')
     return Response(serializer.data)
 
 
@@ -86,6 +88,26 @@ def getfaculty(request):
 
 def addfaculty(request):
     serializer = FacultySerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+    return Response(serializer.data)
+
+
+
+#slot api
+
+@api_view(['GET'])
+
+def getslot(request):
+    slots = slot.objects.all()
+    serializer = SlotSerializer(slots,many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+
+def addslot(request):
+    serializer = SlotSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
     return Response(serializer.data)
