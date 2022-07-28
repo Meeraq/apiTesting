@@ -1,10 +1,10 @@
 from rest_framework.response import Response
-import pandas as pd
+# import pandas as pd
 from django.conf import settings
-from rest_framework.views import APIView
+# from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from base.models import Courses,Learners,Batch,Coach,Faculty,slot,dayTimeSlot
-from base.models import ExcelFileUpload
+# from base.models import ExcelFileUpload
 from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer
 # courses api functions
 
@@ -200,9 +200,9 @@ def deleteDayTimeslot(request,_id):
     return Response({'status': 200})
 
 
-class ExportImportExcel(APIView):
-    def post(self,request):
-        exceled_upload_obj = ExcelFileUpload.objects.create(excel_file_upload=request.FILES['files'])
-        df = pd.read_csv(f"{settings.BASE_DIR}/{exceled_upload_obj.excel_file_upload}")
-        print(df.values.tolist())
-        return Response({'status': 200})
+# class ExportImportExcel(APIView):
+#     def post(self,request):
+#         exceled_upload_obj = ExcelFileUpload.objects.create(excel_file_upload=request.FILES['files'])
+#         df = pd.read_csv(f"{settings.BASE_DIR}/{exceled_upload_obj.excel_file_upload}")
+#         print(df.values.tolist())
+#         return Response({'status': 200})
