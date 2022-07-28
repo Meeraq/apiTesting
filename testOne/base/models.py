@@ -90,3 +90,30 @@ class slot(models.Model):
     duration = models.IntegerField()
     date = models.DateField(blank=True,default="2000-01-01")
     time = models.TimeField()
+
+
+
+class dayTimeSlot(models.Model): 
+    days_choice = [
+        ('sunday','sunday'),
+        ('monday','monday'),
+        ('tuesday','tuesday'),
+        ('wednesday','wednesday'),
+        ('thirsday','thirsday'),
+        ('friday','friday'),
+        ('saturday','saturday'),
+    ]
+
+    # coach = models.ForeignKey(Coach,null=True,on_delete=models.SET_NULL)
+    coach = models.CharField(max_length=200,default='nishant')
+    dayofmock = models.CharField(max_length=2000,choices=days_choice,default='sunday')
+    start_time_id = models.CharField(max_length=200)
+    end_time_id = models.CharField(max_length=200)
+    
+
+
+
+
+# import sheet 
+class ExcelFileUpload(models.Model):
+    excel_file_upload = models.FileField(upload_to="excel")

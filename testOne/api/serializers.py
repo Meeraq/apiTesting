@@ -1,6 +1,6 @@
 from dataclasses import field
 from rest_framework import serializers
-from base.models import Courses,Learners,Batch,Coach,Faculty,slot
+from base.models import Courses,Learners,Batch,Coach,Faculty,slot,dayTimeSlot
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,4 +34,10 @@ class FacultySerializer(serializers.ModelSerializer):
 class SlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = slot
+        fields = '__all__'
+
+
+class SlotTimeDaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = dayTimeSlot
         fields = '__all__'
