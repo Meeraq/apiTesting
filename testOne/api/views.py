@@ -3,9 +3,9 @@ from rest_framework.response import Response
 from django.conf import settings
 # from rest_framework.views import APIView
 from rest_framework.decorators import api_view
-from base.models import Courses,Learners,Batch,Coach,Faculty,slot,dayTimeSlot
+from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions
 # from base.models import ExcelFileUpload
-from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer
+from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer
 # courses api functions
 
 @api_view(['GET'])
@@ -74,7 +74,7 @@ def updateLearners(request,_id):
 
 def getBatches(request):
     batches = Batch.objects.all()
-    serializer = LearnerSerializer(batches,many=True)
+    serializer = BatchSerializer(batches,many=True)
     return Response(serializer.data)
 
 @api_view(['POST'])
@@ -153,7 +153,7 @@ def updateFaculty(request,_id):
 @api_view(['GET'])
 
 def getslot(request):
-    slots = slot.objects.all()
+    slots = Slot.objects.all()
     serializer = SlotSerializer(slots,many=True)
     return Response(serializer.data)
 
@@ -169,7 +169,7 @@ def addslot(request):
 @api_view(['GET'])
 
 def getDayTimeslot(request):
-    slots = dayTimeSlot.objects.all()
+    slots = DayTimeSlot.objects.all()
     serializer = SlotTimeDaySerializer(slots,many=True)
     return Response(serializer.data)
 
@@ -178,26 +178,100 @@ def getDayTimeslot(request):
 
 def addDayTimeslot(request):
     for day in request.data:
-            newdayTimeSlot =  dayTimeSlot(coach=day['coach'],dayofmock = day['day'],start_time_id = day['startID'], end_time_id = day['endID'])
+            newdayTimeSlot =  DayTimeSlot(coach=day['coach'],dayofmock = day['dayofmock'],start_time_id = day['start_time_id'], end_time_id = day['end_time_id'])
             newdayTimeSlot.save()
-    return Response({'status':200})
+
+    slots = DayTimeSlot.objects.all()
+    serializer = SlotTimeDaySerializer(slots,many=True)
+    return Response({'status':200,'data':serializer.data})
 
 @api_view(['POST'])
 
 def updateDayTimeslot(request,_id):
-    slot = dayTimeSlot.objects.get(id=_id)
+    slot = DayTimeSlot.objects.get(id=_id)
     serializer = SlotTimeDaySerializer(instance=slot,data=request.data)
     if serializer.is_valid():
         serializer.save()
-    return Response({'status': 200})
+
+    slots = DayTimeSlot.objects.all()
+    serializer = SlotTimeDaySerializer(slots,many=True)
+    return Response({'status': 200,'data':serializer.data})
 
 
 @api_view(['DELETE'])
 
 def deleteDayTimeslot(request,_id):
-    slot = dayTimeSlot.objects.get(id=_id)
+    slot = DayTimeSlot.objects.get(id=_id)
     slot.delete()
-    return Response({'status': 200})
+
+    slots = DayTimeSlot.objects.all()
+    serializer = SlotTimeDaySerializer(slots,many=True)
+    return Response({'status': 200,'data':serializer.data})
+
+#learner slot book
+
+
+@api_view(['GET'])
+
+def learnergetDayTimeslot(request):
+    slots = LearnerdayTimeSlot.objects.all()
+    serializer = LearnerSlotTimeDaySerializer(slots,many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+
+def addLearnerDayTimeslot(request):
+    for day in request.data:
+            newdayTimeSlot =  LearnerdayTimeSlot(learner=day['learner'],start_time_id = day['start_time_id'], end_time_id = day['end_time_id'])
+            newdayTimeSlot.save()
+    slots = LearnerdayTimeSlot.objects.all()
+    serializer = LearnerSlotTimeDaySerializer(slots,many=True)
+    return Response({'status':200,'data':serializer.data})
+
+@api_view(['POST'])
+
+def updateLearnerDayTimeslot(request,_id):
+    slot = LearnerdayTimeSlot.objects.get(id=_id)
+    serializer = LearnerSlotTimeDaySerializer(instance=slot,data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+
+    slots = LearnerdayTimeSlot.objects.all()
+    serializer = LearnerSlotTimeDaySerializer(slots,many=True)
+    return Response({'status': 200,'data':serializer.data})
+
+
+
+
+# sessions 
+
+@api_view(['GET'])
+
+def getSessions(request):
+    session = Sessions.objects.all()
+    serializer = SessionSerializer(session,many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+
+def addSession(request):
+    serializer = SessionSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+    else:
+        return Response(status='500')
+    return Response(serializer.data)
+
+
+
+
+
+
+
+
+
 
 
 # class ExportImportExcel(APIView):

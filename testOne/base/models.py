@@ -15,6 +15,7 @@ class Learners(models.Model):
     Gender = models.CharField(max_length=100)
     Course = models.CharField(max_length=100)
     Batch = models.CharField(max_length=100)
+    isActive = models.BooleanField(default=False)
 
     def __str__(self):
         return self.Name
@@ -30,8 +31,10 @@ class CourseCategorys(models.Model):
 # Courses Model
 class Courses(models.Model):
     Name = models.CharField(max_length=200)
-    Category = models.ForeignKey(CourseCategorys,null=True,on_delete=models.SET_NULL)
+    category = models.ForeignKey(CourseCategorys,null=True,on_delete=models.SET_NULL)
     created = models.DateTimeField(auto_now_add=True)
+    course_id = models.CharField(max_length=200,default='0000')
+    isActive = models.BooleanField(default=False)
 
     def __str__(self):
         return self.Name
@@ -46,6 +49,7 @@ class Batch(models.Model):
     Frequency = models.CharField(max_length=200)
     NoOfSessions = models.IntegerField()
     course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
+    isActive = models.BooleanField(default=False)
 
     def __str__(self):
         return self.Name
@@ -62,6 +66,8 @@ class Coach(models.Model):
     gender = models.CharField(max_length=200)
     fee = models.IntegerField()
     activeSince = models.DateField(blank=True,default="2000-01-01")
+    isSlotBooked = models.BooleanField(default=False)
+    isActive = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -78,6 +84,7 @@ class Faculty(models.Model):
     gender = models.CharField(max_length=200)
     fee = models.IntegerField()
     activeSince = models.DateField(blank=True,default="2000-01-01")
+    isActive = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -86,14 +93,14 @@ class Faculty(models.Model):
 # slots modal 
 
 
-class slot(models.Model): 
+class Slot(models.Model): 
     duration = models.IntegerField()
     date = models.DateField(blank=True,default="2000-01-01")
     time = models.TimeField()
 
 
 
-class dayTimeSlot(models.Model): 
+class DayTimeSlot(models.Model): 
     days_choice = [
         ('sunday','sunday'),
         ('monday','monday'),
@@ -112,7 +119,22 @@ class dayTimeSlot(models.Model):
     
 
 
+class LearnerdayTimeSlot(models.Model): 
+    learner = models.CharField(max_length=200,default='nishant')
+    start_time_id = models.CharField(max_length=200)
+    end_time_id = models.CharField(max_length=200)
+    
 
+# sessions api 
+
+class Sessions(models.Model): 
+    course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
+    weekStart= models.CharField(max_length=200,default='Null')
+    weekEnd= models.CharField(max_length=200,default='Null')
+    dayOne= models.CharField(max_length=200,default='Null')
+    dayTwo = models.CharField(max_length=200,default='Null')
+    dayThree = models.CharField(max_length=200,default='Null')
+    dayFour = models.CharField(max_length=200,default='Null')
 
 # import sheet 
 class ExcelFileUpload(models.Model):
