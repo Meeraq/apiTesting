@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Courses,Learners,Batch,CourseCategorys,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions
+from .models import Courses,Learners,Batch,CourseCategorys,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,customUser
 
 admin.site.register(Courses)
 admin.site.register(Learners)
@@ -13,3 +13,4 @@ admin.site.register(Slot)
 admin.site.register(DayTimeSlot)
 admin.site.register(LearnerdayTimeSlot)
 admin.site.register(Sessions)
+admin.site.register(customUser)

@@ -1,6 +1,14 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
+
+
+class customUser(User):
+    def _init__(self,type):
+        self.type = type
+    type = models.CharField(max_length=100)
+    
 
 # Learner Modal
 
@@ -50,6 +58,7 @@ class Batch(models.Model):
     NoOfSessions = models.IntegerField()
     course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
     isActive = models.BooleanField(default=False)
+    duration = models.IntegerField()
 
     def __str__(self):
         return self.Name

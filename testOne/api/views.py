@@ -1,11 +1,18 @@
 from rest_framework.response import Response
 # import pandas as pd
 from django.conf import settings
-# from rest_framework.views import APIView
+from rest_framework.views import APIView
 from rest_framework.decorators import api_view
-from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions
+from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,customUser
 # from base.models import ExcelFileUpload
-from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer
+
+
+
+
+
 # courses api functions
 
 @api_view(['GET'])
@@ -106,13 +113,34 @@ def getcoach(request):
     return Response(serializer.data)
 
 
+# class RegisterUser(APIView):
+#     def post(self,request):
+#         serializer = UserSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#         else:
+#             print(serializer.errors)
+#             return Response(status='403')
+#         user = User.objects.get(username = serializer.data['username'])
+#         token , _ = Token.objects.get_or_create(user=user)
+#         print(customUser.objects.all())
+#         return Response({'status': 200,'payload':serializer.data,'token':str(token)})
+
 @api_view(['POST'])
 
 def addcoach(request):
     serializer = CoachSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-    return Response(serializer.data)
+        newUser = User(username=serializer.data['name'],password = 'Nish@@nt111')
+        newUser.save()
+    else:
+        print(serializer.errors)
+        return Response(status='403')
+    for user in User.objects.all():
+        token = Token.objects.get_or_create(user=user)
+    return Response({'status': 200,'payload':serializer.data,'token':str(token)})
+
 
 @api_view(['POST'])
 

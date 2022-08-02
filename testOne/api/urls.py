@@ -28,5 +28,6 @@ urlpatterns = [
     path('add-learner-time-day-slot/', views.addLearnerDayTimeslot),
     path('session/', views.getSessions),
     path('add-session/', views.addSession),
+    # path('register/', RegisterUser.as_view()),
     # path('file-import/', ExportImportExcel.as_view()),
 ]
