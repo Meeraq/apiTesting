@@ -132,7 +132,7 @@ def addcoach(request):
     serializer = CoachSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        newUser = User(username=serializer.data['name'],password = 'Nish@@nt111')
+        newUser = User(username=serializer.data['name'],password = serializer.data['password'])
         newUser.save()
     else:
         print(serializer.errors)
@@ -161,13 +161,21 @@ def getfaculty(request):
     return Response(serializer.data)
 
 
+
 @api_view(['POST'])
 
 def addfaculty(request):
     serializer = FacultySerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-    return Response(serializer.data)
+        newUser = User(username=serializer.data['name'],password = serializer.data['password'])
+        newUser.save()
+    else:
+        print(serializer.errors)
+        return Response(status='403')
+    for user in User.objects.all():
+        token = Token.objects.get_or_create(user=user)
+    return Response({'status': 200,'payload':serializer.data,'token':str(token)})
 
 def updateFaculty(request,_id):
     faculty = Faculty.objects.get(id=_id)

@@ -24,6 +24,7 @@ class Learners(models.Model):
     Course = models.CharField(max_length=100)
     Batch = models.CharField(max_length=100)
     isActive = models.BooleanField(default=False)
+    password = models.CharField(max_length=50,default='Nish@@nt111')
 
     def __str__(self):
         return self.Name
@@ -58,7 +59,7 @@ class Batch(models.Model):
     NoOfSessions = models.IntegerField()
     course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
     isActive = models.BooleanField(default=False)
-    duration = models.IntegerField()
+    duration = models.IntegerField(default=30)
 
     def __str__(self):
         return self.Name
@@ -77,6 +78,7 @@ class Coach(models.Model):
     activeSince = models.DateField(blank=True,default="2000-01-01")
     isSlotBooked = models.BooleanField(default=False)
     isActive = models.BooleanField(default=False)
+    password = models.CharField(max_length=50,default='Nish@@nt111')
 
     def __str__(self):
         return self.name
@@ -94,6 +96,7 @@ class Faculty(models.Model):
     fee = models.IntegerField()
     activeSince = models.DateField(blank=True,default="2000-01-01")
     isActive = models.BooleanField(default=False)
+    password = models.CharField(max_length=50,default='Nish@@nt111')
 
     def __str__(self):
         return self.name
