@@ -1,15 +1,16 @@
 from django.forms import ValidationError
 from rest_framework.response import Response
-import json
 # import pandas as pd
 from django.conf import settings
+from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile
 # from base.models import ExcelFileUpload
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer
+from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer,ProfileSerializer
+
 
 
 
@@ -32,7 +33,7 @@ def addCourses(request):
     if serializer.is_valid():
         serializer.save()
     else:
-        return Response(status='500')
+        return Response({'status':'400 Bad request','Reason':'Wrong data sent'})
     return Response(serializer.data)
 
 
@@ -44,7 +45,7 @@ def updateCourses(request,_id):
     if serializer.is_valid():
         serializer.save()
     else:
-        return Response(status='500')
+        return Response({'status':'400 Bad request','Reason':'Wrong data sent'})
     return Response(serializer.data)
 
 
@@ -289,7 +290,7 @@ def addSession(request):
     if serializer.is_valid():
         serializer.save()
     else:
-        return Response(status='500')
+        return Response({'status':'400 Bad request','Reason':'Wrong data sent'})
     return Response(serializer.data)
 
 
@@ -318,3 +319,27 @@ def login_user(request):
 
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def registerUser(request):
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+    else:
+        return Response(status='403')
+    user = User.objects.get(username = serializer.data['username'])
+    token , _ = Token.objects.get_or_create(user=user)
+    return Response({'status': 200,'payload':serializer.data,'token':str(token)})
+
+
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def addProfileType(request):
+    serializer = ProfileSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+    else:
+        return Response({'status':'400 Bad request','Reason':'Wrong data sent'})
+    return Response(serializer.data)

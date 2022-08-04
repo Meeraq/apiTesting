@@ -20,24 +20,7 @@ class Profile(models.Model):
 
 
 
-# Learner Modal
 
-class Learners(models.Model):
-    Name = models.CharField(max_length=200)
-    Email = models.CharField(max_length=100)
-    PhoneNumber = models.CharField(max_length=1000,default="7880647282")
-    Company = models.CharField(max_length=100)
-    Industry = models.CharField(max_length=100)
-    Designation = models.CharField(max_length=100)
-    DOB = models.DateField(blank=True,default="2000-01-01")
-    Gender = models.CharField(max_length=100)
-    Course = models.CharField(max_length=100)
-    Batch = models.CharField(max_length=100)
-    isActive = models.BooleanField(default=False)
-    password = models.CharField(max_length=50,default='Nish@@nt111')
-
-    def __str__(self):
-        return self.Name
 
 class CourseCategorys(models.Model):
     courseCategoryName = models.CharField(max_length=200)
@@ -83,11 +66,11 @@ class Coach(models.Model):
     email = models.CharField(max_length=200)
     phone = models.CharField(max_length=2000)
     dob = models.DateField(blank=True,default="2000-01-01")
-    gender = models.CharField(max_length=200)
-    fee = models.IntegerField()
+    gender = models.CharField(max_length=200,blank=True)
+    fee = models.IntegerField(blank=True,default="6000")
     activeSince = models.DateField(blank=True,default="2000-01-01")
-    isSlotBooked = models.BooleanField(default=False)
-    isActive = models.BooleanField(default=False)
+    isSlotBooked = models.BooleanField(default=False,blank=True)
+    isActive = models.BooleanField(default=False,blank=True)
     password = models.CharField(max_length=50,default='Nish@@nt111')
 
     def __str__(self):
@@ -102,15 +85,34 @@ class Faculty(models.Model):
     email = models.CharField(max_length=200)
     phone = models.CharField(max_length=2000)
     dob = models.DateField(blank=True,default="2000-01-01")
-    gender = models.CharField(max_length=200)
-    fee = models.IntegerField()
+    gender = models.CharField(max_length=200,blank=True)
+    fee = models.IntegerField(blank=True)
     activeSince = models.DateField(blank=True,default="2000-01-01")
-    isActive = models.BooleanField(default=False)
+    isActive = models.BooleanField(default=False,blank=True)
     password = models.CharField(max_length=50,default='Nish@@nt111')
 
     def __str__(self):
         return self.name
 
+
+# Learner Modal
+
+class Learners(models.Model):
+    Name = models.CharField(max_length=200)
+    Email = models.CharField(max_length=100)
+    PhoneNumber = models.CharField(max_length=1000,default="7880647282")
+    Company = models.CharField(max_length=100,blank=True)
+    Industry = models.CharField(max_length=100,blank=True)
+    Designation = models.CharField(max_length=100,blank=True)
+    DOB = models.DateField(blank=True,default="2000-01-01")
+    Gender = models.CharField(max_length=100,blank=True)
+    Course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
+    Batch = models.ManyToManyField(Batch)
+    isActive = models.BooleanField(default=False)
+    password = models.CharField(max_length=50,default='Nish@@nt111')
+
+    def __str__(self):
+        return self.Name
 
 # slots modal 
 
@@ -133,8 +135,8 @@ class DayTimeSlot(models.Model):
         ('saturday','saturday'),
     ]
 
-    # coach = models.ForeignKey(Coach,null=True,on_delete=models.SET_NULL)
-    coach = models.CharField(max_length=200,default='nishant')
+    coach = models.ForeignKey(Coach,null=True,on_delete=models.SET_NULL)
+    # coach = models.CharField(max_length=200,default='nishant')
     dayofmock = models.CharField(max_length=2000,choices=days_choice,default='sunday')
     start_time_id = models.CharField(max_length=200)
     end_time_id = models.CharField(max_length=200)
@@ -142,7 +144,7 @@ class DayTimeSlot(models.Model):
 
 
 class LearnerdayTimeSlot(models.Model): 
-    learner = models.CharField(max_length=200,default='nishant')
+    learner = models.ForeignKey(Learners,null=True,on_delete=models.SET_NULL)
     start_time_id = models.CharField(max_length=200)
     end_time_id = models.CharField(max_length=200)
     date = models.DateField(blank=True,default="2000-01-01")
@@ -150,16 +152,21 @@ class LearnerdayTimeSlot(models.Model):
 
 # sessions api 
 
+class SessionOneStartEnd(models.Model):
+    start_day = models.DateField(blank=True,default="2000-01-01")
+    end_day = models.DateField(blank=True,default="2000-01-01")
+
+class SessionTwoStartEnd(models.Model):
+    start_day = models.DateField(blank=True,default="2000-01-01")
+    end_day = models.DateField(blank=True,default="2000-01-01")
+
 class Sessions(models.Model): 
     course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
     batch = models.ForeignKey(Batch,null=True,on_delete=models.SET_NULL)
-    weekStart= models.CharField(max_length=200,default='Null')
-    weekEnd= models.CharField(max_length=200,default='Null')
-    dayOne= models.CharField(max_length=200,default='Null')
-    dayTwo = models.CharField(max_length=200,default='Null')
-    dayThree = models.CharField(max_length=200,default='Null')
-    dayFour = models.CharField(max_length=200,default='Null')
+    coachingSessionOne= models.ForeignKey(SessionOneStartEnd,null=True,on_delete=models.SET_NULL)
+    coachingSessionTwo = models.ForeignKey(SessionTwoStartEnd,null=True,on_delete=models.SET_NULL)
+    
 
-# import sheet 
-class ExcelFileUpload(models.Model):
-    excel_file_upload = models.FileField(upload_to="excel")
+# # import sheet 
+# class ExcelFileUpload(models.Model):
+#     excel_file_upload = models.FileField(upload_to="excel")

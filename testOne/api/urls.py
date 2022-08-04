@@ -29,5 +29,7 @@ urlpatterns = [
     path('session/', views.getSessions),
     path('add-session/', views.addSession),
     path('login/', views.login_user),
+    path('register/', views.registerUser),
+    path('add-user-type/', views.addProfileType),
     # path('file-import/', ExportImportExcel.as_view()),
 ]
