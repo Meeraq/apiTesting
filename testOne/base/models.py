@@ -1,14 +1,24 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 
+class Profile(models.Model):
+    user_choice = [
+        ('coach','coach'),
+        ('learner','learner'),
+        ('faculty','faculty')
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    type = models.CharField(max_length=50,choices=user_choice,default='coach')
 
-class customUser(User):
-    def _init__(self,type):
-        self.type = type
-    type = models.CharField(max_length=100)
-    
+    def __str__(self):
+        return self.user.username
+
+
+
 
 # Learner Modal
 
@@ -135,12 +145,14 @@ class LearnerdayTimeSlot(models.Model):
     learner = models.CharField(max_length=200,default='nishant')
     start_time_id = models.CharField(max_length=200)
     end_time_id = models.CharField(max_length=200)
+    date = models.DateField(blank=True,default="2000-01-01")
     
 
 # sessions api 
 
 class Sessions(models.Model): 
     course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
+    batch = models.ForeignKey(Batch,null=True,on_delete=models.SET_NULL)
     weekStart= models.CharField(max_length=200,default='Null')
     weekEnd= models.CharField(max_length=200,default='Null')
     dayOne= models.CharField(max_length=200,default='Null')
