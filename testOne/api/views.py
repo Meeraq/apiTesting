@@ -308,8 +308,9 @@ def login_user(request):
         Account = User.objects.get(username = userName)
     except BaseException as e:
         raise ValidationError({"400":f'{str(e)}'})
-    token = Token.objects.get_or_create(user = Account)
-    if password != Account.password:
+    if password == Account.password:
+        token = Token.objects.get_or_create(user = Account)
+    else:
         raise ValidationError({"message": "Incorrect Login credentials"})
     return Response({'status':'200','username':Account.username,'token':str(token[0])})
 
