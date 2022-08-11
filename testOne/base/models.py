@@ -86,7 +86,7 @@ class Faculty(models.Model):
     phone = models.CharField(max_length=2000)
     dob = models.DateField(blank=True,default="2000-01-01")
     gender = models.CharField(max_length=200,blank=True)
-    fee = models.IntegerField(blank=True)
+    fee = models.IntegerField(blank=True,default="6000")
     activeSince = models.DateField(blank=True,default="2000-01-01")
     isActive = models.BooleanField(default=False,blank=True)
     password = models.CharField(max_length=50,default='Nish@@nt111')
@@ -101,11 +101,11 @@ class Learners(models.Model):
     Name = models.CharField(max_length=200)
     Email = models.CharField(max_length=100)
     PhoneNumber = models.CharField(max_length=1000,default="7880647282")
-    Company = models.CharField(max_length=100,blank=True)
-    Industry = models.CharField(max_length=100,blank=True)
-    Designation = models.CharField(max_length=100,blank=True)
+    Company = models.CharField(max_length=100,blank=True,default="000")
+    Industry = models.CharField(max_length=100,blank=True,default="000")
+    Designation = models.CharField(max_length=100,blank=True,default="000")
     DOB = models.DateField(blank=True,default="2000-01-01")
-    Gender = models.CharField(max_length=100,blank=True)
+    Gender = models.CharField(max_length=100,blank=True,default="male")
     Course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
     Batch = models.ManyToManyField(Batch)
     isActive = models.BooleanField(default=False)
@@ -136,10 +136,13 @@ class DayTimeSlot(models.Model):
     ]
 
     coach = models.ForeignKey(Coach,null=True,on_delete=models.SET_NULL)
-    # coach = models.CharField(max_length=200,default='nishant')
-    dayofmock = models.CharField(max_length=2000,choices=days_choice,default='sunday')
-    start_time_id = models.CharField(max_length=200)
-    end_time_id = models.CharField(max_length=200)
+    day = models.CharField(max_length=2000,choices=days_choice,default='sunday')
+    start_time_id = models.DateField(blank=True,default="2000-01-01")
+    end_time_id = models.DateField(blank=True,default="2000-01-01")
+    week_id = models.CharField(max_length=200,default="1")
+    isActive = models.BooleanField(default=True)
+    isConfirmed = models.BooleanField(default=False)
+    session_id = models.CharField(max_length=200,default='null')
     
 
 
