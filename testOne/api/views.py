@@ -206,11 +206,17 @@ def getDayTimeslot(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def addDayTimeslot(request):
-    for day in request.data:
-            newdayTimeSlot =  DayTimeSlot(coach=day['coach'],dayofmock = day['dayofmock'],start_time_id = day['start_time_id'], end_time_id = day['end_time_id'])
+    for eachDay in request.data:
+            coachToSave = Coach.objects.get(id=eachDay['coach'])
+            newdayTimeSlot =  DayTimeSlot(
+                    coach=coachToSave,
+                    day = eachDay['day'],
+                    start_time_id = eachDay['start_time_id'],
+                    end_time_id = eachDay['end_time_id']
+                    )
             newdayTimeSlot.save()
 
-    slots = DayTimeSlot.objects.all()
+    slots = DayTimeSlot.objects.filter(coach=coachToSave) ## only return the slots for the specific coach
     serializer = SlotTimeDaySerializer(slots,many=True)
     return Response({'status':200,'data':serializer.data})
 
