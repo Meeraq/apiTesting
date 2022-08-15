@@ -212,13 +212,34 @@ def addDayTimeslot(request):
                     coach=coachToSave,
                     day = eachDay['day'],
                     start_time_id = eachDay['start_time_id'],
-                    end_time_id = eachDay['end_time_id']
+                    end_time_id = eachDay['end_time_id'],
+										week_id = eachDay['week_id']
                     )
             newdayTimeSlot.save()
 
     slots = DayTimeSlot.objects.filter(coach=coachToSave) ## only return the slots for the specific coach
     serializer = SlotTimeDaySerializer(slots,many=True)
     return Response({'status':200,'data':serializer.data})
+
+# confirm day time slot
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def confirmDayTimeSlot(request):
+    for eachDay in request.data:
+            coachToSave = Coach.objects.get(id=eachDay['coach'])
+            newdayTimeSlot =  DayTimeSlot(
+                    coach=coachToSave,
+                    day = eachDay['day'],
+                    start_time_id = eachDay['start_time_id'],
+                    end_time_id = eachDay['end_time_id'],
+										week_id = eachDay['week_id'],
+										isConfirmed = True
+                    )
+            newdayTimeSlot.save()
+    slots = DayTimeSlot.objects.filter(coach=coachToSave,isConfirmed = True) ## only return the confirmed slots for the specific coach 
+    serializer = SlotTimeDaySerializer(slots,many=True)
+    return Response({'status':200,'data':serializer.data})
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -318,7 +339,7 @@ def login_user(request):
         token = Token.objects.get_or_create(user = Account)
     else:
         raise ValidationError({"message": "Incorrect Login credentials"})
-    return Response({'status':'200','username':Account.username,'token':str(token[0])})
+    return Response({'status':'200','username': Account.username,'id':Account.id,'token':str(token[0])}) # added id in response
 
 
 

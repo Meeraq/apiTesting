@@ -137,8 +137,8 @@ class DayTimeSlot(models.Model):
 
     coach = models.ForeignKey(Coach,null=True,on_delete=models.SET_NULL)
     day = models.CharField(max_length=2000,choices=days_choice,default='sunday')
-    start_time_id = models.DateField(blank=True,default="2000-01-01")
-    end_time_id = models.DateField(blank=True,default="2000-01-01")
+    start_time_id = models.CharField(blank=True,max_length=2000,default="null") 
+    end_time_id = models.CharField(blank=True,max_length=2000,default="null")
     week_id = models.CharField(max_length=200,default="1")
     isActive = models.BooleanField(default=True)
     isConfirmed = models.BooleanField(default=False)
