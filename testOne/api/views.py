@@ -166,6 +166,9 @@ def addfaculty(request):
         serializer.save()
         newUser = User(username=serializer.data['name'],password = serializer.data['password'])
         newUser.save()
+        userToSave = User.objects.get(email=serializer.data['email'])
+        newProfile = Profile(user=userToSave,type="faculty",email=serializer.data['email'])
+        newProfile.save()
     else:
         print(serializer.errors)
         return Response(status='403')
@@ -323,7 +326,6 @@ def addSession(request):
         courseToSave = Courses.objects.get(id=session['course'])
         batchToSave = Batch.objects.get(id=session['batch'])
         newSession = Sessions(course=courseToSave ,batch=batchToSave ,sessionNumber=session['sessionNumber'],start_day=session['start_day'],end_day=session['end_day'])
-        print("hiii",newSession)
         newSession.save()
     sessions = Sessions.objects.all()
     serializer = SessionSerializer(sessions,many=True)
@@ -374,6 +376,9 @@ def registerUser(request):
     else:
         return Response(status='403')
     user = User.objects.get(username = serializer.data['username'])
+    userToSave = User.objects.get(email=serializer.data['email'])
+    newProfile = Profile(user=userToSave,type="admin",email=serializer.data['email'])
+    newProfile.save()
     token , _ = Token.objects.get_or_create(user=user)
     return Response({'status': 200,'payload':serializer.data,'token':str(token)})
 
