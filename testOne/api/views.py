@@ -11,9 +11,9 @@ from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,Le
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer,ProfileSerializer
-import json
 
-from testOne.api import serializers
+
+
 
 
 
@@ -319,9 +319,13 @@ def getSessions(request):
 @permission_classes([IsAuthenticated])
 def addSession(request):
     for session in request.data:
-        newSession = Sessions(course=session['course'],batch=session['batch'],sessionNumber=session['sessionNumber'],start_day=session['start_day'],end_day=session['end_day'])
+        print(session)
+        courseToSave = Courses.objects.get(id=session['course'])
+        batchToSave = Batch.objects.get(id=session['batch'])
+        newSession = Sessions(course=courseToSave ,batch=batchToSave ,sessionNumber=session['sessionNumber'],start_day=session['start_day'],end_day=session['end_day'])
+        print("hiii",newSession)
         newSession.save()
-    sessions = Sessions.objects.all
+    sessions = Sessions.objects.all()
     serializer = SessionSerializer(sessions,many=True)
     return Response({'status':200,'data':serializer.data})
 
