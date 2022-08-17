@@ -8,11 +8,13 @@ from django.dispatch import receiver
 class Profile(models.Model):
     user_choice = [
         ('coach','coach'),
+        ('admin','admin'),
         ('learner','learner'),
         ('faculty','faculty')
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     type = models.CharField(max_length=50,choices=user_choice,default='coach')
+    email = models.CharField(max_length=200,default="a@gmail.com")
 
     def __str__(self):
         return self.user.username
@@ -148,9 +150,12 @@ class DayTimeSlot(models.Model):
 
 class LearnerdayTimeSlot(models.Model): 
     learner = models.ForeignKey(Learners,null=True,on_delete=models.SET_NULL)
-    start_time_id = models.CharField(max_length=200)
-    end_time_id = models.CharField(max_length=200)
-    date = models.DateField(blank=True,default="2000-01-01")
+    course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
+    slot = models.ForeignKey(DayTimeSlot,null=True,on_delete=models.SET_NULL)
+    coach = models.ForeignKey(Coach,null=True,on_delete=models.SET_NULL)
+    isActive = models.BooleanField(default=True)
+    isConfirmed = models.BooleanField(default=False)
+    day = models.CharField(max_length=200,default='sunday')
     
 
 # sessions api 

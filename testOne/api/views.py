@@ -1,5 +1,6 @@
 from django.forms import ValidationError
 from rest_framework.response import Response
+from django.http import JsonResponse
 # import pandas as pd
 from django.conf import settings
 from rest_framework.views import APIView
@@ -10,8 +11,7 @@ from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,Le
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer,ProfileSerializer
-
-
+import json
 
 
 
@@ -123,8 +123,11 @@ def addcoach(request):
     serializer = CoachSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        newUser = User(username=serializer.data['name'],password = serializer.data['password'])
+        newUser = User(username=serializer.data['name'],email=serializer.data['email'],password = serializer.data['password'])
         newUser.save()
+        userToSave = User.objects.get(email=serializer.data['email'])
+        newProfile = Profile(user=userToSave,type="coach",email=serializer.data['email'])
+        newProfile.save()
     else:
         print(serializer.errors)
         return Response(status='403')
@@ -303,16 +306,25 @@ def addSession(request):
 @permission_classes([AllowAny])
 def login_user(request):
     userName = request.data['username']
+    email = request.data['email']
     password = request.data['password']
+    
     try:
         Account = User.objects.get(username = userName)
+        userType = Profile.objects.get(email = email)
+        if userType.type == 'coach':
+            userProfile = Coach.objects.get(email = email)
+        elif userType.type == 'learner':
+            userProfile = Learners.objects.get(email = email)
+        elif userType.type == 'faculty':
+            userProfile = Faculty.objects.get(email = email)
     except BaseException as e:
         raise ValidationError({"400":f'{str(e)}'})
     if password == Account.password:
         token = Token.objects.get_or_create(user = Account)
     else:
         raise ValidationError({"message": "Incorrect Login credentials"})
-    return Response({'status':'200','username':Account.username,'token':str(token[0])})
+    return JsonResponse({'status':'200','username':Account.username,'token':str(token[0]),'email':userProfile.email,'usertype':userType.type,"id":userProfile.id})
 
 
 
