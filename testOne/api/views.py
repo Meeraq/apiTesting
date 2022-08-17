@@ -120,20 +120,21 @@ def getcoach(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def addcoach(request):
-    serializer = CoachSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        newUser = User(username=serializer.data['name'],email=serializer.data['email'],password = serializer.data['password'])
+    coachSerializer = CoachSerializer(data=request.data)
+    if coachSerializer.is_valid():
+        newUser = User(username=coachSerializer.data['name'],email=coachSerializer.data['email'],password = coachSerializer.data['password'])
         newUser.save()
-        userToSave = User.objects.get(email=serializer.data['email'])
-        newProfile = Profile(user=userToSave,type="coach",email=serializer.data['email'])
+        userToSave = User.objects.get(email=coachSerializer.data['email'])
+        newProfile = Profile(user=userToSave,type="coach",email=coachSerializer.data['email'])
         newProfile.save()
+        coachSerializer.userProfile = newProfile
+        coachSerializer.save()
     else:
-        print(serializer.errors)
+        print(coachSerializer.errors)
         return Response(status='403')
     for user in User.objects.all():
         token = Token.objects.get_or_create(user=user)
-    return Response({'status': 200,'payload':serializer.data,'token':str(token[0])})
+    return Response({'status': 200,'payload':coachSerializer.data,'token':str(token[0])})
 
 
 @api_view(['POST'])
@@ -310,21 +311,21 @@ def login_user(request):
     password = request.data['password']
     
     try:
-        Account = User.objects.get(username = userName)
-        userType = Profile.objects.get(email = email)
-        if userType.type == 'coach':
-            userProfile = Coach.objects.get(email = email)
+        account = User.objects.get(username = userName)
+        userProfile = account.profile
+        if userProfile.type == 'coach':
+            userProfileDetails = userProfile.coach
         elif userType.type == 'learner':
-            userProfile = Learners.objects.get(email = email)
+            userProfileDetails = userProfile.learner
         elif userType.type == 'faculty':
-            userProfile = Faculty.objects.get(email = email)
+            userProfileDetails = userProfile.faculty
     except BaseException as e:
         raise ValidationError({"400":f'{str(e)}'})
-    if password == Account.password:
-        token = Token.objects.get_or_create(user = Account)
+    if password == account.password:
+        token = Token.objects.get_or_create(user = account)
     else:
         raise ValidationError({"message": "Incorrect Login credentials"})
-    return JsonResponse({'status':'200','username':Account.username,'token':str(token[0]),'email':userProfile.email,'usertype':userType.type,"id":userProfile.id})
+    return JsonResponse({'status':'200','username':account.username,'token':str(token[0]),'email':userProfile.email,'usertype':userType.type,"id":userProfile.id})
 
 
 

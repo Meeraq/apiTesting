@@ -64,6 +64,7 @@ class Batch(models.Model):
 # coach Modal
 
 class Coach(models.Model): 
+    userProfile = models.OneToOneField(Profile, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     email = models.CharField(max_length=200)
     phone = models.CharField(max_length=2000)
@@ -83,6 +84,7 @@ class Coach(models.Model):
 # Faculty Modal
 
 class Faculty(models.Model): 
+    userProfile = models.OneToOneField(Profile, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     email = models.CharField(max_length=200)
     phone = models.CharField(max_length=2000)
@@ -100,6 +102,7 @@ class Faculty(models.Model):
 # Learner Modal
 
 class Learners(models.Model):
+    userProfile = models.OneToOneField(Profile, on_delete=models.CASCADE)
     Name = models.CharField(max_length=200)
     Email = models.CharField(max_length=100)
     PhoneNumber = models.CharField(max_length=1000,default="7880647282")
