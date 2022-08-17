@@ -353,6 +353,8 @@ def login_user(request):
             userProfile = Learners.objects.get(email = email)
         elif userType.type == 'faculty':
             userProfile = Faculty.objects.get(email = email)
+        elif userType.type == 'admin':
+            userProfile = User.objects.get(email = email)
     except BaseException as e:
         raise ValidationError({"400":f'{str(e)}'})
     if password == Account.password:
