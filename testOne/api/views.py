@@ -371,3 +371,52 @@ def addProfileType(request):
     else:
         return Response({'status':'400 Bad request','Reason':'Wrong data sent'})
     return Response(serializer.data)
+
+
+# getAvailableSlots
+# [
+#      { learnerID, BatchID , weekID }
+# ]
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def getAvailableSlots(request):
+    bookedSlot = request.data
+    learner = Learner.objects.get(id=bookedSlot['learnerID'])
+    batch = Batch.objects.get(id=bookedSlot['batchId'])
+    week_id = bookedSlot['weekID']
+    getReleventSlotsForThisBatch = DayTimeSlot.objects.filter(week_id=week_id,isConfirmed = True, coachCoachySession__isnull=True)
+    serializer = SlotTimeDaySerializer(getReleventSlotsForThisBatch,many=True)
+    return Response({'status':200,'data':serializer.data})
+
+
+#! Sample Input
+# [ 
+#    { slotID: 123, learnerID: 123, batchId: 2, !!(day: 'Monday', start_time_id: 121212121, end_time_id: 4185454554) },
+# ]
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def pickLearnerSlot(request):
+    bookedSlot = request.data
+    learner = Learner.objects.get(id=bookedSlot['learnerID'])
+    batch = Batch.objects.get(id=bookedSlot['batchId'])
+    slot = DayTimeSlot.objects.get(id=bookedSlot['slotID'])
+    print(bookedSlot)
+    newCoachCoachySession = CoachCoachySession(learner=learner,batch=batch,slot=slot)
+    newCoachCoachySession.save()
+    allSessionsForThisLearner = DayTimeSlot.objects.filter(coachCoachySession__learner=learner)
+    serializer = SlotTimeDaySerializer(allSessionsForThisLearner,many=True)
+    return Response({'status':200,'data':serializer.data})
+
+
+
+#! Sample Input
+# [ 
+#    { id: learner's id },
+# ]
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def getLearnerSlot(request, _id):
+    learner = Learner.objects.get(id=_id)
+    allSessionsForThisLearner = DayTimeSlot.objects.filter(coachCoachySession__learner=learner)
+    serializer = SlotTimeDaySerializer(allSessionsForThisLearner,many=True)
+    return Response({'status':200,'data':serializer.data})

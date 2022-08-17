@@ -145,7 +145,6 @@ class DayTimeSlot(models.Model):
     session_id = models.CharField(max_length=200,default='null')
     
 
-
 class LearnerdayTimeSlot(models.Model): 
     learner = models.ForeignKey(Learners,null=True,on_delete=models.SET_NULL)
     start_time_id = models.CharField(max_length=200)
@@ -153,6 +152,14 @@ class LearnerdayTimeSlot(models.Model):
     date = models.DateField(blank=True,default="2000-01-01")
     
 
+class coachCoachySession(models.Model): 
+    learner = models.ForeignKey(Learners,null=True,on_delete=models.SET_NULL)
+    batch = models.ForeignKey(Batch,null=True,on_delete=models.SET_NULL)
+    slot = models.OneToOneField(DayTimeSlot,null=True,on_delete=models.SET_NULL)
+    zoomID = models.CharField(max_length=200,default='null')
+    isConfirmedByCoach = models.BooleanField(default=False)
+    isConfirmedByLearner = models.BooleanField(default=False)
+    isActive = models.BooleanField(default=True)
 # sessions api 
 
 class SessionOneStartEnd(models.Model):
