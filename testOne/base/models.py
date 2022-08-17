@@ -160,19 +160,13 @@ class LearnerdayTimeSlot(models.Model):
 
 # sessions api 
 
-class SessionOneStartEnd(models.Model):
-    start_day = models.DateField(blank=True,default="2000-01-01")
-    end_day = models.DateField(blank=True,default="2000-01-01")
-
-class SessionTwoStartEnd(models.Model):
-    start_day = models.DateField(blank=True,default="2000-01-01")
-    end_day = models.DateField(blank=True,default="2000-01-01")
 
 class Sessions(models.Model): 
     course = models.ForeignKey(Courses,null=True,on_delete=models.SET_NULL)
     batch = models.ForeignKey(Batch,null=True,on_delete=models.SET_NULL)
-    coachingSessionOne= models.ForeignKey(SessionOneStartEnd,null=True,on_delete=models.SET_NULL)
-    coachingSessionTwo = models.ForeignKey(SessionTwoStartEnd,null=True,on_delete=models.SET_NULL)
+    sessionNumber = models.IntegerField(blank=True,default="1")
+    start_day = models.DateField(blank=True,default="2000-01-01")
+    end_day = models.DateField(blank=True,default="2000-01-01")
     
 
 # # import sheet 
