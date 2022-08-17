@@ -13,6 +13,8 @@ from rest_framework.authtoken.models import Token
 from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer,ProfileSerializer
 import json
 
+from testOne.api import serializers
+
 
 
 
@@ -289,12 +291,12 @@ def getSessions(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def addSession(request):
-    serializer = SessionSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-    else:
-        return Response({'status':'400 Bad request','Reason':'Wrong data sent'})
-    return Response(serializer.data)
+    for session in request.data:
+        newSession = Sessions(course=session['course'],batch=session['batch'],sessionNumber=session['sessionNumber'],start_day=session['start_day'],end_day=session['end_day'])
+        newSession.save()
+    sessions = Sessions.objects.all
+    serializer = SessionSerializer(sessions,many=True)
+    return Response({'status':200,'data':serializer.data})
 
 
 
