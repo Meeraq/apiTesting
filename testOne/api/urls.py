@@ -20,6 +20,7 @@ urlpatterns = [
     path('avilable-slot/', views.getslot),
     path('add-slots/', views.addslot),
     path('add-time-day-slot/', views.addDayTimeslot),
+		path('confirm-day-time-slot/',views.confirmDayTimeSlot),
     path('time-day-slot/', views.getDayTimeslot),
     path('update-time-day-slot/<str:_id>/', views.updateDayTimeslot,name='update_time_day_slot'),
     path('delete-time-day-slot/<str:_id>/', views.deleteDayTimeslot),
