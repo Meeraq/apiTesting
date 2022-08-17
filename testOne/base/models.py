@@ -157,7 +157,7 @@ class LearnerdayTimeSlot(models.Model):
     day = models.CharField(max_length=200,default='sunday')
     
 
-class coachCoachySession(models.Model): 
+class CoachCoachySession(models.Model): 
     learner = models.ForeignKey(Learners,null=True,on_delete=models.SET_NULL)
     batch = models.ForeignKey(Batch,null=True,on_delete=models.SET_NULL)
     slot = models.OneToOneField(DayTimeSlot,null=True,on_delete=models.SET_NULL)

@@ -34,9 +34,9 @@ urlpatterns = [
     path('add-user-type/', views.addProfileType),
     path('add-user-type/', views.addProfileType),
     
-    path('getAvailable-learner-slots', views.getAvailableSlots), 
+    path('get-available-learner-slots', views.getAvailableSlots), 
     path('pick-learner-slot', views.pickLearnerSlot),
-    path('get-learner-slot', views.getLearnerSlot),
+    path('get-learner-slot/<str:_id>/', views.getLearnerSlot),
     
     # path('file-import/', ExportImportExcel.as_view()),
 ]

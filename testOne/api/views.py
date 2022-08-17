@@ -6,7 +6,7 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated,AllowAny
-from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile
+from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile, CoachCoachySession
 # from base.models import ExcelFileUpload
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
@@ -240,8 +240,8 @@ def confirmDayTimeSlot(request):
                     day = eachDay['day'],
                     start_time_id = eachDay['start_time_id'],
                     end_time_id = eachDay['end_time_id'],
-										week_id = eachDay['week_id'],
-										isConfirmed = True
+                    week_id = eachDay['week_id'],
+                    isConfirmed = True
                     )
             newdayTimeSlot.save()
     slots = DayTimeSlot.objects.filter(coach=coachToSave,isConfirmed = True) ## only return the confirmed slots for the specific coach 
@@ -400,35 +400,36 @@ def addProfileType(request):
 
 # getAvailableSlots
 # [
-#      { learnerID, BatchID , weekID }
+#      { learnerId, batchId , weekId }
 # ]
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def getAvailableSlots(request):
     bookedSlot = request.data
-    learner = Learner.objects.get(id=bookedSlot['learnerID'])
+    print(bookedSlot)
+    learner = Learners.objects.get(id=bookedSlot['learnerId'])
     batch = Batch.objects.get(id=bookedSlot['batchId'])
-    week_id = bookedSlot['weekID']
-    getReleventSlotsForThisBatch = DayTimeSlot.objects.filter(week_id=week_id,isConfirmed = True, coachCoachySession__isnull=True)
+    week_id = bookedSlot['weekId']
+    getReleventSlotsForThisBatch = DayTimeSlot.objects.filter(week_id=week_id,isConfirmed = True, coachcoachysession__isnull=True)
     serializer = SlotTimeDaySerializer(getReleventSlotsForThisBatch,many=True)
     return Response({'status':200,'data':serializer.data})
 
 
 #! Sample Input
 # [ 
-#    { slotID: 123, learnerID: 123, batchId: 2, !!(day: 'Monday', start_time_id: 121212121, end_time_id: 4185454554) },
+#    { slotId: 123, learnerId: 123, batchId: 2, !!(day: 'Monday', start_time_id: 121212121, end_time_id: 4185454554) },
 # ]
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def pickLearnerSlot(request):
     bookedSlot = request.data
-    learner = Learner.objects.get(id=bookedSlot['learnerID'])
+    learner = Learners.objects.get(id=bookedSlot['learnerId'])
     batch = Batch.objects.get(id=bookedSlot['batchId'])
-    slot = DayTimeSlot.objects.get(id=bookedSlot['slotID'])
+    slot = DayTimeSlot.objects.get(id=bookedSlot['slotId'])
     print(bookedSlot)
     newCoachCoachySession = CoachCoachySession(learner=learner,batch=batch,slot=slot)
     newCoachCoachySession.save()
-    allSessionsForThisLearner = DayTimeSlot.objects.filter(coachCoachySession__learner=learner)
+    allSessionsForThisLearner = DayTimeSlot.objects.filter(coachcoachysession__learner=learner, isConfirmed=True)
     serializer = SlotTimeDaySerializer(allSessionsForThisLearner,many=True)
     return Response({'status':200,'data':serializer.data})
 
@@ -441,7 +442,7 @@ def pickLearnerSlot(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def getLearnerSlot(request, _id):
-    learner = Learner.objects.get(id=_id)
-    allSessionsForThisLearner = DayTimeSlot.objects.filter(coachCoachySession__learner=learner)
+    learner = Learners.objects.get(id=_id)
+    allSessionsForThisLearner = DayTimeSlot.objects.filter(coachcoachysession__learner=learner, isConfirmed=True)
     serializer = SlotTimeDaySerializer(allSessionsForThisLearner,many=True)
     return Response({'status':200,'data':serializer.data})
