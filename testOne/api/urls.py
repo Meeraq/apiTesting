@@ -36,7 +36,9 @@ urlpatterns = [
     
     path('get-available-learner-slots', views.getAvailableSlots), 
     path('pick-learner-slot', views.pickLearnerSlot),
-    path('get-learner-slot/<str:_id>/', views.getLearnerSlot),
+    path('get-learner-slot/', views.getLearnerSlot),
+
+		path('time-table',views.getCoachCoacheeSessions),
     
     # path('file-import/', ExportImportExcel.as_view()),
 ]

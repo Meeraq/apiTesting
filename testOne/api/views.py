@@ -1,3 +1,5 @@
+import json
+from urllib import response
 from django.forms import ValidationError
 from rest_framework.response import Response
 from django.http import JsonResponse
@@ -10,7 +12,8 @@ from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,Le
 # from base.models import ExcelFileUpload
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer,ProfileSerializer
+from .serializers import CoachCoachySessionSerializer, CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer,ProfileSerializer
+from django.db.models import Q
 
 
 
@@ -334,18 +337,13 @@ def addSession(request):
 
 
 
-# log in
-
-
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login_user(request):
-    userName = request.data['username']
     email = request.data['email']
     password = request.data['password']
-    
     try:
-        Account = User.objects.get(username = userName)
+        Account = User.objects.get(email = email)
         userType = Profile.objects.get(email = email)
         if userType.type == 'coach':
             userProfile = Coach.objects.get(email = email)
@@ -357,12 +355,11 @@ def login_user(request):
             userProfile = User.objects.get(email = email)
     except BaseException as e:
         raise ValidationError({"400":f'{str(e)}'})
-    if password == Account.password:
+    if password == userProfile.password:
         token = Token.objects.get_or_create(user = Account)
     else:
         raise ValidationError({"message": "Incorrect Login credentials"})
     return Response({'status':'200','username':Account.username,'token':str(token[0]),'email':userProfile.email,'usertype':userType.type,"id":userProfile.id})
-
 
 
 
@@ -441,8 +438,15 @@ def pickLearnerSlot(request):
 # ]
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def getLearnerSlot(request, _id):
-    learner = Learners.objects.get(id=_id)
-    allSessionsForThisLearner = DayTimeSlot.objects.filter(coachcoachysession__learner=learner, isConfirmed=True)
-    serializer = SlotTimeDaySerializer(allSessionsForThisLearner,many=True)
+def getLearnerSlot(request):
+    allSessionsForLearner = DayTimeSlot.objects.filter(~Q(coachcoachysession=None), isConfirmed=True)
+    serializer = SlotTimeDaySerializer(allSessionsForLearner,many=True)
     return Response({'status':200,'data':serializer.data})
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getCoachCoacheeSessions(request):
+	print("hello")
+	coachCoacheeSessions = CoachCoachySession.objects.all()
+	serializer = CoachCoachySessionSerializer(coachCoacheeSessions,many=True)
+	return Response(serializer.data)

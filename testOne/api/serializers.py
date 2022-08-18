@@ -3,6 +3,8 @@ from rest_framework import serializers
 from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile
 from django.contrib.auth.models import User
 
+from base.models import CoachCoachySession
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,7 +53,14 @@ class SlotSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class CoachCoachySessionSerializer(serializers.ModelSerializer):
+        
+    class Meta:
+        model = CoachCoachySession
+        fields = '__all__'
+
 class SlotTimeDaySerializer(serializers.ModelSerializer):
+    coachcoachysession = CoachCoachySessionSerializer(required=False)
     class Meta:
         model = DayTimeSlot
         fields = '__all__'
