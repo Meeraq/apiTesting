@@ -167,7 +167,7 @@ def addfaculty(request):
     serializer = FacultySerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        newUser = User(username=serializer.data['name'],password = serializer.data['password'])
+        newUser = User(username=serializer.data['name'],email=serializer.data['email'],password = serializer.data['password'])
         newUser.save()
         userToSave = User.objects.get(email=serializer.data['email'])
         newProfile = Profile(user=userToSave,type="faculty",email=serializer.data['email'])
