@@ -1,3 +1,5 @@
+import json
+from urllib import response
 from django.forms import ValidationError
 from rest_framework.response import Response
 from django.http import JsonResponse
@@ -6,11 +8,12 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated,AllowAny
-from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile
+from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile, CoachCoachySession
 # from base.models import ExcelFileUpload
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-from .serializers import CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer,ProfileSerializer
+from .serializers import CoachCoachySessionSerializer, CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer,ProfileSerializer
+from django.db.models import Q
 
 
 
@@ -164,7 +167,7 @@ def addfaculty(request):
     serializer = FacultySerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        newUser = User(username=serializer.data['name'],password = serializer.data['password'])
+        newUser = User(username=serializer.data['name'],email=serializer.data['email'],password = serializer.data['password'])
         newUser.save()
         userToSave = User.objects.get(email=serializer.data['email'])
         newProfile = Profile(user=userToSave,type="faculty",email=serializer.data['email'])
@@ -240,8 +243,8 @@ def confirmDayTimeSlot(request):
                     day = eachDay['day'],
                     start_time_id = eachDay['start_time_id'],
                     end_time_id = eachDay['end_time_id'],
-										week_id = eachDay['week_id'],
-										isConfirmed = True
+                    week_id = eachDay['week_id'],
+                    isConfirmed = True
                     )
             newdayTimeSlot.save()
     slots = DayTimeSlot.objects.filter(coach=coachToSave,isConfirmed = True) ## only return the confirmed slots for the specific coach 
@@ -344,18 +347,13 @@ def addSession(request):
 
 
 
-# log in
-
-
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login_user(request):
-    userName = request.data['username']
     email = request.data['email']
     password = request.data['password']
-    
     try:
-        Account = User.objects.get(username = userName)
+        Account = User.objects.get(email = email)
         userType = Profile.objects.get(email = email)
         if userType.type == 'coach':
             userProfile = Coach.objects.get(email = email)
@@ -367,12 +365,11 @@ def login_user(request):
             userProfile = User.objects.get(email = email)
     except BaseException as e:
         raise ValidationError({"400":f'{str(e)}'})
-    if password == Account.password:
+    if password == userProfile.password:
         token = Token.objects.get_or_create(user = Account)
     else:
         raise ValidationError({"message": "Incorrect Login credentials"})
     return Response({'status':'200','username':Account.username,'token':str(token[0]),'email':userProfile.email,'usertype':userType.type,"id":userProfile.id})
-
 
 
 
@@ -406,3 +403,60 @@ def addProfileType(request):
     else:
         return Response({'status':'400 Bad request','Reason':'Wrong data sent'})
     return Response(serializer.data)
+
+
+# getAvailableSlots
+# [
+#      { learnerId, batchId , weekId }
+# ]
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def getAvailableSlots(request):
+    bookedSlot = request.data
+    print(bookedSlot)
+    learner = Learners.objects.get(id=bookedSlot['learnerId'])
+    batch = Batch.objects.get(id=bookedSlot['batchId'])
+    week_id = bookedSlot['weekId']
+    getReleventSlotsForThisBatch = DayTimeSlot.objects.filter(week_id=week_id,isConfirmed = True, coachcoachysession__isnull=True)
+    serializer = SlotTimeDaySerializer(getReleventSlotsForThisBatch,many=True)
+    return Response({'status':200,'data':serializer.data})
+
+
+#! Sample Input
+# [ 
+#    { slotId: 123, learnerId: 123, batchId: 2, !!(day: 'Monday', start_time_id: 121212121, end_time_id: 4185454554) },
+# ]
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def pickLearnerSlot(request):
+    bookedSlot = request.data
+    learner = Learners.objects.get(id=bookedSlot['learnerId'])
+    batch = Batch.objects.get(id=bookedSlot['batchId'])
+    slot = DayTimeSlot.objects.get(id=bookedSlot['slotId'])
+    print(bookedSlot)
+    newCoachCoachySession = CoachCoachySession(learner=learner,batch=batch,slot=slot)
+    newCoachCoachySession.save()
+    allSessionsForThisLearner = DayTimeSlot.objects.filter(coachcoachysession__learner=learner, isConfirmed=True)
+    serializer = SlotTimeDaySerializer(allSessionsForThisLearner,many=True)
+    return Response({'status':200,'data':serializer.data})
+
+
+
+#! Sample Input
+# [ 
+#    { id: learner's id },
+# ]
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def getLearnerSlot(request):
+    allSessionsForLearner = DayTimeSlot.objects.filter(~Q(coachcoachysession=None), isConfirmed=True)
+    serializer = SlotTimeDaySerializer(allSessionsForLearner,many=True)
+    return Response({'status':200,'data':serializer.data})
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getCoachCoacheeSessions(request):
+	print("hello")
+	coachCoacheeSessions = CoachCoachySession.objects.all()
+	serializer = CoachCoachySessionSerializer(coachCoacheeSessions,many=True)
+	return Response(serializer.data)
