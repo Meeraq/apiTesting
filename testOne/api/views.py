@@ -130,7 +130,7 @@ def addcoach(request):
         userToSave = User.objects.get(email=serializer.data['email'])
         newProfile = Profile(user=userToSave,type="coach",email=serializer.data['email'])
         newProfile.save()
-    else:
+    else: 
         print(serializer.errors)
         return Response(status='403')
     for user in User.objects.all():
@@ -301,6 +301,16 @@ def updateLearnerDayTimeslot(request,_id):
     if serializer.is_valid():
         serializer.save()
 
+    slots = LearnerdayTimeSlot.objects.all()
+    serializer = LearnerSlotTimeDaySerializer(slots,many=True)
+    return Response({'status': 200,'data':serializer.data})
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def LearnerdeleteDayTimeslot(request,_id):
+    slot = LearnerdayTimeSlot.objects.get(id=_id)
+    slot.delete()
     slots = LearnerdayTimeSlot.objects.all()
     serializer = LearnerSlotTimeDaySerializer(slots,many=True)
     return Response({'status': 200,'data':serializer.data})

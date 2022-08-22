@@ -25,6 +25,7 @@ urlpatterns = [
     path('update-time-day-slot/<str:_id>/', views.updateDayTimeslot,name='update_time_day_slot'),
     path('delete-time-day-slot/<str:_id>/', views.deleteDayTimeslot),
     path('learner-time-day-slot/', views.learnergetDayTimeslot),
+    path('delete-learner-time-day-slot/', views.LearnerdeleteDayTimeslot),
     path('update-learner-time-day-slot/<str:_id>/', views.updateLearnerDayTimeslot,name='update_learner_time_day_slot'),
     path('add-learner-time-day-slot/', views.addLearnerDayTimeslot),
     path('session/', views.getSessions),
