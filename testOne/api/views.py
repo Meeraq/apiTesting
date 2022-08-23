@@ -409,13 +409,17 @@ def login_user(request):
     username = request.data['username']
     password = request.data['password']
     user = authenticate(username=username, password=password)
-    # print(user.profile.id)
-    newUser = CoachSerializer(user)
-    # print(newUser.data)
-    # print(user.groups.all()[0])
+    if user.profile.type == 'coach':
+      userProfile = Coach.objects.get(id = user.profile.id)
+    elif user.profile.type == 'learner':
+      userProfile = Learners.objects.get(id = user.profile.id)
+    elif user.profile.type == 'faculty':
+      userProfile = Faculty.objects.get(id = user.profile.id)
+    elif user.profile.type == 'admin':
+      userProfile = User.objects.get(id = user.profile.id)
     if user is not None:
         token = Token.objects.get_or_create(user = user)
-        return Response({'status':200,'token':str(token[0])})
+        return Response({'status':'200','username':user.username,'token':str(token[0]),'email':userProfile.email,'usertype':user.profile.type,"id":userProfile.id})
     return Response(status=401)
 
 
