@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'base',
     'corsheaders',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+		'django_extensions'
 ]
 
 MIDDLEWARE = [
@@ -89,17 +90,18 @@ WSGI_APPLICATION = 'testOne.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+   'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'meeraq',
+        'NAME': 'testone',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': 'password@mysql',
         'HOST': 'localhost',
-        'PORT': '',
+        'PORT': '3306',
         'OPTIONS':{
             'init_command':"SET sql_mode='STRICT_TRANS_TABLES'"
         }
     }
+
 }
 
 # Password validation
@@ -145,3 +147,17 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True
+
+
+# authentication backends
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "sesame.backends.ModelBackend",
+]
+
+LOGIN_REDIRECT_URL = "/admin/"
+
+SESAME_MAX_AGE = 300  # 300 seconds = 5 minutes
+
+

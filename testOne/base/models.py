@@ -148,6 +148,7 @@ class DayTimeSlot(models.Model):
     isActive = models.BooleanField(default=True)
     isConfirmed = models.BooleanField(default=False)
     session_id = models.CharField(max_length=200,default='null')
+    for_learners = models.BooleanField(default=False)
     
 
 class LearnerdayTimeSlot(models.Model): 

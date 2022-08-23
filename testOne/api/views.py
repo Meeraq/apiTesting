@@ -265,7 +265,21 @@ def confirmDayTimeSlot(request):
                     isConfirmed = True
                     )
             newdayTimeSlot.save()
-    slots = DayTimeSlot.objects.filter(coach=coachToSave,isConfirmed = True) ## only return the confirmed slots for the specific coach 
+            currTime = int(eachDay['start_time_id'])
+            endTime = int(eachDay['end_time_id'])
+            while currTime + 1800000 <= endTime:
+              learnerSlot = DayTimeSlot(
+                coach=coachToSave,
+								day = eachDay['day'],
+								start_time_id = str(currTime),
+								end_time_id = str(currTime + 1800000),
+								week_id = eachDay['week_id'],
+								isConfirmed = True,
+								for_learners = True
+                )
+              currTime+= 2700000
+              learnerSlot.save()
+    slots = DayTimeSlot.objects.filter(coach=coachToSave,isConfirmed = True,for_learners = False) ## only return the confirmed slots for the specific coach 
     serializer = SlotTimeDaySerializer(slots,many=True)
     return Response({'status':200,'data':serializer.data})
 
@@ -455,7 +469,12 @@ def getAvailableSlots(request):
     learner = Learners.objects.get(id=bookedSlot['learnerId'])
     batch = Batch.objects.get(id=bookedSlot['batchId'])
     week_id = bookedSlot['weekId']
-    getReleventSlotsForThisBatch = DayTimeSlot.objects.filter(week_id=week_id,isConfirmed = True, coachcoachysession__isnull=True)
+    getReleventSlotsForThisBatch = DayTimeSlot.objects.filter(
+			week_id=week_id,
+			isConfirmed = True,
+			coachcoachysession__isnull=True,
+			for_learners = True
+			)
     serializer = SlotTimeDaySerializer(getReleventSlotsForThisBatch,many=True)
     return Response({'status':200,'data':serializer.data})
 
@@ -487,7 +506,11 @@ def pickLearnerSlot(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def getLearnerSlot(request):
-    allSessionsForLearner = DayTimeSlot.objects.filter(~Q(coachcoachysession=None), isConfirmed=True)
+    allSessionsForLearner = DayTimeSlot.objects.filter(
+			~Q(coachcoachysession=None),
+			isConfirmed=True,
+			for_learners = True
+			)
     serializer = SlotTimeDaySerializer(allSessionsForLearner,many=True)
     return Response({'status':200,'data':serializer.data})
 
