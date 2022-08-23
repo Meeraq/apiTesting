@@ -7,11 +7,12 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated,AllowAny
-from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile, CoachCoachySession
+from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile, CoachCoachySession,CourseCategorys
 # from base.models import ExcelFileUpload
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from .serializers import CoachCoachySessionSerializer, CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer,ProfileSerializer
+from .serializers import CoachCoachySessionSerializer, CourseSerializer,LearnerSerializer,BatchSerializer,CoachSerializer,FacultySerializer,SlotSerializer,SlotTimeDaySerializer,LearnerSlotTimeDaySerializer,SessionSerializer,UserSerializer,ProfileSerializer,CourseCategorySerializer
 from django.db.models import Q
 
 
@@ -55,6 +56,14 @@ def updateCourses(request,_id):
     return Response(serializer.data)
 
 
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getCourseCategory(request):
+    category = CourseCategorys.objects.all()
+    serializer = CourseCategorySerializer(category,many=True)
+    return Response(serializer.data)
+
 # Learner Api Functions
 
 @api_view(['GET'])
@@ -70,7 +79,14 @@ def getLearners(request):
 def addLearners(request):
     serializer = LearnerSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        newUser = User.objects.create_user(username=request.data['email'],password = request.data['password'])
+        newUser.save()
+        userToSave = User.objects.get(username=request.data['email'])
+        newProfile = Profile(user=userToSave,type="learner",email=request.data['email'])
+        newProfile.save()
+        serializer.save(user_id = newProfile.id)
+    for user in User.objects.all():
+        Token.objects.get_or_create(user=user)
     return Response(serializer.data)
 
 
@@ -128,17 +144,18 @@ def getcoach(request):
 def addcoach(request):
     serializer = CoachSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        newUser = User(username=serializer.data['name'],email=serializer.data['email'],password = serializer.data['password'])
+        newUser = User.objects.create_user(username=request.data['email'],email=request.data['email'],password = request.data['password'])
         newUser.save()
-        userToSave = User.objects.get(email=serializer.data['email'])
-        newProfile = Profile(user=userToSave,type="coach",email=serializer.data['email'])
-        newProfile.save()
-    else:
+        userToSave = User.objects.get(username=request.data['email'])
+        newProfile = Profile(user=userToSave,type="coach",email=request.data['email'])
+        newProfile.save() 
+        serializer.save(user_id = newProfile.id)
+        
+        for user in User.objects.all():
+            token = Token.objects.get_or_create(user=user)
+    else: 
         print(serializer.errors)
         return Response(status='403')
-    for user in User.objects.all():
-        token = Token.objects.get_or_create(user=user)
     return Response({'status': 200,'payload':serializer.data,'token':str(token[0])})
 
 
@@ -167,18 +184,18 @@ def getfaculty(request):
 def addfaculty(request):
     serializer = FacultySerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        newUser = User(username=serializer.data['name'],email=serializer.data['email'],password = serializer.data['password'])
+        newUser = User.objects.create_user(username=request.data['email'],password = request.data['password'])
         newUser.save()
-        userToSave = User.objects.get(email=serializer.data['email'])
-        newProfile = Profile(user=userToSave,type="faculty",email=serializer.data['email'])
+        userToSave = User.objects.get(username=request.data['email'])
+        newProfile = Profile(user=userToSave,type="faculty",email=request.data['email'])
         newProfile.save()
+        serializer.save(user_id = newProfile.id)
     else:
         print(serializer.errors)
         return Response(status='403')
     for user in User.objects.all():
-        token = Token.objects.get_or_create(user=user)
-    return Response({'status': 200,'payload':serializer.data,'token':str(token)})
+            token = Token.objects.get_or_create(user=user)
+    return Response({'status': 200,'payload':serializer.data,'token':str(token[0])})
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -310,6 +327,16 @@ def updateLearnerDayTimeslot(request,_id):
     return Response({'status': 200,'data':serializer.data})
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def LearnerdeleteDayTimeslot(request,_id):
+    slot = LearnerdayTimeSlot.objects.get(id=_id)
+    slot.delete()
+    slots = LearnerdayTimeSlot.objects.all()
+    serializer = LearnerSlotTimeDaySerializer(slots,many=True)
+    return Response({'status': 200,'data':serializer.data})
+
+
 
 
 # sessions 
@@ -338,30 +365,44 @@ def addSession(request):
 
 
 
+# @api_view(["POST"])
+# @permission_classes([AllowAny])
+# def login_user(request):
+#     email = request.data['email']
+#     password = request.data['password']
+#     try:
+#         Account = User.objects.get(email = email)
+#         userType = Profile.objects.get(email = email)
+#         if userType.type == 'coach':
+#             userProfile = Coach.objects.get(email = email)
+#         elif userType.type == 'learner':
+#             userProfile = Learners.objects.get(email = email)
+#         elif userType.type == 'faculty':
+#             userProfile = Faculty.objects.get(email = email)
+#         elif userType.type == 'admin':
+#             userProfile = User.objects.get(email = email)
+#     except BaseException as e:
+#         raise ValidationError({"400":f'{str(e)}'})
+#     if password == userProfile.password:
+#         token = Token.objects.get_or_create(user = Account)
+#     else:
+#         raise ValidationError({"message": "Incorrect Login credentials"})
+#     return Response({'status':'200','username':Account.username,'token':str(token[0]),'email':userProfile.email,'usertype':userType.type,"id":userProfile.id})
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login_user(request):
-    email = request.data['email']
+    username = request.data['username']
     password = request.data['password']
-    try:
-        Account = User.objects.get(email = email)
-        userType = Profile.objects.get(email = email)
-        if userType.type == 'coach':
-            userProfile = Coach.objects.get(email = email)
-        elif userType.type == 'learner':
-            userProfile = Learners.objects.get(email = email)
-        elif userType.type == 'faculty':
-            userProfile = Faculty.objects.get(email = email)
-        elif userType.type == 'admin':
-            userProfile = User.objects.get(email = email)
-    except BaseException as e:
-        raise ValidationError({"400":f'{str(e)}'})
-    if password == userProfile.password:
-        token = Token.objects.get_or_create(user = Account)
-    else:
-        raise ValidationError({"message": "Incorrect Login credentials"})
-    return Response({'status':'200','username':Account.username,'token':str(token[0]),'email':userProfile.email,'usertype':userType.type,"id":userProfile.id})
-
+    user = authenticate(username=username, password=password)
+    print(user.profile.id)
+    newUser = CoachSerializer(user)
+    print(newUser.data)
+    # print(user.groups.all()[0])
+    if user is not None:
+        token = Token.objects.get_or_create(user = user)
+        return Response({'status':200,'token':str(token[0])})
+    return Response(status=401)
 
 
 
@@ -376,7 +417,7 @@ def registerUser(request):
     else:
         return Response(status='403')
     user = User.objects.get(username = serializer.data['username'])
-    userToSave = User.objects.get(email=serializer.data['email'])
+    userToSave = User.objects.get(username=serializer.data['email'])
     newProfile = Profile(user=userToSave,type="admin",email=serializer.data['email'])
     newProfile.save()
     token , _ = Token.objects.get_or_create(user=user)
@@ -395,6 +436,12 @@ def addProfileType(request):
         return Response({'status':'400 Bad request','Reason':'Wrong data sent'})
     return Response(serializer.data)
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getProfile(request):
+    session = Profile.objects.all()
+    serializer = ProfileSerializer(session,many=True)
+    return Response(serializer.data)
 
 # getAvailableSlots
 # [

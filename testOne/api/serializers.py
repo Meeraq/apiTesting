@@ -1,6 +1,6 @@
 from dataclasses import field
 from rest_framework import serializers
-from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile
+from base.models import Courses,Learners,Batch,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile,CourseCategorys
 from django.contrib.auth.models import User
 
 from base.models import CoachCoachySession
@@ -13,15 +13,20 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    userDetails = UserSerializer(required=False)
     class Meta:
         model = Profile
+        fields = '__all__'
+
+class CourseCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseCategorys
         fields = '__all__'
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Courses
         fields = '__all__'
-
 
 class LearnerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,7 +44,7 @@ class BatchSerializer(serializers.ModelSerializer):
 class CoachSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coach
-        fields = '__all__'
+        fields = ['name','email','phone','dob','gender','fee','activeSince','isSlotBooked','isActive','password']
 
 class FacultySerializer(serializers.ModelSerializer):
     class Meta:
