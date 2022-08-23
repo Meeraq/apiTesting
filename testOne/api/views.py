@@ -409,9 +409,9 @@ def login_user(request):
     username = request.data['username']
     password = request.data['password']
     user = authenticate(username=username, password=password)
-    print(user.profile.id)
+    # print(user.profile.id)
     newUser = CoachSerializer(user)
-    print(newUser.data)
+    # print(newUser.data)
     # print(user.groups.all()[0])
     if user is not None:
         token = Token.objects.get_or_create(user = user)
@@ -509,7 +509,6 @@ def getLearnerSlot(request):
     allSessionsForLearner = DayTimeSlot.objects.filter(
 			~Q(coachcoachysession=None),
 			isConfirmed=True,
-			for_learners = True
 			)
     serializer = SlotTimeDaySerializer(allSessionsForLearner,many=True)
     return Response({'status':200,'data':serializer.data})
