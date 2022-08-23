@@ -40,5 +40,9 @@ urlpatterns = [
 
 		path('time-table',views.getCoachCoacheeSessions),
     
+		# sesame link
+    path("login-learner/", views.loginLearner, name="email_login"),
+		path("trial/",views.trialLogin,name="trial")
+    
     # path('file-import/', ExportImportExcel.as_view()),
 ]

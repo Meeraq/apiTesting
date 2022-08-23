@@ -1,4 +1,3 @@
-import json
 from urllib import response
 from django.forms import ValidationError
 from rest_framework.response import Response
@@ -16,6 +15,8 @@ from .serializers import CoachCoachySessionSerializer, CourseSerializer,LearnerS
 from django.db.models import Q
 
 
+# sesame 
+from sesame.utils import get_query_string,get_user
 
 
 
@@ -450,3 +451,25 @@ def getCoachCoacheeSessions(request):
 	coachCoacheeSessions = CoachCoachySession.objects.all()
 	serializer = CoachCoachySessionSerializer(coachCoacheeSessions,many=True)
 	return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def loginLearner(request): # request.data = body
+	email=request.data['email']
+	user=User.objects.get(email=email)
+	print(user.email)
+	# link = reverse("trial")
+	# link = request.build_absolute_uri(link)
+	link = 'http://127.0.0.1:8000/trial/'
+	link += get_query_string(user)
+	print(link)
+	return Response({"login": email})
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def trialLogin(request):
+	sesame_id = request.GET.get('sesame',None)
+	user = get_user(sesame_id)
+	serializer = UserSerializer(user)
+	print(serializer.data)
+	return Response({"message": "hello"})
