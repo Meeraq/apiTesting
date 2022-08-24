@@ -18,6 +18,7 @@ from django.db.models import Q
 
 # sesame
 from sesame.utils import get_query_string, get_user
+# from sesame.utils import get_query_string, get_user
 
 
 # courses api functions
@@ -78,6 +79,7 @@ def addLearners(request):
     if serializer.is_valid():
         newUser = User.objects.create_user(
             username=request.data['email'], password='password@123')
+        # username=request.data['email'], password=request.data['password'])
         newUser.save()
         userToSave = User.objects.get(username=request.data['email'])
         newProfile = Profile(user=userToSave, type="learner",
@@ -186,6 +188,7 @@ def addfaculty(request):
     if serializer.is_valid():
         newUser = User.objects.create_user(
             username=request.data['email'], password='password@123')
+        # username=request.data['email'], password=request.data['password'])
         newUser.save()
         userToSave = User.objects.get(username=request.data['email'])
         newProfile = Profile(user=userToSave, type="faculty",
@@ -429,6 +432,8 @@ def login_user(request):
     if user is not None:
         token = Token.objects.get_or_create(user=user)
         return Response({'status': '200', 'username': user.username, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+
+        # return Response({'status': 200, 'token': str(token[0])})
     return Response(status=401)
 
 
@@ -442,11 +447,18 @@ def registerUser(request):
         newUser.save()
     else:
         return Response(status='403')
-    user = User.objects.get(username=request.data['email'])
-    newProfile = Profile(user=user, type="admin", email=request.data['email'])
+    # user = User.objects.get(username=request.data['email'])
+    # newProfile = Profile(user=user, type="admin", email=request.data['email'])
+    # newProfile.save()
+    # token, _ = Token.objects.get_or_create(user=user)
+    # return Response({'status': 200, 'payload': request.data, 'token': str(token)})
+    user = User.objects.get(username=serializer.data['username'])
+    userToSave = User.objects.get(username=serializer.data['email'])
+    newProfile = Profile(user=userToSave, type="admin",
+                         email=serializer.data['email'])
     newProfile.save()
     token, _ = Token.objects.get_or_create(user=user)
-    return Response({'status': 200, 'payload': request.data, 'token': str(token)})
+    return Response({'status': 200, 'payload': serializer.data, 'token': str(token)})
 
 
 @api_view(['POST'])
