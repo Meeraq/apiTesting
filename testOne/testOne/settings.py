@@ -92,11 +92,11 @@ WSGI_APPLICATION = 'testOne.wsgi.application'
 DATABASES = {
    'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'testone',
+        'NAME': 'meeraq',
         'USER': 'root',
-        'PASSWORD': 'password@mysql',
+        'PASSWORD': '',
         'HOST': 'localhost',
-        'PORT': '3306',
+        'PORT': '',
         'OPTIONS':{
             'init_command':"SET sql_mode='STRICT_TRANS_TABLES'"
         }
