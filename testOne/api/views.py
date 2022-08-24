@@ -17,6 +17,7 @@ from django.db.models import Q
 
 
 # sesame
+from sesame.utils import get_query_string, get_user
 # from sesame.utils import get_query_string, get_user
 
 
@@ -77,7 +78,7 @@ def addLearners(request):
     serializer = LearnerSerializer(data=request.data)
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data['email'], password=request.data['password'])
+            username=request.data['email'], password='Meeraq@123')
         newUser.save()
         userToSave = User.objects.get(username=request.data['email'])
         newProfile = Profile(user=userToSave, type="learner",
@@ -185,7 +186,7 @@ def addfaculty(request):
     serializer = FacultySerializer(data=request.data)
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data['email'], password=request.data['password'])
+            username=request.data['email'], password='Meeraq@123')
         newUser.save()
         userToSave = User.objects.get(username=request.data['email'])
         newProfile = Profile(user=userToSave, type="faculty",
@@ -388,43 +389,24 @@ def addSession(request):
     return Response({'status': 200, 'data': serializer.data})
 
 
-# @api_view(["POST"])
-# @permission_classes([AllowAny])
-# def login_user(request):
-#     email = request.data['email']
-#     password = request.data['password']
-#     try:
-#         Account = User.objects.get(email = email)
-#         userType = Profile.objects.get(email = email)
-#         if userType.type == 'coach':
-#             userProfile = Coach.objects.get(email = email)
-#         elif userType.type == 'learner':
-#             userProfile = Learners.objects.get(email = email)
-#         elif userType.type == 'faculty':
-#             userProfile = Faculty.objects.get(email = email)
-#         elif userType.type == 'admin':
-#             userProfile = User.objects.get(email = email)
-#     except BaseException as e:
-#         raise ValidationError({"400":f'{str(e)}'})
-#     if password == userProfile.password:
-#         token = Token.objects.get_or_create(user = Account)
-#     else:
-#         raise ValidationError({"message": "Incorrect Login credentials"})
-#     return Response({'status':'200','username':Account.username,'token':str(token[0]),'email':userProfile.email,'usertype':userType.type,"id":userProfile.id})
-
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login_user(request):
     username = request.data['username']
     password = request.data['password']
     user = authenticate(username=username, password=password)
-    # print(user.profile.id)
-    newUser = CoachSerializer(user)
-    # print(newUser.data)
-    # print(user.groups.all()[0])
+    if user.profile.type == 'coach':
+        userProfile = Coach.objects.get(id=user.profile.id)
+    elif user.profile.type == 'learner':
+        userProfile = Learners.objects.get(id=user.profile.id)
+    elif user.profile.type == 'faculty':
+        userProfile = Faculty.objects.get(id=user.profile.id)
+    elif user.profile.type == 'admin':
+        userProfile = User.objects.get(id=user.profile.id)
     if user is not None:
         token = Token.objects.get_or_create(user=user)
-        return Response({'status': 200, 'token': str(token[0])})
+        return Response({'status': '200', 'username': user.username, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+
     return Response(status=401)
 
 
@@ -433,7 +415,9 @@ def login_user(request):
 def registerUser(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        newUser = User.objects.create_user(
+            username=request.data['email'], email=request.data['email'], password=request.data['password'])
+        newUser.save()
     else:
         return Response(status='403')
     user = User.objects.get(username=serializer.data['username'])
