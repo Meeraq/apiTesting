@@ -5,6 +5,7 @@ urlpatterns = [
     path('', views.getCourses,name='get_course'),
     path('add-courses/', views.addCourses,name='add_course'),
     path('update-courses/<str:_id>/', views.updateCourses,name='update_course'),
+    path('course-category/', views.getCourseCategory),
     path('learners/', views.getLearners,name='get_learner'),
     path('add-learner/', views.addLearners,name='add_learner'),
     path('update-learner/<str:_id>/', views.updateLearners,name='update_learner'), 
@@ -20,11 +21,12 @@ urlpatterns = [
     path('avilable-slot/', views.getslot),
     path('add-slots/', views.addslot),
     path('add-time-day-slot/', views.addDayTimeslot),
-		path('confirm-day-time-slot/',views.confirmDayTimeSlot),
+	path('confirm-day-time-slot/',views.confirmDayTimeSlot),
     path('time-day-slot/', views.getDayTimeslot),
     path('update-time-day-slot/<str:_id>/', views.updateDayTimeslot,name='update_time_day_slot'),
     path('delete-time-day-slot/<str:_id>/', views.deleteDayTimeslot),
     path('learner-time-day-slot/', views.learnergetDayTimeslot),
+    path('delete-learner-time-day-slot/', views.LearnerdeleteDayTimeslot),
     path('update-learner-time-day-slot/<str:_id>/', views.updateLearnerDayTimeslot,name='update_learner_time_day_slot'),
     path('add-learner-time-day-slot/', views.addLearnerDayTimeslot),
     path('session/', views.getSessions),
@@ -32,5 +34,17 @@ urlpatterns = [
     path('login/', views.login_user),
     path('register/', views.registerUser),
     path('add-user-type/', views.addProfileType),
+    path('user-type/', views.getProfile),
+    
+    path('get-available-learner-slots', views.getAvailableSlots), 
+    path('pick-learner-slot', views.pickLearnerSlot),
+    path('get-learner-slot/', views.getLearnerSlot),
+
+		path('time-table',views.getCoachCoacheeSessions),
+    
+		# sesame link
+    path("login-learner/", views.loginLearner, name="email_login"),
+		path("trial/",views.trialLogin,name="trial")
+    
     # path('file-import/', ExportImportExcel.as_view()),
 ]
