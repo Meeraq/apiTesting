@@ -51,14 +51,14 @@ class CoachSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coach
         fields = ['name', 'email', 'phone', 'dob', 'gender', 'fee',
-                  'activeSince', 'isSlotBooked', 'isActive', 'password']
+                  'activeSince', 'isSlotBooked', 'isActive']
 
 
 class FacultySerializer(serializers.ModelSerializer):
     class Meta:
         model = Faculty
         fields = ['id', 'name', 'email', 'phone', 'dob', 'gender', 'fee',
-                  'activeSince', 'isActive', 'password']
+                  'activeSince', 'isActive']
 
 
 class SlotSerializer(serializers.ModelSerializer):
