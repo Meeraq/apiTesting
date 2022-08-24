@@ -420,7 +420,7 @@ def registerUser(request):
         newUser.save()
     else:
         return Response(status='403')
-    user = User.objects.get(username=serializer.data['username'])
+    user = User.objects.get(username=serializer.data['email'])
     userToSave = User.objects.get(username=serializer.data['email'])
     newProfile = Profile(user=userToSave, type="admin",
                          email=serializer.data['email'])
