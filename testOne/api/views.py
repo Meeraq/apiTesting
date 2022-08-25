@@ -1,3 +1,4 @@
+import email
 from urllib import response
 from django.forms import ValidationError
 from rest_framework.response import Response
@@ -78,7 +79,7 @@ def addLearners(request):
     serializer = LearnerSerializer(data=request.data)
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data['email'], password='Meeraq@123')
+            username=request.data['email'], password='Meeraq@123',email = request.data['email'])
         newUser.save()
         userToSave = User.objects.get(username=request.data['email'])
         newProfile = Profile(user=userToSave, type="learner",
@@ -186,7 +187,7 @@ def addfaculty(request):
     serializer = FacultySerializer(data=request.data)
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data['email'], password='Meeraq@123')
+            username=request.data['email'], password='Meeraq@123',email=request.data['email'])
         newUser.save()
         userToSave = User.objects.get(username=request.data['email'])
         newProfile = Profile(user=userToSave, type="faculty",
@@ -397,15 +398,17 @@ def login_user(request):
     user = authenticate(username=username, password=password)
 
     if user is not None:
+        token = Token.objects.get_or_create(user=user)
         if user.profile.type == 'coach':
             userProfile = Coach.objects.get(email=username)
         elif user.profile.type == 'learner':
             userProfile = Learners.objects.get(email=username)
+            serializer = LearnerSerializer(userProfile)
+            return JsonResponse({'status': '200', 'username': user.username,'userType': user.profile.type, 'token': str(token[0]), 'data': serializer.data })
         elif user.profile.type == 'faculty':
             userProfile = Faculty.objects.get(email=username)
         elif user.profile.type == 'admin':
             userProfile = User.objects.get(email=username)
-        token = Token.objects.get_or_create(user=user)
         return Response({'status': '200', 'username': user.username, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
     else:
         return Response({'status':"404",'reason':"No user found"})
