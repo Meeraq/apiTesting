@@ -366,8 +366,9 @@ def LearnerdeleteDayTimeslot(request, _id):
 
 # sessions
 
+
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def getSessions(request):
     session = Sessions.objects.all()
     serializer = SessionSerializer(session, many=True)
@@ -408,7 +409,7 @@ def login_user(request):
         token = Token.objects.get_or_create(user=user)
         return Response({'status': '200', 'username': user.username, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
     else:
-        return Response({'status':"404",'reason':"No user found"})
+        return Response({'reason':'No user Found'},status=404)
 
 
 @api_view(['POST'])
