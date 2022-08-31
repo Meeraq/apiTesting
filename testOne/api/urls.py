@@ -44,7 +44,10 @@ urlpatterns = [
     
 		# sesame link
     path("login-learner/", views.loginLearner, name="email_login"),
-		path("trial/",views.trialLogin,name="trial")
+		path("trial/",views.trialLogin,name="trial"),
+    path('make-request/',views.makeSlotRequest),
+    path('get-requested-slots/<str:_id>/',views.getSlotofRequest),
+    path('confirm-available-slots-by-coach/<str:coach_id>/<str:request_id>/',views.confirmAvailableSlotsByCoach)
     
     # path('file-import/', ExportImportExcel.as_view()),
 ]

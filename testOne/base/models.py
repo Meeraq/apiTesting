@@ -180,3 +180,46 @@ class Sessions(models.Model):
 # # import sheet
 # class ExcelFileUpload(models.Model):
 #     excel_file_upload = models.FileField(upload_to="excel")
+
+
+
+
+
+
+
+
+
+# New coach model 
+
+
+
+class AdminRequest(models.Model):
+    coach = models.ManyToManyField(Coach)
+
+
+class SlotForCoach(models.Model):
+    start_time = models.CharField(blank=True, max_length=2000, default="null")
+    end_time = models.CharField(blank=True, max_length=2000, default="null")
+    date = models.DateField()
+    request = models.ForeignKey(AdminRequest, null=True, on_delete=models.SET_NULL)
+
+
+
+
+class ConfirmedSlotsbyCoach(models.Model):
+    coach_id = models.CharField( max_length=200)
+    start_time = models.CharField(blank=True, max_length=2000, default="null")
+    end_time = models.CharField(blank=True, max_length=2000, default="null")
+    date = models.DateField()
+
+
+
+
+
+
+
+
+
+
+
+

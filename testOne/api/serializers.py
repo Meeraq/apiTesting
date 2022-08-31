@@ -4,6 +4,7 @@ from base.models import Courses, Learners, Batch, Coach, Faculty, Slot, DayTimeS
 from django.contrib.auth.models import User
 
 from base.models import CoachCoachySession
+from base.models import SlotForCoach
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -91,4 +92,10 @@ class LearnerSlotTimeDaySerializer(serializers.ModelSerializer):
 class SessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sessions
+        fields = '__all__'
+
+
+class SlotForCoachSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SlotForCoach
         fields = '__all__'

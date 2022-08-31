@@ -7,18 +7,26 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from base.models import Courses, Learners, Batch, Coach, Faculty, Slot, DayTimeSlot, LearnerdayTimeSlot, Sessions, Profile, CoachCoachySession, CourseCategorys
+from base.models import Courses, Learners, Batch, Coach,AdminRequest, Faculty, Slot, DayTimeSlot, LearnerdayTimeSlot, Sessions, Profile, CoachCoachySession, CourseCategorys
 # from base.models import ExcelFileUpload
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from .serializers import CoachCoachySessionSerializer, CourseSerializer, LearnerSerializer, BatchSerializer, CoachSerializer, FacultySerializer, SlotSerializer, SlotTimeDaySerializer, LearnerSlotTimeDaySerializer, SessionSerializer, UserSerializer, ProfileSerializer, CourseCategorySerializer
+
+from base.models import SlotForCoach
+from base.models import ConfirmedSlotsbyCoach
+from .serializers import CoachCoachySessionSerializer, CourseSerializer, LearnerSerializer, BatchSerializer, CoachSerializer, FacultySerializer, SlotForCoachSerializer, SlotSerializer, SlotTimeDaySerializer, LearnerSlotTimeDaySerializer, SessionSerializer, UserSerializer, ProfileSerializer, CourseCategorySerializer
 from django.db.models import Q
 
 
 # sesame
 from sesame.utils import get_query_string, get_user
+
 # from sesame.utils import get_query_string, get_user
+
+# flattening array 
+from functools import reduce
+from operator import concat
 
 
 # courses api functions
@@ -540,3 +548,94 @@ def trialLogin(request):
     serializer = UserSerializer(user)
     print(serializer.data)
     return Response({"message": "hello"})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def makeSlotRequest(request):  
+    adminRequest = AdminRequest()
+    adminRequest.save()
+    for coach in Coach.objects.all():
+        adminRequest.coach.add(coach)
+    for slot in request.data:
+        newSlot = SlotForCoach(
+            start_time=slot['start_time'],
+            end_time=slot['end_time'],
+            date=slot['date'],
+            request=adminRequest
+        )
+        newSlot.save()
+    return Response({'details':'success'},status=200)
+
+
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getSlotofRequest(request,_id):  
+    adminRequest = AdminRequest.objects.filter(coach__id=_id)
+    request_id = []
+    all_slots = []
+    for _request in adminRequest:
+        request_id.append(_request.id)
+        all_slots += (SlotForCoach.objects.filter(request=_request))
+    
+    serializers = SlotForCoachSerializer(all_slots, many=True)
+    return Response({'details':'success','slots': serializers.data,'requestId':request_id},status=200)
+
+
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def confirmAvailableSlotsByCoach(request,coach_id,request_id):  
+    coach=Coach.objects.get(id=coach_id)
+    adminRequest=AdminRequest.objects.get(id=request_id)
+    print(adminRequest)
+    adminRequest.coach.remove(coach)
+
+    for slot in request.data:
+        newSlot = ConfirmedSlotsbyCoach(
+            start_time=slot['start_time'],
+            end_time=slot['end_time'],
+            date=slot['date'],
+            coach_id=coach_id
+        )
+        newSlot.save()
+    return Response({'details':'success'},status=200)
+
+
