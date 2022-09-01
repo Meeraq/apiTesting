@@ -589,9 +589,10 @@ def trialLogin(request):
 def makeSlotRequest(request):  
     adminRequest = AdminRequest()
     adminRequest.save()
-    for coach in Coach.objects.all():
-        adminRequest.coach.add(coach)
-    for slot in request.data:
+    for coach in request.data['coach_id']:
+        single_coach = Coach.objects.get(id=coach)
+        adminRequest.coach.add(single_coach)
+    for slot in request.data['slots']:
         newSlot = SlotForCoach(
             start_time=slot['start_time'],
             end_time=slot['end_time'],

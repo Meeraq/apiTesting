@@ -1,8 +1,8 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import SlotForCoach,AdminRequest,Courses,Learners,Batch,CourseCategorys,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile
-# SessionOneStartEnd,SessionTwoStartEnd
+from .models import SlotForCoach,AdminRequest,Courses,Learners,Batch,CourseCategorys,Coach,Faculty,Slot,DayTimeSlot,LearnerdayTimeSlot,Sessions,Profile,ConfirmedSlotsbyCoach
+from import_export.admin import ImportExportMixin
 
 admin.site.register(Profile)
 admin.site.register(SlotForCoach)
@@ -17,5 +17,11 @@ admin.site.register(Slot)
 admin.site.register(DayTimeSlot)
 admin.site.register(LearnerdayTimeSlot)
 admin.site.register(Sessions)
-# admin.site.register(SessionOneStartEnd)
-# admin.site.register(SessionTwoStartEnd)
+
+
+
+class ExelExport(ImportExportMixin, admin.ModelAdmin):
+    list_display = ['start_time', 'end_time', 'date', 'coach_id']
+
+
+admin.site.register(ConfirmedSlotsbyCoach,ExelExport)
