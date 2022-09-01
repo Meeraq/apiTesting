@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
-from .views import *
+
+
 urlpatterns = [
     path('', views.getCourses,name='get_course'),
     path('add-courses/', views.addCourses,name='add_course'),
@@ -47,7 +48,7 @@ urlpatterns = [
 		path("trial/",views.trialLogin,name="trial"),
     path('make-request/',views.makeSlotRequest),
     path('get-requested-slots/<str:_id>/',views.getSlotofRequest),
-    path('confirm-available-slots-by-coach/<str:coach_id>/<str:request_id>/',views.confirmAvailableSlotsByCoach)
-    
+    path('confirm-available-slots-by-coach/<str:coach_id>/<str:request_id>/',views.confirmAvailableSlotsByCoach),
+    path('export-confirmed-slot-data/',views.export),
     # path('file-import/', ExportImportExcel.as_view()),
 ]

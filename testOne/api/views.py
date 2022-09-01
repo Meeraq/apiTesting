@@ -640,3 +640,20 @@ def confirmAvailableSlotsByCoach(request,coach_id,request_id):
     return Response({'details':'success'},status=200)
 
 
+
+
+
+
+# Create your views here.
+from django.http import HttpResponse
+from base.resources import ConfirmedSlotResource
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def export(request):
+    coach_slot_file = ConfirmedSlotResource()
+    dataset = coach_slot_file.export()
+    response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="persons.xls"'
+    return response
