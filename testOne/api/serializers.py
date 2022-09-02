@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 
 from base.models import CoachCoachySession
 from base.models import SlotForCoach
+from base.models import ConfirmedSlotsbyCoach
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -98,4 +99,9 @@ class SessionSerializer(serializers.ModelSerializer):
 class SlotForCoachSerializer(serializers.ModelSerializer):
     class Meta:
         model = SlotForCoach
+        fields = '__all__'
+
+class ConfirmedSlotsbyCoachSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConfirmedSlotsbyCoach
         fields = '__all__'

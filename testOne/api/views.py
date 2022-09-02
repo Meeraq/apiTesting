@@ -15,7 +15,7 @@ from rest_framework.authtoken.models import Token
 
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
-from .serializers import CoachCoachySessionSerializer, CourseSerializer, LearnerSerializer, BatchSerializer, CoachSerializer, FacultySerializer, SlotForCoachSerializer, SlotSerializer, SlotTimeDaySerializer, LearnerSlotTimeDaySerializer, SessionSerializer, UserSerializer, ProfileSerializer, CourseCategorySerializer
+from .serializers import CoachCoachySessionSerializer,ConfirmedSlotsbyCoachSerializer, CourseSerializer, LearnerSerializer, BatchSerializer, CoachSerializer, FacultySerializer, SlotForCoachSerializer, SlotSerializer, SlotTimeDaySerializer, LearnerSlotTimeDaySerializer, SessionSerializer, UserSerializer, ProfileSerializer, CourseCategorySerializer
 from django.db.models import Q
 
 
@@ -657,3 +657,21 @@ def export(request):
     response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename="persons.xls"'
     return response
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getConfirmedSlotsbyCoach(request, coach_id):
+    slot = ConfirmedSlotsbyCoach.objects.filter(coach_id = coach_id)
+    serializer = ConfirmedSlotsbyCoachSerializer(slot, many=True)
+    return Response({'details':'success','data':serializer.data},status=200)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def updateConfirmedSlots(request, coach_id):
+    slot = ConfirmedSlotsbyCoach.objects.filter(coach_id = coach_id).first()
+    serializer = ConfirmedSlotsbyCoachSerializer(instance=slot, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+    return Response({'details':'success','data':serializer.data},status=201)
