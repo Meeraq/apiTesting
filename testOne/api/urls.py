@@ -51,6 +51,7 @@ urlpatterns = [
     path('confirm-available-slots-by-coach/<str:coach_id>/<str:request_id>/',views.confirmAvailableSlotsByCoach),
     path('export-confirmed-slot-data/',views.export),
     path('get-confirmed-slots-by-coach/<str:coach_id>/',views.getConfirmedSlotsbyCoach),
-    path('edit-confirmed-slots/<str:coach_id>/',views.updateConfirmedSlots),
+    path('edit-confirmed-slots/<str:slot_id>/',views.updateConfirmedSlots),
+    path('delete-confirmed-slots-by-coach/<str:slot_id>/',views.deleteConfirmedSlotsbyCoach),
     # path('file-import/', ExportImportExcel.as_view()),
 ]

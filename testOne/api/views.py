@@ -669,9 +669,19 @@ def getConfirmedSlotsbyCoach(request, coach_id):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def updateConfirmedSlots(request, coach_id):
-    slot = ConfirmedSlotsbyCoach.objects.filter(coach_id = coach_id).first()
+def updateConfirmedSlots(request, slot_id):
+    slot = ConfirmedSlotsbyCoach.objects.filter(id = slot_id).first()
     serializer = ConfirmedSlotsbyCoachSerializer(instance=slot, data=request.data)
     if serializer.is_valid():
         serializer.save()
     return Response({'details':'success','data':serializer.data},status=201)
+
+
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def deleteConfirmedSlotsbyCoach(request,slot_id):
+    slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
+    slot.delete()
+
+    return Response({'status': 'success, Data deleted'},status=200)
