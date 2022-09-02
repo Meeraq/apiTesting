@@ -587,7 +587,7 @@ def trialLogin(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def makeSlotRequest(request):  
-    adminRequest = AdminRequest()
+    adminRequest = AdminRequest(name = request.data['request_name'])
     adminRequest.save()
     for coach in request.data['coach_id']:
         single_coach = Coach.objects.get(id=coach)
@@ -607,8 +607,8 @@ def makeSlotRequest(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def getSlotofRequest(request,_id):  
-    adminRequest = AdminRequest.objects.filter(coach__id=_id)
+def getSlotofRequest(request,coach_id):  
+    adminRequest = AdminRequest.objects.filter(coach__id=coach_id)
     request_id = []
     all_slots = []
     for _request in adminRequest:
@@ -624,19 +624,19 @@ def getSlotofRequest(request,_id):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def confirmAvailableSlotsByCoach(request,coach_id,request_id):  
-    coach=Coach.objects.get(id=coach_id)
-    adminRequest=AdminRequest.objects.get(id=request_id)
-    print(adminRequest)
-    adminRequest.coach.remove(coach)
-
     for slot in request.data:
+        print(slot)
         newSlot = ConfirmedSlotsbyCoach(
             start_time=slot['start_time'],
             end_time=slot['end_time'],
             date=slot['date'],
-            coach_id=coach_id
+            coach_id=coach_id,
+            request_ID = int(request_id)
         )
         newSlot.save()
+    coach=Coach.objects.get(id=coach_id)
+    adminRequest=AdminRequest.objects.get(id=request_id)
+    adminRequest.coach.remove(coach)
     return Response({'details':'success'},status=200)
 
 

@@ -195,6 +195,7 @@ class Sessions(models.Model):
 
 class AdminRequest(models.Model):
     coach = models.ManyToManyField(Coach)
+    name = models.CharField(blank=True,max_length=200,default='Request -')
 
 
 class SlotForCoach(models.Model):
@@ -211,6 +212,8 @@ class ConfirmedSlotsbyCoach(models.Model):
     start_time = models.CharField(blank=True, max_length=2000, default="null")
     end_time = models.CharField(blank=True, max_length=2000, default="null")
     date = models.DateField()
+    request_ID = models.CharField( max_length=200)
+
 
 
 
