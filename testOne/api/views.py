@@ -584,7 +584,7 @@ def trialLogin(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def makeSlotRequest(request):  
-    adminRequest = AdminRequest(name = request.data['request_name'])
+    adminRequest = AdminRequest(name = request.data['request_name'],expire_date=request.data['expiry_date'])
     adminRequest.save()
     for coach in request.data['coach_id']:
         single_coach = Coach.objects.get(id=coach)
