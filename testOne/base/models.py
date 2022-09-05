@@ -196,6 +196,8 @@ class Sessions(models.Model):
 class AdminRequest(models.Model):
     coach = models.ManyToManyField(Coach)
     name = models.CharField(blank=True,max_length=200,default='Request -')
+    isActive = models.BooleanField(default=True)
+    expire_date = models.DateField(default="2022-09-10")
 
 
 class SlotForCoach(models.Model):

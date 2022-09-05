@@ -1,8 +1,5 @@
-from urllib import response
-from django.forms import ValidationError
 from rest_framework.response import Response
-from django.http import JsonResponse
-# import pandas as pd
+from datetime import date
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
@@ -15,7 +12,7 @@ from rest_framework.authtoken.models import Token
 
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
-from .serializers import CoachCoachySessionSerializer,ConfirmedSlotsbyCoachSerializer, CourseSerializer, LearnerSerializer, BatchSerializer, CoachSerializer, FacultySerializer, SlotForCoachSerializer, SlotSerializer, SlotTimeDaySerializer, LearnerSlotTimeDaySerializer, SessionSerializer, UserSerializer, ProfileSerializer, CourseCategorySerializer
+from .serializers import AdminReqSerializer, CoachCoachySessionSerializer,ConfirmedSlotsbyCoachSerializer, CourseSerializer, LearnerSerializer, BatchSerializer, CoachSerializer, FacultySerializer, SlotForCoachSerializer, SlotSerializer, SlotTimeDaySerializer, LearnerSlotTimeDaySerializer, SessionSerializer, UserSerializer, ProfileSerializer, CourseCategorySerializer
 from django.db.models import Q
 
 
@@ -605,18 +602,37 @@ def makeSlotRequest(request):
 
 
 
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def getSlotofRequest(request,coach_id):  
+def getSlotofRequest(request,coach_id):
+    today = date.today()
     adminRequest = AdminRequest.objects.filter(coach__id=coach_id)
-    request_id = []
-    all_slots = []
     for _request in adminRequest:
-        request_id.append(_request.id)
-        all_slots += (SlotForCoach.objects.filter(request=_request))
-    
+        if today > _request.expire_date:
+            newData = {
+                'isActive':False,
+                'expire_date':_request.expire_date,
+                'name':_request.name,
+            }
+            newReq = AdminRequest.objects.filter(expire_date = _request.expire_date).first()
+            adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
+            if adminSerializer.is_valid():
+                adminSerializer.save()
+            else:
+                print(adminSerializer.errors)
+    request_id_name = {}
+    all_slots = []
+
+    for _request in adminRequest:
+        if _request.isActive == True:
+            request_id_name[_request.id] = _request.name
+            all_slots += (SlotForCoach.objects.filter(request=_request))
     serializers = SlotForCoachSerializer(all_slots, many=True)
-    return Response({'details':'success','slots': serializers.data,'requestId':request_id},status=200)
+
+    
+            
+    return Response({'details':'success','slots': serializers.data,'requests':request_id_name},status=200)
 
 
 
