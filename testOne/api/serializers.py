@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from base.models import CoachCoachySession
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
+from base.models import AdminRequest
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -105,3 +106,10 @@ class ConfirmedSlotsbyCoachSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConfirmedSlotsbyCoach
         fields = '__all__'
+
+
+
+class AdminReqSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdminRequest
+        fields = ['isActive','expire_date','name']
