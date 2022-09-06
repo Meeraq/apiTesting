@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path,include
 from . import views
 
 
@@ -54,4 +54,8 @@ urlpatterns = [
     path('edit-confirmed-slots/<str:slot_id>/',views.updateConfirmedSlots),
     path('delete-confirmed-slots-by-coach/<str:slot_id>/',views.deleteConfirmedSlotsbyCoach),
     # path('file-import/', ExportImportExcel.as_view()),
+
+
+
+    path('password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 ]
