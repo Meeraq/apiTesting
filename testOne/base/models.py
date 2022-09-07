@@ -184,20 +184,14 @@ class Sessions(models.Model):
 #     excel_file_upload = models.FileField(upload_to="excel")
 
 
-
-
-
-
-
-
-
-# New coach model 
-
+# New coach model
 
 
 class AdminRequest(models.Model):
-    coach = models.ManyToManyField(Coach)
-    name = models.CharField(blank=True,max_length=200,default='Request -')
+    assigned_coach = models.ManyToManyField(Coach, related_name='Coach')
+    confirmed_coach = models.ManyToManyField(
+        Coach, related_name='confirmed_coach',blank=True)
+    name = models.CharField(blank=True, max_length=200, default='Request -')
     isActive = models.BooleanField(default=True)
     expire_date = models.DateField(default="2022-09-10")
 
@@ -206,13 +200,12 @@ class SlotForCoach(models.Model):
     start_time = models.CharField(blank=True, max_length=2000, default="null")
     end_time = models.CharField(blank=True, max_length=2000, default="null")
     date = models.DateField()
-    request = models.ForeignKey(AdminRequest, null=True, on_delete=models.SET_NULL)
-
-
+    request = models.ForeignKey(
+        AdminRequest, null=True, on_delete=models.SET_NULL)
 
 
 class ConfirmedSlotsbyCoach(models.Model):
-    coach_id = models.CharField( max_length=200)
+    coach_id = models.CharField(max_length=200)
     start_time = models.CharField(blank=True, max_length=2000, default="null")
     end_time = models.CharField(blank=True, max_length=2000, default="null")
     date = models.DateField()
