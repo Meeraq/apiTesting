@@ -15,6 +15,9 @@ from base.models import ConfirmedSlotsbyCoach
 from .serializers import AdminReqSerializer, CoachCoachySessionSerializer,ConfirmedSlotsbyCoachSerializer, CourseSerializer, LearnerSerializer, BatchSerializer, CoachSerializer, FacultySerializer, SlotForCoachSerializer, SlotSerializer, SlotTimeDaySerializer, LearnerSlotTimeDaySerializer, SessionSerializer, UserSerializer, ProfileSerializer, CourseCategorySerializer
 from django.db.models import Q
 
+from django.core.mail import EmailMessage
+
+
 
 # sesame
 from sesame.utils import get_query_string, get_user
@@ -625,6 +628,7 @@ def getSlotofRequest(request,coach_id):
     all_slots = []
 
     for _request in adminRequest:
+        print(_request.coach)
         if _request.isActive == True:
             request_id_name[_request.id] = _request.name
             all_slots += (SlotForCoach.objects.filter(request=_request))
@@ -701,3 +705,17 @@ def deleteConfirmedSlotsbyCoach(request,slot_id):
     slot.delete()
 
     return Response({'status': 'success, Data deleted'},status=200)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def sendMail(request):
+    print('send mail')
+    email = EmailMessage(
+        'Title',
+        (),
+        'wadhwanip38@gmail.com',
+        ['pankaj@meeraq.com']
+    )
+    email.send()
+    return Response({'message':"success"})
