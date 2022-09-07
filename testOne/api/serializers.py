@@ -113,3 +113,9 @@ class AdminReqSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdminRequest
         fields = ['isActive','expire_date','name']
+
+
+class GetAdminReqSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdminRequest
+        fields = '__all__'

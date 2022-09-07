@@ -1,10 +1,12 @@
+from base.resources import ConfirmedSlotResource
+from django.http import HttpResponse
 from rest_framework.response import Response
 from datetime import date
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from base.models import Courses, Learners, Batch, Coach,AdminRequest, Faculty, Slot, DayTimeSlot, LearnerdayTimeSlot, Sessions, Profile, CoachCoachySession, CourseCategorys
+from base.models import Courses, Learners, Batch, Coach, AdminRequest, Faculty, Slot, DayTimeSlot, LearnerdayTimeSlot, Sessions, Profile, CoachCoachySession, CourseCategorys
 # from base.models import ExcelFileUpload
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -12,16 +14,16 @@ from rest_framework.authtoken.models import Token
 
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
-from .serializers import AdminReqSerializer, CoachCoachySessionSerializer,ConfirmedSlotsbyCoachSerializer, CourseSerializer, LearnerSerializer, BatchSerializer, CoachSerializer, FacultySerializer, SlotForCoachSerializer, SlotSerializer, SlotTimeDaySerializer, LearnerSlotTimeDaySerializer, SessionSerializer, UserSerializer, ProfileSerializer, CourseCategorySerializer
+from .serializers import AdminReqSerializer, CoachCoachySessionSerializer, ConfirmedSlotsbyCoachSerializer, CourseSerializer, GetAdminReqSerializer, LearnerSerializer, BatchSerializer, CoachSerializer, FacultySerializer, SlotForCoachSerializer, SlotSerializer, SlotTimeDaySerializer, LearnerSlotTimeDaySerializer, SessionSerializer, UserSerializer, ProfileSerializer, CourseCategorySerializer
 from django.db.models import Q
-
+from django.core.mail import send_mail
 
 # sesame
 from sesame.utils import get_query_string, get_user
 
 # from sesame.utils import get_query_string, get_user
 
-# flattening array 
+# flattening array
 from functools import reduce
 from operator import concat
 
@@ -414,7 +416,7 @@ def login_user(request):
         token = Token.objects.get_or_create(user=user)
         return Response({'status': '200', 'username': user.username, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
     else:
-        return Response({'reason':'No user Found'},status=404)
+        return Response({'reason': 'No user Found'}, status=404)
 
 
 @api_view(['POST'])
@@ -547,48 +549,15 @@ def trialLogin(request):
     return Response({"message": "hello"})
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def makeSlotRequest(request):  
-    adminRequest = AdminRequest(name = request.data['request_name'],expire_date=request.data['expiry_date'])
+def makeSlotRequest(request):
+    adminRequest = AdminRequest(
+        name=request.data['request_name'], expire_date=request.data['expiry_date'])
     adminRequest.save()
     for coach in request.data['coach_id']:
         single_coach = Coach.objects.get(id=coach)
-        adminRequest.coach.add(single_coach)
+        adminRequest.assigned_coach.add(single_coach)
     for slot in request.data['slots']:
         newSlot = SlotForCoach(
             start_time=slot['start_time'],
@@ -597,25 +566,40 @@ def makeSlotRequest(request):
             request=adminRequest
         )
         newSlot.save()
-    return Response({'details':'success'},status=200)
-
-
-
+    return Response({'details': 'success'}, status=200)
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def getSlotofRequest(request,coach_id):
+def getAdminRequestData(request):
+    req = AdminRequest.objects.all()
+    serilizedData = GetAdminReqSerializer(req, many=True)
+    return Response({'details': 'success', 'Data': serilizedData.data}, status=200)
+
+
+def checkIfCoachExistsInQuerySet(querySet, id):
+    for coach in querySet:
+        if (int(coach.id) == int(id)):
+            return True
+    return False
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getSlotofRequest(request, coach_id, type):
     today = date.today()
-    adminRequest = AdminRequest.objects.filter(coach__id=coach_id)
+    adminRequest = AdminRequest.objects.filter(assigned_coach__id=coach_id)
+
+    # killing the request by changing isActive field
     for _request in adminRequest:
         if today > _request.expire_date:
             newData = {
-                'isActive':False,
-                'expire_date':_request.expire_date,
-                'name':_request.name,
+                'isActive': False,
+                'expire_date': _request.expire_date,
+                'name': _request.name,
             }
-            newReq = AdminRequest.objects.filter(expire_date = _request.expire_date).first()
+            newReq = AdminRequest.objects.filter(
+                expire_date=_request.expire_date).first()
             adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
             if adminSerializer.is_valid():
                 adminSerializer.save()
@@ -625,21 +609,31 @@ def getSlotofRequest(request,coach_id):
     all_slots = []
 
     for _request in adminRequest:
-        if _request.isActive == True:
-            request_id_name[_request.id] = _request.name
-            all_slots += (SlotForCoach.objects.filter(request=_request))
+        confirmedCoaches = _request.confirmed_coach.all()
+        if type == 'NEW':
+            if _request.isActive == True & (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
+                request_id_name[_request.id] = _request.name
+                all_slots += (SlotForCoach.objects.filter(request=_request))
+        if type == "ACTIVE":
+            if _request.isActive == True & checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
+                request_id_name[_request.id] = _request.name
+                all_slots += (SlotForCoach.objects.filter(request=_request))
+        if type == "PASSED":
+            if _request.isActive == False & checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
+                request_id_name[_request.id] = _request.name
+                all_slots += (SlotForCoach.objects.filter(request=_request))
+        if type == "MISSED":
+            if _request.isActive == False & (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
+                request_id_name[_request.id] = _request.name
+                all_slots += (SlotForCoach.objects.filter(request=_request))
+
     serializers = SlotForCoachSerializer(all_slots, many=True)
-
-    
-            
-    return Response({'details':'success','slots': serializers.data,'requests':request_id_name},status=200)
-
-
+    return Response({'details': 'success', 'slots': serializers.data, 'requests': request_id_name}, status=200)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def confirmAvailableSlotsByCoach(request,coach_id,request_id):  
+def confirmAvailableSlotsByCoach(request, coach_id, request_id):
     for slot in request.data:
         print(slot)
         newSlot = ConfirmedSlotsbyCoach(
@@ -647,22 +641,16 @@ def confirmAvailableSlotsByCoach(request,coach_id,request_id):
             end_time=slot['end_time'],
             date=slot['date'],
             coach_id=coach_id,
-            request_ID = int(request_id)
+            request_ID=int(request_id)
         )
         newSlot.save()
-    coach=Coach.objects.get(id=coach_id)
-    adminRequest=AdminRequest.objects.get(id=request_id)
-    adminRequest.coach.remove(coach)
-    return Response({'details':'success'},status=200)
-
-
-
-
+    coach = Coach.objects.get(id=coach_id)
+    adminRequest = AdminRequest.objects.get(id=request_id)
+    adminRequest.confirmed_coach.add(coach)
+    return Response({'details': 'success'}, status=200)
 
 
 # Create your views here.
-from django.http import HttpResponse
-from base.resources import ConfirmedSlotResource
 
 
 @api_view(['GET'])
@@ -670,7 +658,8 @@ from base.resources import ConfirmedSlotResource
 def export(request):
     coach_slot_file = ConfirmedSlotResource()
     dataset = coach_slot_file.export()
-    response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
+    response = HttpResponse(
+        dataset.xls, content_type='application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename="persons.xls"'
     return response
 
@@ -678,26 +667,39 @@ def export(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def getConfirmedSlotsbyCoach(request, coach_id):
-    slot = ConfirmedSlotsbyCoach.objects.filter(coach_id = coach_id)
+    slot = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach_id)
     serializer = ConfirmedSlotsbyCoachSerializer(slot, many=True)
-    return Response({'details':'success','data':serializer.data},status=200)
+    return Response({'details': 'success', 'data': serializer.data}, status=200)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def updateConfirmedSlots(request, slot_id):
-    slot = ConfirmedSlotsbyCoach.objects.filter(id = slot_id).first()
-    serializer = ConfirmedSlotsbyCoachSerializer(instance=slot, data=request.data)
+    slot = ConfirmedSlotsbyCoach.objects.filter(id=slot_id).first()
+    serializer = ConfirmedSlotsbyCoachSerializer(
+        instance=slot, data=request.data)
     if serializer.is_valid():
         serializer.save()
-    return Response({'details':'success','data':serializer.data},status=201)
-
+    return Response({'details': 'success', 'data': serializer.data}, status=201)
 
 
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
-def deleteConfirmedSlotsbyCoach(request,slot_id):
+def deleteConfirmedSlotsbyCoach(request, slot_id):
     slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
     slot.delete()
 
-    return Response({'status': 'success, Data deleted'},status=200)
+    return Response({'status': 'success, Data deleted'}, status=200)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def sendMail(request):
+    send_mail(
+        'Subject here',
+        'Here is the message.',
+        'wadhwanip38@gmail.com',
+        ['pankaj@meeraq.com'],
+        fail_silently=False,
+    )
+    return Response({'message': 'success'})
