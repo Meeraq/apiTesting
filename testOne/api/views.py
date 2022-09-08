@@ -131,7 +131,7 @@ def addBatches(request):
     if serializer.is_valid():
         serializer.save()
     return Response(serializer.data)
-
+ 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -558,10 +558,6 @@ def trialLogin(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-
-def makeSlotRequest(request):  
-    adminRequest = AdminRequest(name = request.data['request_name'],expire_date=request.data['expiry_date'])
-
 def makeSlotRequest(request):
     adminRequest = AdminRequest(
         name=request.data['request_name'], expire_date=request.data['expiry_date'])
@@ -620,24 +616,23 @@ def getSlotofRequest(request, coach_id, type):
     all_slots = []
 
     for _request in adminRequest:
-        confirmedCoaches = _request.confirmed_coach.all()
+        confirmedCoaches = _request.confirmed_coach.all() 
         if type == 'NEW':
-            if _request.isActive == True & (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
+            if _request.isActive == True and (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
                 request_id_name[_request.id] = _request.name
                 all_slots += (SlotForCoach.objects.filter(request=_request))
         if type == "ACTIVE":
-            if _request.isActive == True & checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
+            if _request.isActive == True and checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
                 request_id_name[_request.id] = _request.name
                 all_slots += (SlotForCoach.objects.filter(request=_request))
-        if type == "PASSED":
-            if _request.isActive == False & checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
+        if type == "PAST":
+            if _request.isActive == False and checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
                 request_id_name[_request.id] = _request.name
                 all_slots += (SlotForCoach.objects.filter(request=_request))
         if type == "MISSED":
-            if _request.isActive == False & (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
+            if _request.isActive == False and (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
                 request_id_name[_request.id] = _request.name
                 all_slots += (SlotForCoach.objects.filter(request=_request))
-
 
     serializers = SlotForCoachSerializer(all_slots, many=True)
     return Response({'details': 'success', 'slots': serializers.data, 'requests': request_id_name}, status=200)
