@@ -18,13 +18,6 @@ from .serializers import AdminReqSerializer, CoachCoachySessionSerializer, Confi
 from django.db.models import Q
 
 
-from django.core.mail import EmailMessage
-
-
-
-from django.core.mail import send_mail
-
-
 # sesame
 from sesame.utils import get_query_string, get_user
 
@@ -696,4 +689,7 @@ def deleteConfirmedSlotsbyCoach(request, slot_id):
     slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
     slot.delete()
     return Response({'status': 'success, Data deleted'},status=200)
+
+
+
 

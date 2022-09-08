@@ -216,14 +216,6 @@ class ConfirmedSlotsbyCoach(models.Model):
 
 
 
-from customerio import APIClient, SendEmailRequest, CustomerIOException
-
-
-
-api = APIClient("56b4303644157c0d06662a02ca04e371")
-
-
-
 
 
 @receiver(reset_password_token_created)
@@ -231,29 +223,16 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
 
     email_plaintext_message = "{}?token={}".format(reverse('password_reset:reset-password-request'), reset_password_token.key)
 
-
-    request = SendEmailRequest(
-        to="nishant88tiwari@gmail.com",
-        transactional_message_id="3",
-        identifiers={
-            "id": "2"
-                },
-        _from="sonia@meeraq.com",
-        subject="reset password",
-        body=email_plaintext_message
-)
-
-    api.send_email(request)
-    # send_mail(
-    #     # title:
-    #     "Password Reset for {title}".format(title="Meeraq"),
-    #     # message:
-    #     email_plaintext_message,
-    #     # from:
-    #     "noreply@somehost.local",
-    #     # to:
-    #     [reset_password_token.user.email]
-    # )
+    send_mail(
+        # title:
+        "Password Reset for {title}".format(title="Some website title"),
+        # message:
+        email_plaintext_message,
+        # from:0
+        "info@meeraq.com",
+        # to:
+        [reset_password_token.user.email]
+    )
 
 
 

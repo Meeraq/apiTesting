@@ -61,7 +61,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'testOne.urls'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django_ses.SESBackend'
+
+AWS_ACCESS_KEY_ID = 'AKIAVKI2ZWHZXXSQWPXB'
+AWS_SECRET_ACCESS_KEY = 'BA8IH/dImnaypwgD3Qj4SnBbS6thnnLs0oIN6gG6IK3w'
+
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
