@@ -611,19 +611,19 @@ def getSlotofRequest(request, coach_id, type):
     for _request in adminRequest:
         confirmedCoaches = _request.confirmed_coach.all()
         if type == 'NEW':
-            if _request.isActive == True & (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
+            if _request.isActive == True and (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
                 request_id_name[_request.id] = _request.name
                 all_slots += (SlotForCoach.objects.filter(request=_request))
         if type == "ACTIVE":
-            if _request.isActive == True & checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
+            if _request.isActive == True and checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
                 request_id_name[_request.id] = _request.name
                 all_slots += (SlotForCoach.objects.filter(request=_request))
-        if type == "PASSED":
-            if _request.isActive == False & checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
+        if type == "PAST":
+            if _request.isActive == False and checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
                 request_id_name[_request.id] = _request.name
                 all_slots += (SlotForCoach.objects.filter(request=_request))
         if type == "MISSED":
-            if _request.isActive == False & (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
+            if _request.isActive == False and (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
                 request_id_name[_request.id] = _request.name
                 all_slots += (SlotForCoach.objects.filter(request=_request))
 
@@ -658,6 +658,9 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
 def export(request):
     coach_slot_file = ConfirmedSlotResource()
     dataset = coach_slot_file.export()
+    print(type(dataset))
+    for data in dataset:
+      print(data)
     response = HttpResponse(
         dataset.xls, content_type='application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename="persons.xls"'
