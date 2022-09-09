@@ -65,14 +65,14 @@ class Coach(models.Model):
     user = models.OneToOneField(Profile, on_delete=models.CASCADE, blank=True)
     name = models.CharField(max_length=200)
     email = models.CharField(max_length=200)
-    phone = models.CharField(max_length=2000)
+    phone = models.CharField(max_length=200)
     dob = models.DateField(blank=True, default="2000-01-01")
     gender = models.CharField(max_length=200, blank=True, default="NA")
     fee = models.IntegerField(blank=True, default="0")
     activeSince = models.DateField(blank=True, default="2000-01-01")
     isSlotBooked = models.BooleanField(default=False, blank=True)
     isActive = models.BooleanField(default=False, blank=True)
-    password = models.CharField(max_length=50, default='Nish@@nt111')
+    meet_link = models.CharField(max_length=500, default='')
 
     def __str__(self):
         return self.name
@@ -84,7 +84,7 @@ class Faculty(models.Model):
     user = models.OneToOneField(Profile, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     email = models.CharField(max_length=200)
-    phone = models.CharField(max_length=2000)
+    phone = models.CharField(max_length=200)
     dob = models.DateField(blank=True, default="2000-01-01")
     gender = models.CharField(max_length=200, blank=True)
     fee = models.IntegerField(blank=True, default="6000")
@@ -138,9 +138,9 @@ class DayTimeSlot(models.Model):
 
     coach = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
     day = models.CharField(
-        max_length=2000, choices=days_choice, default='sunday')
+        max_length=200, choices=days_choice, default='sunday')
     start_time_id = models.CharField(
-        blank=True, max_length=2000, default="null")
+        blank=True, max_length=200, default="null")
     end_time_id = models.CharField(blank=True, max_length=2000, default="null")
     week_id = models.CharField(max_length=200, default="1")
     isActive = models.BooleanField(default=True)
@@ -197,8 +197,8 @@ class AdminRequest(models.Model):
 
 
 class SlotForCoach(models.Model):
-    start_time = models.CharField(blank=True, max_length=2000, default="null")
-    end_time = models.CharField(blank=True, max_length=2000, default="null")
+    start_time = models.CharField(blank=True, max_length=200, default="null")
+    end_time = models.CharField(blank=True, max_length=200, default="null")
     date = models.DateField()
     request = models.ForeignKey(
         AdminRequest, null=True, on_delete=models.SET_NULL)
@@ -206,15 +206,17 @@ class SlotForCoach(models.Model):
 
 class ConfirmedSlotsbyCoach(models.Model):
     coach_id = models.CharField(max_length=200)
-    start_time = models.CharField(blank=True, max_length=2000, default="null")
-    end_time = models.CharField(blank=True, max_length=2000, default="null")
+    start_time = models.CharField(blank=True, max_length=200, default="null")
+    end_time = models.CharField(blank=True, max_length=200, default="null")
     date = models.DateField()
     request_ID = models.CharField( max_length=200)
-    SESSION_START_TIME = models.CharField(blank=True, max_length=2000, default="null")
-    SESSION_END_TIME = models.CharField(blank=True, max_length=2000, default="null")
-    SESSION_DATE = models.CharField(blank=True, max_length=2000, default="null")
-    COACH_NAME = models.CharField(blank=True, max_length=2000, default="null")
-    DESCRIPTION = models.CharField(blank=True, max_length=2000, default="null")
+    SESSION_START_TIME = models.CharField(blank=True, max_length=200, default="null")
+    SESSION_END_TIME = models.CharField(blank=True, max_length=200, default="null")
+    SESSION_DATE = models.CharField(blank=True, max_length=200, default="null")
+    COACH_NAME = models.CharField(blank=True, max_length=200, default="null")
+    DESCRIPTION = models.CharField(blank=True, max_length=200, default="null")
+    CC = models.CharField(blank=True, max_length=200, default="null")
+    MEETING_LINK = models.CharField(blank=True, max_length=200, default=" ")
 
  
 

@@ -571,7 +571,25 @@ def makeSlotRequest(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def getAdminRequestData(request):
+def getAdminRequestData(request,coach_id):
+    today = date.today()
+    adminRequest = AdminRequest.objects.all()
+
+    # killing the request by changing isActive field
+    for _request in adminRequest:
+        if today > _request.expire_date:
+            newData = {
+                'isActive': False,
+                'expire_date': _request.expire_date,
+                'name': _request.name,
+            }
+            newReq = AdminRequest.objects.filter(
+                expire_date=_request.expire_date).first()
+            adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
+            if adminSerializer.is_valid():
+                adminSerializer.save()
+            else:
+                print(adminSerializer.errors)
     req = AdminRequest.objects.all()
     serilizedData = GetAdminReqSerializer(req, many=True)
     return Response({'details': 'success', 'Data': serilizedData.data}, status=200)
@@ -650,8 +668,9 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
             SESSION_END_TIME=datetime.fromtimestamp(end_timestamp).strftime('%I:%M %p'),
             SESSION_DATE=datetime.fromtimestamp(int(start_timestamp)).strftime('%d %B %Y'),
             COACH_NAME = Coach.objects.get(id = coach_id).name,
-            DESCRIPTION = AdminRequest.objects.get(id = request_id).name
-
+            DESCRIPTION = AdminRequest.objects.get(id = request_id).name,
+            CC = Coach.objects.get(id = coach_id).email,
+            MEETING_LINK = Coach.objects.get(id = coach_id).meet_link
         )
         newSlot.save()
     coach = Coach.objects.get(id=coach_id)
@@ -665,9 +684,9 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def export(request):
+def export(request,request_id):
     coach_slot_file = ConfirmedSlotResource()
-    dataset = coach_slot_file.export()
+    dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
     response = HttpResponse(
         dataset.xls, content_type='application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename="persons.xls"'
@@ -702,10 +721,12 @@ def updateConfirmedSlots(request, slot_id):
 
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
-def deleteConfirmedSlotsbyCoach(request, slot_id):
+def deleteConfirmedSlotsbyCoach(request,coach_id,slot_id):
     slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
     slot.delete()
-    return Response({'status': 'success, Data deleted'},status=200)
+    all_slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach_id)
+    serializer = ConfirmedSlotsbyCoachSerializer(all_slots,many = True)
+    return Response({'status': 'success, Data deleted','data':serializer.data},status=200)
 
 
 
