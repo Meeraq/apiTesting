@@ -56,6 +56,8 @@ urlpatterns = [
     path('export-confirmed-slot-data/', views.export),
     path('get-confirmed-slots-by-coach/<str:coach_id>/',
          views.getConfirmedSlotsbyCoach),
+    path('get-confirmed-slots-by-request/<str:req_id>/',
+         views.getConfirmedSlotsbyRequestID),
     path('edit-confirmed-slots/<str:slot_id>/', views.updateConfirmedSlots),
     path('delete-confirmed-slots-by-coach/<str:slot_id>/',
          views.deleteConfirmedSlotsbyCoach),

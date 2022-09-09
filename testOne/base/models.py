@@ -210,8 +210,13 @@ class ConfirmedSlotsbyCoach(models.Model):
     end_time = models.CharField(blank=True, max_length=2000, default="null")
     date = models.DateField()
     request_ID = models.CharField( max_length=200)
+    SESSION_START_TIME = models.CharField(blank=True, max_length=2000, default="null")
+    SESSION_END_TIME = models.CharField(blank=True, max_length=2000, default="null")
+    SESSION_DATE = models.CharField(blank=True, max_length=2000, default="null")
+    COACH_NAME = models.CharField(blank=True, max_length=2000, default="null")
+    DESCRIPTION = models.CharField(blank=True, max_length=2000, default="null")
 
-
+ 
 
 
 

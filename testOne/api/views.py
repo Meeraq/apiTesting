@@ -630,18 +630,28 @@ def getSlotofRequest(request, coach_id, type):
     serializers = SlotForCoachSerializer(all_slots, many=True)
     return Response({'details': 'success', 'slots': serializers.data, 'requests': request_id_name}, status=200)
 
+from datetime import datetime
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def confirmAvailableSlotsByCoach(request, coach_id, request_id):
     for slot in request.data:
-        print(slot)
+        start_timestamp = (int(slot['start_time'])/1000) + 19800
+        end_timestamp = (int(slot['end_time'])/1000) + 19800
+        print(type(start_timestamp))
+        print(datetime.fromtimestamp(start_timestamp).strftime('%I:%M %p'))
         newSlot = ConfirmedSlotsbyCoach(
             start_time=slot['start_time'],
             end_time=slot['end_time'],
             date=slot['date'],
             coach_id=coach_id,
-            request_ID=int(request_id)
+            request_ID=int(request_id),
+            SESSION_START_TIME=datetime.fromtimestamp(start_timestamp).strftime('%I:%M %p'),
+            SESSION_END_TIME=datetime.fromtimestamp(end_timestamp).strftime('%I:%M %p'),
+            SESSION_DATE=datetime.fromtimestamp(int(start_timestamp)).strftime('%d %B %Y'),
+            COACH_NAME = Coach.objects.get(id = coach_id).name,
+            DESCRIPTION = AdminRequest.objects.get(id = request_id).name
+
         )
         newSlot.save()
     coach = Coach.objects.get(id=coach_id)
@@ -668,6 +678,13 @@ def export(request):
 @permission_classes([AllowAny])
 def getConfirmedSlotsbyCoach(request, coach_id):
     slot = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach_id)
+    serializer = ConfirmedSlotsbyCoachSerializer(slot, many=True)
+    return Response({'details': 'success', 'data': serializer.data}, status=200)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getConfirmedSlotsbyRequestID(request, req_id):
+    slot = ConfirmedSlotsbyCoach.objects.filter(request_ID=req_id)
     serializer = ConfirmedSlotsbyCoachSerializer(slot, many=True)
     return Response({'details': 'success', 'data': serializer.data}, status=200)
 
