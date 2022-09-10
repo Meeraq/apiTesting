@@ -1,3 +1,5 @@
+from datetime import datetime
+import email
 from base.resources import ConfirmedSlotResource
 from django.http import HttpResponse
 from rest_framework.response import Response
@@ -124,7 +126,7 @@ def addBatches(request):
     if serializer.is_valid():
         serializer.save()
     return Response(serializer.data)
- 
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -403,7 +405,6 @@ def login_user(request):
     username = request.data['username']
     password = request.data['password']
     user = authenticate(username=username, password=password)
-
     if user is not None:
         if user.profile.type == 'coach':
             userProfile = Coach.objects.get(email=username)
@@ -416,7 +417,11 @@ def login_user(request):
         token = Token.objects.get_or_create(user=user)
         return Response({'status': '200', 'username': user.username, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
     else:
-        return Response({'reason': 'No user Found'}, status=404)
+        userFound = User.objects.filter(email=username)
+        if userFound.exists():
+            return Response({'reason': 'Invalid Password'}, status=401)
+        else:
+            return Response({'reason': 'No user found'}, status=404)
 
 
 @api_view(['POST'])
@@ -627,7 +632,7 @@ def getSlotofRequest(request, coach_id, type):
     all_slots = []
 
     for _request in adminRequest:
-        confirmedCoaches = _request.confirmed_coach.all() 
+        confirmedCoaches = _request.confirmed_coach.all()
         if type == 'NEW':
             if _request.isActive == True and (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
                 request_id_name[_request.id] = _request.name
@@ -648,7 +653,6 @@ def getSlotofRequest(request, coach_id, type):
     serializers = SlotForCoachSerializer(all_slots, many=True)
     return Response({'details': 'success', 'slots': serializers.data, 'requests': request_id_name}, status=200)
 
-from datetime import datetime
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -664,13 +668,16 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
             date=slot['date'],
             coach_id=coach_id,
             request_ID=int(request_id),
-            SESSION_START_TIME=datetime.fromtimestamp(start_timestamp).strftime('%I:%M %p'),
-            SESSION_END_TIME=datetime.fromtimestamp(end_timestamp).strftime('%I:%M %p'),
-            SESSION_DATE=datetime.fromtimestamp(int(start_timestamp)).strftime('%d %B %Y'),
-            COACH_NAME = Coach.objects.get(id = coach_id).name,
-            DESCRIPTION = AdminRequest.objects.get(id = request_id).name,
-            CC = Coach.objects.get(id = coach_id).email,
-            MEETING_LINK = Coach.objects.get(id = coach_id).meet_link
+            SESSION_START_TIME=datetime.fromtimestamp(
+                start_timestamp).strftime('%I:%M %p'),
+            SESSION_END_TIME=datetime.fromtimestamp(
+                end_timestamp).strftime('%I:%M %p'),
+            SESSION_DATE=datetime.fromtimestamp(
+                int(start_timestamp)).strftime('%d %B %Y'),
+            COACH_NAME=Coach.objects.get(id=coach_id).name,
+            DESCRIPTION=AdminRequest.objects.get(id=request_id).name,
+            CC=Coach.objects.get(id=coach_id).email,
+            MEETING_LINK=Coach.objects.get(id=coach_id).meet_link
         )
         newSlot.save()
     coach = Coach.objects.get(id=coach_id)
@@ -684,9 +691,10 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def export(request,request_id):
+def export(request, request_id):
     coach_slot_file = ConfirmedSlotResource()
-    dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
+    dataset = coach_slot_file.export(
+        ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
     response = HttpResponse(
         dataset.xls, content_type='application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename="persons.xls"'
@@ -699,6 +707,7 @@ def getConfirmedSlotsbyCoach(request, coach_id):
     slot = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach_id)
     serializer = ConfirmedSlotsbyCoachSerializer(slot, many=True)
     return Response({'details': 'success', 'data': serializer.data}, status=200)
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -721,13 +730,9 @@ def updateConfirmedSlots(request, slot_id):
 
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
-def deleteConfirmedSlotsbyCoach(request,coach_id,slot_id):
+def deleteConfirmedSlotsbyCoach(request, coach_id, slot_id):
     slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
     slot.delete()
     all_slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach_id)
-    serializer = ConfirmedSlotsbyCoachSerializer(all_slots,many = True)
-    return Response({'status': 'success, Data deleted','data':serializer.data},status=200)
-
-
-
-
+    serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
+    return Response({'status': 'success, Data deleted', 'data': serializer.data}, status=200)
