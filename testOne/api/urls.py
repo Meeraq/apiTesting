@@ -54,6 +54,7 @@ urlpatterns = [
     path('confirm-available-slots-by-coach/<str:coach_id>/<str:request_id>/',
          views.confirmAvailableSlotsByCoach),
     path('export-confirmed-slot-data/<str:request_id>/', views.export),
+    path('export-all-confirmed-slot-data/', views.export_all),
     path('get-confirmed-slots-by-coach/<str:coach_id>/',
          views.getConfirmedSlotsbyCoach),
     path('get-confirmed-slots-by-request/<str:req_id>/',

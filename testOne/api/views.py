@@ -689,8 +689,23 @@ def export(request,request_id):
     dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
     response = HttpResponse(
         dataset.xls, content_type='application/vnd.ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="persons.xls"'
+    response['Content-Disposition'] = 'attachment; filename="slots.xls"'
     return response
+
+from django.db.models.functions import TruncDate
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def export_all(request):
+    today = date.today()
+    coach_slot_file = ConfirmedSlotResource()
+    dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.all())
+    response = HttpResponse(
+        dataset.xls, content_type='application/vnd.ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="allslots.xls"'
+    return response
+
+
 
 
 @api_view(['GET'])
