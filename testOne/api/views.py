@@ -571,7 +571,7 @@ def makeSlotRequest(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def getAdminRequestData(request,coach_id):
+def getAdminRequestData(request):
     today = date.today()
     adminRequest = AdminRequest.objects.all()
 
