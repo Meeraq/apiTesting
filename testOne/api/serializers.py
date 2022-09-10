@@ -54,7 +54,7 @@ class CoachSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coach
         fields = ['id','name', 'email', 'phone', 'dob', 'gender', 'fee',
-                  'activeSince', 'isSlotBooked', 'isActive']
+                  'activeSince', 'isSlotBooked', 'isActive','meet_link']
 
 
 class FacultySerializer(serializers.ModelSerializer):
@@ -113,3 +113,9 @@ class AdminReqSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdminRequest
         fields = ['isActive','expire_date','name']
+
+
+class GetAdminReqSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdminRequest
+        fields = '__all__'

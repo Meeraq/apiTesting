@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework.authtoken',
 	'django_extensions',
-    'import_export'
+    'import_export',
+    'django_rest_passwordreset',
 ]
 
 MIDDLEWARE = [
@@ -60,11 +61,23 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'testOne.urls'
 
+
+# ses-smtp-user.20220908-111729
+# EMAIL_USE_TLS = True
+# EMAIL_HOST = 'localhost'
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = 'ses-smtp-user.20220908-111729'
+# EMAIL_HOST_PASSWORD = 'BA8IH/dImnaypwgD3Qj4SnBbS6thnnLs0oIN6gG6IK3w'
+# EMAIL_BACKEND = 'django_ses.SESBackend'
+# # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# AWS_ACCESS_KEY_ID = 'AKIAVKI2ZWHZQ7VR545S'
+# AWS_SECRET_ACCESS_KEY = '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'
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
+    'DEFAULT_PERMISSION_CLASSES': [ 
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
