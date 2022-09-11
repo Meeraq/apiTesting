@@ -1,3 +1,4 @@
+from django.db.models.functions import TruncDate
 from datetime import datetime
 import email
 from base.resources import ConfirmedSlotResource
@@ -415,7 +416,7 @@ def login_user(request):
         elif user.profile.type == 'admin':
             userProfile = User.objects.get(email=username)
         token = Token.objects.get_or_create(user=user)
-        return Response({'status': '200', 'username': user.username, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+        return Response({'status': '200', 'username': user.username, 'name': userProfile.name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
     else:
         userFound = User.objects.filter(email=username)
         if userFound.exists():
@@ -700,7 +701,6 @@ def export(request, request_id):
     response['Content-Disposition'] = 'attachment; filename="slots.xls"'
     return response
 
-from django.db.models.functions import TruncDate
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -712,8 +712,6 @@ def export_all(request):
         dataset.xls, content_type='application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename="allslots.xls"'
     return response
-
-
 
 
 @api_view(['GET'])
