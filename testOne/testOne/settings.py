@@ -176,4 +176,6 @@ LOGIN_REDIRECT_URL = "/admin/"
 
 SESAME_MAX_AGE = 300  # 300 seconds = 5 minutes
 
-
+# Celery settings
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"
