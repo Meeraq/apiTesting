@@ -218,7 +218,6 @@ class ConfirmedSlotsbyCoach(models.Model):
     CC = models.CharField(blank=True, max_length=200, default="null")
     MEETING_LINK = models.CharField(blank=True, max_length=200, default=" ")
 
- 
 
 
 
