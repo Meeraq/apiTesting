@@ -53,7 +53,7 @@ class BatchSerializer(serializers.ModelSerializer):
 class CoachSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coach
-        fields = ['id','name', 'email', 'phone', 'dob', 'gender', 'fee',
+        fields = ['id','first_name','middle_name','last_name', 'email', 'phone', 'dob', 'gender', 'fee',
                   'activeSince', 'isSlotBooked', 'isActive','meet_link']
 
 

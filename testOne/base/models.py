@@ -78,7 +78,7 @@ class Coach(models.Model):
     meet_link = models.CharField(max_length=500, default='')
 
     def __str__(self):
-        return self.name
+        return self.first_name
 
 
 # Faculty Modal
@@ -239,7 +239,7 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
         # message:
         email_plaintext_message,
         # from:0
-        "info@meeraq.com"
+        "info@info.meeraq.com"
         # to:
         [reset_password_token.user.email]
     )
