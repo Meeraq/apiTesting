@@ -679,7 +679,7 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
                 end_timestamp).strftime('%I:%M %p'),
             SESSION_DATE=datetime.fromtimestamp(
                 int(start_timestamp)).strftime('%d %B %Y'),
-            COACH_NAME=Coach.objects.get(id=coach_id).name,
+            COACH_NAME=Coach.objects.get(id=coach_id).first_name + Coach.objects.get(id=coach_id).middle_name + Coach.objects.get(id=coach_id).last_name,
             DESCRIPTION=AdminRequest.objects.get(id=request_id).name,
             CC=Coach.objects.get(id=coach_id).email,
             MEETING_LINK=Coach.objects.get(id=coach_id).meet_link
@@ -765,7 +765,9 @@ def updateMeetLinkByCoach(request, _id):
     user = User.objects.get(email = coach.email)
     newMeetLink = {
         'user':user,
-        'name':coach.name,
+        'first_name':coach.first_name,
+        'middle_name':coach.middle_name,
+        'last_name':coach.last_name,
         'email':coach.email,
         'phone':coach.phone,
         'dob':coach.dob,
