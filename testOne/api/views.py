@@ -409,14 +409,18 @@ def login_user(request):
     if user is not None:
         if user.profile.type == 'coach':
             userProfile = Coach.objects.get(email=username)
+            token = Token.objects.get_or_create(user=user)
+            return Response({'status': '200', 'username': user.username, 'name': userProfile.name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
         elif user.profile.type == 'learner':
             userProfile = Learners.objects.get(email=username)
         elif user.profile.type == 'faculty':
             userProfile = Faculty.objects.get(email=username)
         elif user.profile.type == 'admin':
             userProfile = User.objects.get(email=username)
-        token = Token.objects.get_or_create(user=user)
-        return Response({'status': '200', 'username': user.username, 'name': userProfile.name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+            token = Token.objects.get_or_create(user=user)
+            return Response({'status': '200', 'username': user.username, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+        # token = Token.objects.get_or_create(user=user)
+        # return Response({'status': '200', 'username': user.username, 'name': userProfile.name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
     else:
         userFound = User.objects.filter(email=username)
         if userFound.exists():
