@@ -63,6 +63,7 @@ urlpatterns = [
     path('delete-confirmed-slots-by-coach/<str:coach_id>/<str:slot_id>/',
          views.deleteConfirmedSlotsbyCoach),
     path('get-admin-request/', views.getAdminRequestData),
+    path('update-meetlink-by-coach/<str:_id>/',views.updateMeetLinkByCoach),
     # path('file-import/', ExportImportExcel.as_view()),
 
 

@@ -753,3 +753,32 @@ def deleteConfirmedSlotsbyCoach(request, coach_id, slot_id):
     all_slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach_id)
     serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
     return Response({'status': 'success, Data deleted', 'data': serializer.data}, status=200)
+
+
+
+# update meet link by coach
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def updateMeetLinkByCoach(request, _id):
+    coach = Coach.objects.get(id=_id)
+    user = User.objects.get(email = coach.email)
+    newMeetLink = {
+        'user':user,
+        'name':coach.name,
+        'email':coach.email,
+        'phone':coach.phone,
+        'dob':coach.dob,
+        'gender':coach.gender,
+        'fee':coach.fee,
+        'activeSince':coach.activeSince,
+        'isSlotBooked':coach.isSlotBooked,
+        'isActive':coach.isActive,
+        'meet_link':request.data['meet_link']
+    }
+    serializer = CoachSerializer(instance=coach, data=newMeetLink)
+    if serializer.is_valid():
+        serializer.save()
+    else:
+        print(serializer.errors)
+    return Response(serializer.data)
