@@ -62,7 +62,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'testOne.urls'
 
 
-# ses-smtp-user.20220908-111729
 # EMAIL_USE_TLS = True
 # EMAIL_HOST = 'localhost'
 # EMAIL_PORT = 587
