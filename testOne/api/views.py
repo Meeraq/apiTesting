@@ -410,7 +410,7 @@ def login_user(request):
         if user.profile.type == 'coach':
             userProfile = Coach.objects.get(email=username)
             token = Token.objects.get_or_create(user=user)
-            return Response({'status': '200', 'username': user.username, 'name': userProfile.name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+            return Response({'status': '200', 'username': user.username, 'first_name': userProfile.first_name,'middle_name': userProfile.middle_name,'last_name': userProfile.last_name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
         elif user.profile.type == 'learner':
             userProfile = Learners.objects.get(email=username)
         elif user.profile.type == 'faculty':
