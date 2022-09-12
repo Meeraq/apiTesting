@@ -62,7 +62,7 @@ class Batch(models.Model):
 
 # coach Modal
 
-class Coach(models.Model):
+class Coach(models.Model): 
     user = models.OneToOneField(Profile, on_delete=models.CASCADE, blank=True)
     first_name = models.CharField(max_length=200)
     middle_name = models.CharField(max_length=200,blank=True, default=" ")
@@ -239,7 +239,7 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
         # message:
         email_plaintext_message,
         # from:0
-        ""
+        "info@meeraq.com"
         # to:
         [reset_password_token.user.email]
     )

@@ -62,16 +62,15 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'testOne.urls'
 
 
-
+# ses-smtp-user.20220908-111729
 # EMAIL_USE_TLS = True
 # EMAIL_HOST = 'localhost'
 # EMAIL_PORT = 587
-# EMAIL_HOST_USER = ''
+
 # EMAIL_HOST_PASSWORD = 'BA8IH/dImnaypwgD3Qj4SnBbS6thnnLs0oIN6gG6IK3w'
 # EMAIL_BACKEND = 'django_ses.SESBackend'
 # # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# AWS_ACCESS_KEY_ID = ''
-# AWS_SECRET_ACCESS_KEY = ''
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -177,5 +176,5 @@ LOGIN_REDIRECT_URL = "/admin/"
 SESAME_MAX_AGE = 300  # 300 seconds = 5 minutes
 
 # Celery settings
-CELERY_BROKER_URL = "redis://localhost:6379"
-CELERY_RESULT_BACKEND = "redis://localhost:6379"
+# CELERY_BROKER_URL = "redis://localhost:6379"
+# CELERY_RESULT_BACKEND = "redis://localhost:6379"
