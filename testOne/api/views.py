@@ -1,7 +1,7 @@
 from django.db.models.functions import TruncDate
 from datetime import datetime
 import email
-from django.core.mail import send_mail 
+from django.core.mail import send_mail
 from base.resources import ConfirmedSlotResource
 from django.http import HttpResponse
 from rest_framework.response import Response
@@ -10,17 +10,16 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from base.models import Courses, Learners, Batch, Coach, AdminRequest, Faculty, Slot, DayTimeSlot, LearnerdayTimeSlot, Sessions, Profile, CoachCoachySession, CourseCategorys
-# from base.models import ExcelFileUpload
+from base.models import  Coach, AdminRequest,  Profile
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
-from .serializers import AdminReqSerializer, CoachCoachySessionSerializer, ConfirmedSlotsbyCoachSerializer, CourseSerializer, GetAdminReqSerializer, LearnerSerializer, BatchSerializer, CoachSerializer, FacultySerializer, SlotForCoachSerializer, SlotSerializer, SlotTimeDaySerializer, LearnerSlotTimeDaySerializer, SessionSerializer, UserSerializer, ProfileSerializer, CourseCategorySerializer
-from django.db.models import Q
+from .serializers import AdminReqSerializer, ConfirmedSlotsbyCoachSerializer,  GetAdminReqSerializer,  CoachSerializer,  SlotForCoachSerializer,   UserSerializer, ProfileSerializer
 
+from django.template.loader import render_to_string
 
 # sesame
 from sesame.utils import get_query_string, get_user
@@ -154,7 +153,8 @@ def getcoach(request):
 @permission_classes([AllowAny])
 def addcoach(request):
     serializer = CoachSerializer(data=request.data)
-    email_plaintext_message = 'Username : ' + request.data['email'] + ',' + 'Password : ' + request.data['password']
+    email_message = render_to_string("addcoachmail.html", {
+                                     'coach_name': request.data['first_name'], 'username': request.data['email'], 'password': request.data['password']})
     if serializer.is_valid():
         newUser = User.objects.create_user(
             username=request.data['email'], email=request.data['email'], password=request.data['password'])
@@ -165,15 +165,16 @@ def addcoach(request):
         newProfile.save()
         serializer.save(user_id=newProfile.id)
         send_mail(
-        # title:
-        "You are added as Coach in {title}".format(title="Meeraq"),
-        # message:
-        email_plaintext_message,
-        # from:0
-        "info@meeraq.com",
-        # to:
-        [request.data['email']]
-    )
+            # title:
+            "You are added as Coach in {title}".format(title="Meeraq"),
+            # message:
+            email_message,
+            # from:0
+            "info@meeraq.com",
+            # to:
+            [request.data['email']],
+            html_message=email_message
+        )
         for user in User.objects.all():
             token = Token.objects.get_or_create(user=user)
     else:
@@ -423,7 +424,7 @@ def login_user(request):
         if user.profile.type == 'coach':
             userProfile = Coach.objects.get(email=username)
             token = Token.objects.get_or_create(user=user)
-            return Response({'status': '200', 'username': user.username, 'first_name': userProfile.first_name,'middle_name': userProfile.middle_name,'last_name': userProfile.last_name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+            return Response({'status': '200', 'username': user.username, 'first_name': userProfile.first_name, 'middle_name': userProfile.middle_name, 'last_name': userProfile.last_name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
         elif user.profile.type == 'learner':
             userProfile = Learners.objects.get(email=username)
         elif user.profile.type == 'faculty':
@@ -571,32 +572,31 @@ def trialLogin(request):
     print(serializer.data)
     return Response({"message": "hello"})
 
+# from django.template.loader import get_template
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def makeSlotRequest(request):
-    email_plaintext_message = 'you received mail'
-
-
-
-
-
-
     adminRequest = AdminRequest(
         name=request.data['request_name'], expire_date=request.data['expiry_date'])
     adminRequest.save()
     for coach in request.data['coach_id']:
         single_coach = Coach.objects.get(id=coach)
+        email_message = render_to_string("makerequest.html", {
+                                         'expire_date': request.data['expiry_date'], 'coach_name': single_coach.first_name})
+
         send_mail(
-        # title:
-        "Slot Requested by {title}".format(title="Admin"),
-        # message:
-        email_plaintext_message,
-        # from:0
-        "info@meeraq.com",
-        # to:
-        [single_coach.email]
-    )
+            # title:
+            "Meeraq - Coaching Sessions Slot Requests",
+            # message:
+            email_message,
+            # from:0
+            "info@meeraq.com",
+            # to:
+            [single_coach.email],
+            html_message=email_message
+        )
         adminRequest.assigned_coach.add(single_coach)
     for slot in request.data['slots']:
         newSlot = SlotForCoach(
@@ -648,12 +648,6 @@ def deleteRequest(request, req_id):
     req.delete()
 
     return Response({'status': 'success, Data deleted'}, status=200)
-
-
-
-
-
-
 
 
 def checkIfCoachExistsInQuerySet(querySet, id):
@@ -730,7 +724,8 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
                 end_timestamp).strftime('%I:%M %p'),
             SESSION_DATE=datetime.fromtimestamp(
                 int(start_timestamp)).strftime('%d %B %Y'),
-            COACH_NAME=Coach.objects.get(id=coach_id).first_name + Coach.objects.get(id=coach_id).middle_name + Coach.objects.get(id=coach_id).last_name,
+            COACH_NAME=Coach.objects.get(id=coach_id).first_name + Coach.objects.get(
+                id=coach_id).middle_name + Coach.objects.get(id=coach_id).last_name,
             DESCRIPTION=AdminRequest.objects.get(id=request_id).name,
             CC=Coach.objects.get(id=coach_id).email,
             MEETING_LINK=Coach.objects.get(id=coach_id).meet_link
@@ -806,28 +801,27 @@ def deleteConfirmedSlotsbyCoach(request, coach_id, slot_id):
     return Response({'status': 'success, Data deleted', 'data': serializer.data}, status=200)
 
 
-
 # update meet link by coach
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def updateMeetLinkByCoach(request, _id):
     coach = Coach.objects.get(id=_id)
-    user = User.objects.get(email = coach.email)
+    user = User.objects.get(email=coach.email)
     newMeetLink = {
-        'user':user,
-        'first_name':coach.first_name,
-        'middle_name':coach.middle_name,
-        'last_name':coach.last_name,
-        'email':coach.email,
-        'phone':coach.phone,
-        'dob':coach.dob,
-        'gender':coach.gender,
-        'fee':coach.fee,
-        'activeSince':coach.activeSince,
-        'isSlotBooked':coach.isSlotBooked,
-        'isActive':coach.isActive,
-        'meet_link':request.data['meet_link']
+        'user': user,
+        'first_name': coach.first_name,
+        'middle_name': coach.middle_name,
+        'last_name': coach.last_name,
+        'email': coach.email,
+        'phone': coach.phone,
+        'dob': coach.dob,
+        'gender': coach.gender,
+        'fee': coach.fee,
+        'activeSince': coach.activeSince,
+        'isSlotBooked': coach.isSlotBooked,
+        'isActive': coach.isActive,
+        'meet_link': request.data['meet_link']
     }
     serializer = CoachSerializer(instance=coach, data=newMeetLink)
     if serializer.is_valid():

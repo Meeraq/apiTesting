@@ -6,6 +6,7 @@ from django.urls import reverse
 from django_rest_passwordreset.signals import reset_password_token_created
 from django.core.mail import send_mail 
 from .task import create_random_user_accounts
+from django.template.loader import render_to_string
 
 class Profile(models.Model):
     user_choice = [
@@ -23,41 +24,41 @@ class Profile(models.Model):
         return self.user.username
 
 
-class CourseCategorys(models.Model):
-    courseCategoryName = models.CharField(max_length=200)
+# class CourseCategorys(models.Model):
+#     courseCategoryName = models.CharField(max_length=200)
 
-    def __str__(self):
-        return self.courseCategoryName
+#     def __str__(self):
+#         return self.courseCategoryName
 
 
 # Courses Model
-class Courses(models.Model):
-    Name = models.CharField(max_length=200)
-    category = models.ForeignKey(
-        CourseCategorys, null=True, on_delete=models.SET_NULL)
-    created = models.DateTimeField(auto_now_add=True)
-    course_id = models.CharField(max_length=200, default='0000')
-    isActive = models.BooleanField(default=False)
+# class Courses(models.Model):
+#     Name = models.CharField(max_length=200)
+#     category = models.ForeignKey(
+#         CourseCategorys, null=True, on_delete=models.SET_NULL)
+#     created = models.DateTimeField(auto_now_add=True)
+#     course_id = models.CharField(max_length=200, default='0000')
+#     isActive = models.BooleanField(default=False)
 
-    def __str__(self):
-        return self.Name
+#     def __str__(self):
+#         return self.Name
 
 # batch Modal
 
 
-class Batch(models.Model):
-    StartDate = models.DateField(blank=True, default="2000-01-01")
-    Name = models.CharField(max_length=200)
-    Faculty = models.CharField(max_length=200)
-    Fees = models.CharField(max_length=200)
-    Frequency = models.CharField(max_length=200)
-    NoOfSessions = models.IntegerField()
-    course = models.ForeignKey(Courses, null=True, on_delete=models.SET_NULL)
-    isActive = models.BooleanField(default=False)
-    duration = models.IntegerField(default=30)
+# class Batch(models.Model):
+#     StartDate = models.DateField(blank=True, default="2000-01-01")
+#     Name = models.CharField(max_length=200)
+#     Faculty = models.CharField(max_length=200)
+#     Fees = models.CharField(max_length=200)
+#     Frequency = models.CharField(max_length=200)
+#     NoOfSessions = models.IntegerField()
+#     course = models.ForeignKey(Courses, null=True, on_delete=models.SET_NULL)
+#     isActive = models.BooleanField(default=False)
+#     duration = models.IntegerField(default=30)
 
-    def __str__(self):
-        return self.Name
+#     def __str__(self):
+#         return self.Name
 
 
 # coach Modal
@@ -81,105 +82,105 @@ class Coach(models.Model):
         return self.first_name
 
 
-# Faculty Modal
+# # Faculty Modal
 
-class Faculty(models.Model):
-    user = models.OneToOneField(Profile, on_delete=models.CASCADE)
-    name = models.CharField(max_length=200)
-    email = models.CharField(max_length=200)
-    phone = models.CharField(max_length=200)
-    dob = models.DateField(blank=True, default="2000-01-01")
-    gender = models.CharField(max_length=200, blank=True)
-    fee = models.IntegerField(blank=True, default="6000")
-    activeSince = models.DateField(blank=True, default="2000-01-01")
-    isActive = models.BooleanField(default=False, blank=True)
-    password = models.CharField(max_length=50, default='Nish@@nt111')
+# class Faculty(models.Model):
+#     user = models.OneToOneField(Profile, on_delete=models.CASCADE)
+#     name = models.CharField(max_length=200)
+#     email = models.CharField(max_length=200)
+#     phone = models.CharField(max_length=200)
+#     dob = models.DateField(blank=True, default="2000-01-01")
+#     gender = models.CharField(max_length=200, blank=True)
+#     fee = models.IntegerField(blank=True, default="6000")
+#     activeSince = models.DateField(blank=True, default="2000-01-01")
+#     isActive = models.BooleanField(default=False, blank=True)
+#     password = models.CharField(max_length=50, default='Nish@@nt111')
 
-    def __str__(self):
-        return self.name
-
-
-# Learner Modal
-
-class Learners(models.Model):
-    user = models.OneToOneField(Profile, on_delete=models.CASCADE)
-    name = models.CharField(max_length=200)
-    email = models.CharField(max_length=100)
-    phone = models.CharField(max_length=1000, default="7880647282")
-    company = models.CharField(max_length=100, blank=True, default="000")
-    industry = models.CharField(max_length=100, blank=True, default="000")
-    designation = models.CharField(max_length=100, blank=True, default="000")
-    dob = models.DateField(blank=True, default="2000-01-01")
-    gender = models.CharField(max_length=100, blank=True, default="male")
-    course = models.ForeignKey(Courses, null=True, on_delete=models.SET_NULL)
-    batch = models.ManyToManyField(Batch)
-    isActive = models.BooleanField(default=False)
-    password = models.CharField(max_length=50, default='Nish@@nt111')
-
-    def __str__(self):
-        return self.Name
-
-# slots modal
+#     def __str__(self):
+#         return self.name
 
 
-class Slot(models.Model):
-    duration = models.IntegerField()
-    date = models.DateField(blank=True, default="2000-01-01")
-    time = models.TimeField()
+# # Learner Modal
+
+# class Learners(models.Model):
+#     user = models.OneToOneField(Profile, on_delete=models.CASCADE)
+#     name = models.CharField(max_length=200)
+#     email = models.CharField(max_length=100)
+#     phone = models.CharField(max_length=1000, default="7880647282")
+#     company = models.CharField(max_length=100, blank=True, default="000")
+#     industry = models.CharField(max_length=100, blank=True, default="000")
+#     designation = models.CharField(max_length=100, blank=True, default="000")
+#     dob = models.DateField(blank=True, default="2000-01-01")
+#     gender = models.CharField(max_length=100, blank=True, default="male")
+#     course = models.ForeignKey(Courses, null=True, on_delete=models.SET_NULL)
+#     batch = models.ManyToManyField(Batch)
+#     isActive = models.BooleanField(default=False)
+#     password = models.CharField(max_length=50, default='Nish@@nt111')
+
+#     def __str__(self):
+#         return self.Name
+
+# # slots modal
 
 
-class DayTimeSlot(models.Model):
-    days_choice = [
-        ('sunday', 'sunday'),
-        ('monday', 'monday'),
-        ('tuesday', 'tuesday'),
-        ('wednesday', 'wednesday'),
-        ('thirsday', 'thirsday'),
-        ('friday', 'friday'),
-        ('saturday', 'saturday'),
-    ]
-
-    coach = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
-    day = models.CharField(
-        max_length=200, choices=days_choice, default='sunday')
-    start_time_id = models.CharField(
-        blank=True, max_length=200, default="null")
-    end_time_id = models.CharField(blank=True, max_length=2000, default="null")
-    week_id = models.CharField(max_length=200, default="1")
-    isActive = models.BooleanField(default=True)
-    isConfirmed = models.BooleanField(default=False)
-    session_id = models.CharField(max_length=200, default='null')
-    for_learners = models.BooleanField(default=False)
+# class Slot(models.Model):
+#     duration = models.IntegerField()
+#     date = models.DateField(blank=True, default="2000-01-01")
+#     time = models.TimeField()
 
 
-class LearnerdayTimeSlot(models.Model):
-    learner = models.ForeignKey(Learners, null=True, on_delete=models.SET_NULL)
-    course = models.ForeignKey(Courses, null=True, on_delete=models.SET_NULL)
-    slot = models.ForeignKey(DayTimeSlot, null=True, on_delete=models.SET_NULL)
-    coach = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
-    isActive = models.BooleanField(default=True)
-    isConfirmed = models.BooleanField(default=False)
-    day = models.CharField(max_length=200, default='sunday')
+# class DayTimeSlot(models.Model):
+#     days_choice = [
+#         ('sunday', 'sunday'),
+#         ('monday', 'monday'),
+#         ('tuesday', 'tuesday'),
+#         ('wednesday', 'wednesday'),
+#         ('thirsday', 'thirsday'),
+#         ('friday', 'friday'),
+#         ('saturday', 'saturday'),
+#     ]
+
+#     coach = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
+#     day = models.CharField(
+#         max_length=200, choices=days_choice, default='sunday')
+#     start_time_id = models.CharField(
+#         blank=True, max_length=200, default="null")
+#     end_time_id = models.CharField(blank=True, max_length=2000, default="null")
+#     week_id = models.CharField(max_length=200, default="1")
+#     isActive = models.BooleanField(default=True)
+#     isConfirmed = models.BooleanField(default=False)
+#     session_id = models.CharField(max_length=200, default='null')
+#     for_learners = models.BooleanField(default=False)
 
 
-class CoachCoachySession(models.Model):
-    learner = models.ForeignKey(Learners, null=True, on_delete=models.SET_NULL)
-    batch = models.ForeignKey(Batch, null=True, on_delete=models.SET_NULL)
-    slot = models.OneToOneField(
-        DayTimeSlot, null=True, on_delete=models.SET_NULL)
-    zoomID = models.CharField(max_length=200, default='null')
-    isConfirmedByCoach = models.BooleanField(default=False)
-    isConfirmedByLearner = models.BooleanField(default=False)
-    isActive = models.BooleanField(default=True)
-# sessions api
+# class LearnerdayTimeSlot(models.Model):
+#     learner = models.ForeignKey(Learners, null=True, on_delete=models.SET_NULL)
+#     course = models.ForeignKey(Courses, null=True, on_delete=models.SET_NULL)
+#     slot = models.ForeignKey(DayTimeSlot, null=True, on_delete=models.SET_NULL)
+#     coach = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
+#     isActive = models.BooleanField(default=True)
+#     isConfirmed = models.BooleanField(default=False)
+#     day = models.CharField(max_length=200, default='sunday')
 
 
-class Sessions(models.Model):
-    course = models.ForeignKey(Courses, null=True, on_delete=models.SET_NULL)
-    batch = models.ForeignKey(Batch, null=True, on_delete=models.SET_NULL)
-    sessionNumber = models.IntegerField(blank=True, default="1")
-    start_day = models.DateField(blank=True, default="2000-01-01")
-    end_day = models.DateField(blank=True, default="2000-01-01")
+# class CoachCoachySession(models.Model):
+#     learner = models.ForeignKey(Learners, null=True, on_delete=models.SET_NULL)
+#     batch = models.ForeignKey(Batch, null=True, on_delete=models.SET_NULL)
+#     slot = models.OneToOneField(
+#         DayTimeSlot, null=True, on_delete=models.SET_NULL)
+#     zoomID = models.CharField(max_length=200, default='null')
+#     isConfirmedByCoach = models.BooleanField(default=False)
+#     isConfirmedByLearner = models.BooleanField(default=False)
+#     isActive = models.BooleanField(default=True)
+# # sessions api
+
+
+# class Sessions(models.Model):
+#     course = models.ForeignKey(Courses, null=True, on_delete=models.SET_NULL)
+#     batch = models.ForeignKey(Batch, null=True, on_delete=models.SET_NULL)
+#     sessionNumber = models.IntegerField(blank=True, default="1")
+#     start_day = models.DateField(blank=True, default="2000-01-01")
+#     end_day = models.DateField(blank=True, default="2000-01-01")
 
 
 # # import sheet
@@ -231,7 +232,7 @@ class ConfirmedSlotsbyCoach(models.Model):
 def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
 
     email_plaintext_message = "https://coach.meeraq.com/reset-password/"+ reset_password_token.key
-    total = 10
+    email_message = render_to_string("resetpasswordmail.html", {'url':email_plaintext_message})
     # create_random_user_accounts.delay(total)
     send_mail(
         # title:
@@ -241,7 +242,8 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
         # from:0
         "info@meeraq.com",
         # to:
-        [reset_password_token.user.email]
+        [reset_password_token.user.email],
+        html_message=email_message
     )
 
 
