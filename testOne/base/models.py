@@ -230,18 +230,17 @@ class ConfirmedSlotsbyCoach(models.Model):
 @receiver(reset_password_token_created)
 def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
 
-    email_plaintext_message = "{}?token={}".format(reverse('password_reset:reset-password-request'), reset_password_token.key)
+    email_plaintext_message = "https://coach.meeraq.com/reset-password/"+ reset_password_token.key
     total = 10
     # create_random_user_accounts.delay(total)
     send_mail(
         # title:
-        "Password Reset for {title}".format(title="Some website title"),
+        "Password Reset for {title}".format(title="Meeraq Slot Scheduler"),
         # message:
         email_plaintext_message,
         # from:0
         "info@meeraq.com",
         # to:
-        # ["nishant88tiwari@gmail.com"]
         [reset_password_token.user.email]
     )
 
