@@ -613,6 +613,9 @@ def deleteRequest(request, req_id):
     all_slots = SlotForCoach.objects.filter(request=req_id)
     for slot in all_slots:
         slot.delete()
+    coach_slots = ConfirmedSlotsbyCoach.objects.filter(request_ID=req_id)
+    for slot in coach_slots:
+        slot.delete()
     req = AdminRequest.objects.get(id=req_id)
     req.delete()
 
