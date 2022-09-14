@@ -1,6 +1,7 @@
 from django.db.models.functions import TruncDate
 from datetime import datetime
 import email
+from django.core.mail import send_mail 
 from base.resources import ConfirmedSlotResource
 from django.http import HttpResponse
 from rest_framework.response import Response
@@ -153,6 +154,7 @@ def getcoach(request):
 @permission_classes([AllowAny])
 def addcoach(request):
     serializer = CoachSerializer(data=request.data)
+    email_plaintext_message = 'Username : ' + request.data['email'] + ',' + 'Password : ' + request.data['password']
     if serializer.is_valid():
         newUser = User.objects.create_user(
             username=request.data['email'], email=request.data['email'], password=request.data['password'])
@@ -162,7 +164,16 @@ def addcoach(request):
                              email=request.data['email'])
         newProfile.save()
         serializer.save(user_id=newProfile.id)
-
+        send_mail(
+        # title:
+        "You are added as Coach in {title}".format(title="Meeraq"),
+        # message:
+        email_plaintext_message,
+        # from:0
+        "info@meeraq.com",
+        # to:
+        [request.data['email']]
+    )
         for user in User.objects.all():
             token = Token.objects.get_or_create(user=user)
     else:
@@ -564,11 +575,28 @@ def trialLogin(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def makeSlotRequest(request):
+    email_plaintext_message = 'you received mail'
+
+
+
+
+
+
     adminRequest = AdminRequest(
         name=request.data['request_name'], expire_date=request.data['expiry_date'])
     adminRequest.save()
     for coach in request.data['coach_id']:
         single_coach = Coach.objects.get(id=coach)
+        send_mail(
+        # title:
+        "Slot Requested by {title}".format(title="Admin"),
+        # message:
+        email_plaintext_message,
+        # from:0
+        "info@meeraq.com",
+        # to:
+        [single_coach.email]
+    )
         adminRequest.assigned_coach.add(single_coach)
     for slot in request.data['slots']:
         newSlot = SlotForCoach(
