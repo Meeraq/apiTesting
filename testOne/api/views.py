@@ -407,6 +407,8 @@ def login_user(request):
     password = request.data['password']
     user = authenticate(username=username, password=password)
     if user is not None:
+        print(user)
+        print(user.last_login)
         if user.profile.type == 'coach':
             userProfile = Coach.objects.get(email=username)
             token = Token.objects.get_or_create(user=user)
@@ -603,6 +605,24 @@ def getAdminRequestData(request):
     req = AdminRequest.objects.all()
     serilizedData = GetAdminReqSerializer(req, many=True)
     return Response({'details': 'success', 'Data': serilizedData.data}, status=200)
+
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def deleteRequest(request, req_id):
+    all_slots = SlotForCoach.objects.filter(request=req_id)
+    for slot in all_slots:
+        slot.delete()
+    req = AdminRequest.objects.get(id=req_id)
+    req.delete()
+
+    return Response({'status': 'success, Data deleted'}, status=200)
+
+
+
+
+
+
 
 
 def checkIfCoachExistsInQuerySet(querySet, id):

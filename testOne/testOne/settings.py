@@ -62,13 +62,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'testOne.urls'
 
 
-# EMAIL_USE_TLS = True
-# EMAIL_HOST = 'localhost'
-# EMAIL_PORT = 587
-
-# EMAIL_HOST_PASSWORD = 'BA8IH/dImnaypwgD3Qj4SnBbS6thnnLs0oIN6gG6IK3w'
-# EMAIL_BACKEND = 'django_ses.SESBackend'
-# # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 REST_FRAMEWORK = {

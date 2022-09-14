@@ -232,15 +232,16 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
 
     email_plaintext_message = "{}?token={}".format(reverse('password_reset:reset-password-request'), reset_password_token.key)
     total = 10
-    create_random_user_accounts.delay(total)
+    # create_random_user_accounts.delay(total)
     send_mail(
         # title:
         "Password Reset for {title}".format(title="Some website title"),
         # message:
         email_plaintext_message,
         # from:0
-        "info@info.meeraq.com"
+        "info@meeraq.com",
         # to:
+        # ["nishant88tiwari@gmail.com"]
         [reset_password_token.user.email]
     )
 

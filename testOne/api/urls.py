@@ -64,6 +64,7 @@ urlpatterns = [
          views.deleteConfirmedSlotsbyCoach),
     path('get-admin-request/', views.getAdminRequestData),
     path('update-meetlink-by-coach/<str:_id>/',views.updateMeetLinkByCoach),
+    path('delete-request/<str:req_id>/', views.deleteRequest),
     # path('file-import/', ExportImportExcel.as_view()),
 
 
