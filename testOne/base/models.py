@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
-# from django_rest_passwordreset.signals import reset_password_token_created
+from django_rest_passwordreset.signals import reset_password_token_created
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
@@ -225,7 +225,7 @@ class ConfirmedSlotsbyCoach(models.Model):
     MEETING_LINK = models.CharField(blank=True, max_length=200, default=" ")
 
 
-# @receiver(reset_password_token_created)
+@receiver(reset_password_token_created)
 def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
 
     email_plaintext_message = "https://coach.meeraq.com/reset-password/" + \
