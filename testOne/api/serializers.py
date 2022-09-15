@@ -1,6 +1,6 @@
 from dataclasses import field
 from rest_framework import serializers
-from base.models import  Coach, Profile
+from base.models import Coach, Profile
 from django.contrib.auth.models import User
 
 
@@ -53,8 +53,8 @@ class ProfileSerializer(serializers.ModelSerializer):
 class CoachSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coach
-        fields = ['id','first_name','middle_name','last_name', 'email', 'phone', 'dob', 'gender', 'fee',
-                  'activeSince', 'isSlotBooked', 'isActive','meet_link']
+        fields = ['id', 'first_name', 'middle_name', 'last_name', 'email', 'phone', 'dob', 'gender', 'fee',
+                  'activeSince', 'isSlotBooked', 'isActive', 'meet_link']
 
 
 # class FacultySerializer(serializers.ModelSerializer):
@@ -102,17 +102,17 @@ class SlotForCoachSerializer(serializers.ModelSerializer):
         model = SlotForCoach
         fields = '__all__'
 
+
 class ConfirmedSlotsbyCoachSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConfirmedSlotsbyCoach
         fields = '__all__'
 
 
-
 class AdminReqSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdminRequest
-        fields = ['isActive','expire_date','name']
+        fields = ['isActive', 'expire_date', 'name']
 
 
 class GetAdminReqSerializer(serializers.ModelSerializer):

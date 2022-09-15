@@ -2,8 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 # from django_rest_passwordreset.signals import reset_password_token_created
-from django.core.mail import send_mail 
+from django.core.mail import send_mail
 from django.template.loader import render_to_string
+
 
 class Profile(models.Model):
     user_choice = [
@@ -60,11 +61,11 @@ class Profile(models.Model):
 
 # coach Modal
 
-class Coach(models.Model): 
+class Coach(models.Model):
     user = models.OneToOneField(Profile, on_delete=models.CASCADE, blank=True)
     first_name = models.CharField(max_length=200)
-    middle_name = models.CharField(max_length=200,blank=True, default=" ")
-    last_name = models.CharField(max_length=200,default=" ")
+    middle_name = models.CharField(max_length=200, blank=True, default=" ")
+    last_name = models.CharField(max_length=200, default=" ")
     email = models.CharField(max_length=200)
     phone = models.CharField(max_length=200)
     dob = models.DateField(blank=True, default="2000-01-01")
@@ -191,7 +192,7 @@ class Coach(models.Model):
 class AdminRequest(models.Model):
     assigned_coach = models.ManyToManyField(Coach, related_name='Coach')
     confirmed_coach = models.ManyToManyField(
-        Coach, related_name='confirmed_coach',blank=True)
+        Coach, related_name='confirmed_coach', blank=True)
     name = models.CharField(blank=True, max_length=200, default='Request -')
     isActive = models.BooleanField(default=True)
     expire_date = models.DateField(default="2022-09-10")
@@ -212,9 +213,11 @@ class ConfirmedSlotsbyCoach(models.Model):
     start_time = models.CharField(blank=True, max_length=200, default="null")
     end_time = models.CharField(blank=True, max_length=200, default="null")
     date = models.DateField()
-    request_ID = models.CharField( max_length=200)
-    SESSION_START_TIME = models.CharField(blank=True, max_length=200, default="null")
-    SESSION_END_TIME = models.CharField(blank=True, max_length=200, default="null")
+    request_ID = models.CharField(max_length=200)
+    SESSION_START_TIME = models.CharField(
+        blank=True, max_length=200, default="null")
+    SESSION_END_TIME = models.CharField(
+        blank=True, max_length=200, default="null")
     SESSION_DATE = models.CharField(blank=True, max_length=200, default="null")
     COACH_NAME = models.CharField(blank=True, max_length=200, default="null")
     DESCRIPTION = models.CharField(blank=True, max_length=200, default="null")
@@ -222,16 +225,13 @@ class ConfirmedSlotsbyCoach(models.Model):
     MEETING_LINK = models.CharField(blank=True, max_length=200, default=" ")
 
 
-
-
-
-
-
 # @receiver(reset_password_token_created)
 def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
 
-    email_plaintext_message = "https://coach.meeraq.com/reset-password/"+ reset_password_token.key
-    email_message = render_to_string("resetpasswordmail.html", {'url':email_plaintext_message})
+    email_plaintext_message = "https://coach.meeraq.com/reset-password/" + \
+        reset_password_token.key
+    email_message = render_to_string("resetpasswordmail.html", {
+                                     'url': email_plaintext_message})
     # create_random_user_accounts.delay(total)
     send_mail(
         # title:
@@ -244,7 +244,3 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
         [reset_password_token.user.email],
         html_message=email_message
     )
-
-
-
-
