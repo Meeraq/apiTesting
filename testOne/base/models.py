@@ -1,11 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.urls import reverse
-from django_rest_passwordreset.signals import reset_password_token_created
+# from django_rest_passwordreset.signals import reset_password_token_created
 from django.core.mail import send_mail 
-from .task import create_random_user_accounts
 from django.template.loader import render_to_string
 
 class Profile(models.Model):
@@ -206,6 +203,8 @@ class SlotForCoach(models.Model):
     date = models.DateField()
     request = models.ForeignKey(
         AdminRequest, null=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class ConfirmedSlotsbyCoach(models.Model):
@@ -228,7 +227,7 @@ class ConfirmedSlotsbyCoach(models.Model):
 
 
 
-@receiver(reset_password_token_created)
+# @receiver(reset_password_token_created)
 def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
 
     email_plaintext_message = "https://coach.meeraq.com/reset-password/"+ reset_password_token.key
