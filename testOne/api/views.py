@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from django.core.mail import send_mail
 from base.resources import ConfirmedSlotResource
@@ -198,7 +197,6 @@ def updateCoach(request, _id):
     return Response(serializer.data)
 
 # faculty api
-
 
 # @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
