@@ -7,14 +7,14 @@ from rest_framework.response import Response
 from datetime import date
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from base.models import  Coach, AdminRequest,  Profile
+from base.models import Coach, AdminRequest,  Profile
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
-from .serializers import AdminReqSerializer, ConfirmedSlotsbyCoachSerializer,  GetAdminReqSerializer,  CoachSerializer,  SlotForCoachSerializer,   UserSerializer, ProfileSerializer
+from .serializers import AdminReqSerializer, ConfirmedSlotsbyCoachSerializer, EditUserSerializer,  GetAdminReqSerializer,  CoachSerializer,  SlotForCoachSerializer,   UserSerializer, ProfileSerializer
 
 from django.template.loader import render_to_string
 
@@ -184,6 +184,14 @@ def addcoach(request):
 @permission_classes([IsAuthenticated])
 def updateCoach(request, _id):
     coach = Coach.objects.get(id=_id)
+    user = User.objects.get(username=coach.email)
+    changedUser = {
+        'username': request.data['email'],
+        'email': request.data['email'],
+    }
+    editSerilizer = EditUserSerializer(instance=user, data=changedUser)
+    if editSerilizer.is_valid():
+        editSerilizer.save()
     serializer = CoachSerializer(instance=coach, data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -707,8 +715,6 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
     for slot in request.data:
         start_timestamp = (int(slot['start_time'])/1000) + 19800
         end_timestamp = (int(slot['end_time'])/1000) + 19800
-        print(type(start_timestamp))
-        print(datetime.fromtimestamp(start_timestamp).strftime('%I:%M %p'))
         newSlot = ConfirmedSlotsbyCoach(
             start_time=slot['start_time'],
             end_time=slot['end_time'],
@@ -722,7 +728,7 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
             SESSION_DATE=datetime.fromtimestamp(
                 int(start_timestamp)).strftime('%d %B %Y'),
             COACH_NAME=Coach.objects.get(id=coach_id).first_name + " " + Coach.objects.get(
-                id=coach_id).middle_name +  " " + Coach.objects.get(id=coach_id).last_name,
+                id=coach_id).middle_name + " " + Coach.objects.get(id=coach_id).last_name,
             DESCRIPTION=AdminRequest.objects.get(id=request_id).name,
             CC=Coach.objects.get(id=coach_id).email,
             MEETING_LINK=Coach.objects.get(id=coach_id).meet_link

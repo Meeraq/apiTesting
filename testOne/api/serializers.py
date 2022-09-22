@@ -14,6 +14,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['email', 'password', 'is_staff']
 
+class EditUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'username']
 
 class ProfileSerializer(serializers.ModelSerializer):
     userDetails = UserSerializer(required=False)
