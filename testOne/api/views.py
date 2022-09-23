@@ -1,4 +1,5 @@
 from datetime import datetime
+from multiprocessing import Event
 from django.core.mail import send_mail
 from base.resources import ConfirmedSlotResource
 from django.http import HttpResponse
@@ -14,7 +15,8 @@ from rest_framework.authtoken.models import Token
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
-from .serializers import AdminReqSerializer, ConfirmedSlotsbyCoachSerializer, EditUserSerializer, EventSerializer,  GetAdminReqSerializer,  CoachSerializer,  SlotForCoachSerializer,   UserSerializer, ProfileSerializer
+from base.models import LeanerConfirmedSlots
+from .serializers import AdminReqSerializer, ConfirmedSlotsbyCoachSerializer, ConfirmedSlotsbyLearnerSerializer, EditUserSerializer, EventSerializer,  GetAdminReqSerializer,  CoachSerializer,  SlotForCoachSerializer,   UserSerializer, ProfileSerializer
 
 from django.template.loader import render_to_string
 
@@ -25,6 +27,7 @@ from django.template.loader import render_to_string
 
 # flattening array
 import uuid
+
 
 # courses api functions
 
@@ -859,10 +862,10 @@ def getEvents(request):
     serializer = EventSerializer(events, many=True)
     return Response({'status': 'success', 'data': serializer.data}, status=200)
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def editEvents(request,event_id):
-    event = Events.objects.filter(id=event_id)
+    event = Events.objects.get(id=event_id)
     event_data = {
         'name':request.data['name'],
         'start_date':event.start_date,
@@ -873,7 +876,7 @@ def editEvents(request,event_id):
         '_id':event._id,
         'coach':request.data['coach']
     }
-    serializer = EventSerializer(instance=Events, data=event_data)
+    serializer = EventSerializer(instance=event, data=event_data)
     if serializer.is_valid():
         serializer.save()
     else:
@@ -891,12 +894,86 @@ def deleteEvents(request, event_id):
 
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getSlotsByEventID(request, event_id):
+    event = Events.objects.get(_id=event_id)
+    all_slots = []
+    for coach in event.coach.all():
+        slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach.id)
+        for slot in slots:
+            if slot.is_confirmed == False & slot.is_realeased == False:
+                all_slots.append(slot)
+    serializer = ConfirmedSlotsbyCoachSerializer(slots, many=True)
+    eventserializer = EventSerializer(event)
+    return Response({'status': 'success','slots':serializer.data,'event':eventserializer.data}, status=200)
 
 
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def confirmSlotsByLearner(request,slot_id):
+    coach_slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
+    Booked_slot = {
+        'name':request.data['name'],
+        'email':request.data['email'],
+        'organisation':request.data['organisation'],
+        'phone_no':request.data['phone_no'],
+        'slot':coach_slot.id,
+        'event':request.data['event']
+    }
+    event = Events.objects.get(id=request.data['event'])
+    count = int(event.count)
+    coach_ids = []
+    for coach in event.coach.all():
+        coach_ids.append(coach.id)
+    new_count = count-1
+    new_event_data = {
+        'name':event.name,
+        'start_date':event.start_date,
+        'end_date':event.end_date,
+        'expire_date':event.expire_date,
+        'count':str(new_count),
+        'link':event.link,
+        '_id':event._id,
+        'coach':coach_ids
+    }
+    event_serializer = EventSerializer(instance=event, data=new_event_data)
+    if event_serializer.is_valid():
+        event_serializer.save()
+    else:
+        print(event_serializer.errors)
+
+    serializer = ConfirmedSlotsbyLearnerSerializer(data = Booked_slot)
+    if serializer.is_valid():
+        booked_slots = LeanerConfirmedSlots.objects.all()
+        if request.data['warning'] == True:
+            for slot in booked_slots:
+                if (slot.email == request.data['email']) & (request.data['event'] == slot.event.id):
+                    return Response({'status': '409 Bad request', 'reason': 'email already exist'}, status=409)
+                else:
+                    serializer.save()
+                    if event_serializer.is_valid():
+                        event_serializer.save()
+                    else:
+                        print(event_serializer.errors)
+        else:
+            serializer.save()
+            if event_serializer.is_valid():
+                event_serializer.save()
+            else:
+                print(event_serializer.errors)
+    else:
+        print(serializer.errors)
+        return Response({'status': '400 Bad request', 'reason': 'wrong data sent'}, status=400)
+    return Response({'status': 'success', 'data': serializer.data}, status=200)
+    
 
 
-
-
-
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getConfirmSlotsByLearner(request):
+    booked_slots = LeanerConfirmedSlots.objects.all()
+    serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
+    return Response({'status': 'success','data':serializer.data}, status=200)
