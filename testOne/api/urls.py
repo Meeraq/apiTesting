@@ -78,4 +78,5 @@ urlpatterns = [
     path('get-slots-by-event-id/<str:event_id>/', views.getSlotsByEventID),
     path('confirm-slot-by-learner/<str:slot_id>/',views.confirmSlotsByLearner),
     path('get-booked-slots-by-learner/',views.getConfirmSlotsByLearner),
+    path('get-booked-slots-of-learner-event-id/<str:event_id>/',views.getConfirmSlotsByLearner),
 ]

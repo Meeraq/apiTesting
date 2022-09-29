@@ -904,7 +904,7 @@ def getSlotsByEventID(request, event_id):
         for slot in slots:
             if slot.is_confirmed == False & slot.is_realeased == False:
                 all_slots.append(slot)
-    serializer = ConfirmedSlotsbyCoachSerializer(slots, many=True)
+    serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
     eventserializer = EventSerializer(event)
     return Response({'status': 'success','slots':serializer.data,'event':eventserializer.data}, status=200)
 
@@ -915,6 +915,12 @@ def getSlotsByEventID(request, event_id):
 @permission_classes([AllowAny])
 def confirmSlotsByLearner(request,slot_id):
     coach_slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
+    
+    booked_slot_coach = {
+        **coach_slot,
+        'is_confirmed': True
+    }
+    coach_serilizer = ConfirmedSlotsbyCoachSerializer(instance=coach_slot,data = booked_slot_coach)
     Booked_slot = {
         'name':request.data['name'],
         'email':request.data['email'],
@@ -965,8 +971,12 @@ def confirmSlotsByLearner(request,slot_id):
             else:
                 print(event_serializer.errors)
     else:
-        print(serializer.errors)
         return Response({'status': '400 Bad request', 'reason': 'wrong data sent'}, status=400)
+
+    if coach_serilizer.is_valid():
+        coach_serilizer.save()
+    else:
+        return Response({'status': '400 Bad request', 'reason': 'coach data is wrong'}, status=400)
     return Response({'status': 'success', 'data': serializer.data}, status=200)
     
 
@@ -975,5 +985,13 @@ def confirmSlotsByLearner(request,slot_id):
 @permission_classes([AllowAny])
 def getConfirmSlotsByLearner(request):
     booked_slots = LeanerConfirmedSlots.objects.all()
+    serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
+    return Response({'status': 'success','data':serializer.data}, status=200)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getConfirmSlotsByLearnerByEventId(request,event_id):
+    booked_slots = LeanerConfirmedSlots.objects.filter(event = event_id)
     serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
     return Response({'status': 'success','data':serializer.data}, status=200)
