@@ -1,5 +1,7 @@
 from datetime import datetime
+from email.message import EmailMessage
 from multiprocessing import Event
+import os
 from django.core.mail import send_mail
 from base.resources import ConfirmedSlotResource
 from django.http import HttpResponse
@@ -11,7 +13,7 @@ from base.models import Coach, AdminRequest,  Profile
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-
+from pytz import timezone, utc
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
@@ -911,6 +913,12 @@ def getSlotsByEventID(request, event_id):
 
 
 
+def createIcs(start_time,end_time):
+    fp = open('event.ics', 'w')
+    fp.write('BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nDTSTAMP:20221014T170000Z\nORGANIZER;CN=Nishant:MAILTO:nishant@meeraq.com\nDTSTART:'+start_time+'\nDTEND:20221015T035959Z'+end_time+'nSUMMARY:Meeraq | Coaching Session \nLOCATION:https://www.google.com/\nGEO:48.85299;2.36885\nEND:VEVENT\nEND:VCALENDAR')
+    fp.close()
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def confirmSlotsByLearner(request,slot_id):
@@ -977,6 +985,22 @@ def confirmSlotsByLearner(request,slot_id):
         coach_serilizer.save()
     else:
         return Response({'status': '400 Bad request', 'reason': 'coach data is wrong'}, status=400)
+
+    start =(coach_slot.start_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + 'Z').replace(':','').replace('-','')
+    end = (coach_slot.end_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + 'Z').replace(':','').replace('-','')
+    createIcs(start,end)
+    email = EmailMessage(
+        'Subject',
+        'Email body',
+        'info@meeraq.com',
+        ['yaswanth@meeraq.com', 'pankaj@meeraq.com']
+    )
+    email.attach_file('event.ics', 'text/calendar')
+    email.send()
+    if os.path.exists("event.ics"):
+        os.remove("event.ics")
+    else:
+        print('file not found')
     return Response({'status': 'success', 'data': serializer.data}, status=200)
     
 
