@@ -996,12 +996,19 @@ def confirmSlotsByLearner(request, slot_id):
         end_time=datetime.fromtimestamp(int(coach_slot.end_time)/1000)
         end = (end_time.replace(microsecond=0).astimezone(utc).replace(
             tzinfo=None).isoformat() + 'Z').replace(':', '').replace('-', '')
+
+
+        date = datetime.fromtimestamp(
+                int(coach_slot.start_time)).strftime('%d %B %Y')
+        email_message = render_to_string("addevent.html", {
+                                     'name': request.data['name'], 'time': start_time, 'duration': "30 Min",'date':date})
         createIcs(start, end)
         email = EmailMessage(
             'Meeraq | Coaching Session',
-            'Your are Invited',
+            email_message,
             'info@meeraq.com',
-            [request.data['email'], coach_mail]
+            [request.data['email'], coach_mail],
+            html_message=email_message
         )
         email.attach_file('event.ics', 'text/calendar')
         email.send()
