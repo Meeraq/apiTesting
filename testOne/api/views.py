@@ -1,5 +1,5 @@
 from datetime import datetime
-from email.message import EmailMessage
+from django.core.mail import EmailMessage
 from multiprocessing import Event
 import os
 from django.core.mail import send_mail
@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from datetime import date
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from base.models import Coach, AdminRequest,  Profile
+from base.models import Coach, AdminRequest, Profile
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
@@ -18,7 +18,18 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
-from .serializers import AdminReqSerializer, ConfirmedSlotsbyCoachSerializer, ConfirmedSlotsbyLearnerSerializer, EditUserSerializer, EventSerializer,  GetAdminReqSerializer,  CoachSerializer,  SlotForCoachSerializer,   UserSerializer, ProfileSerializer
+from .serializers import (
+    AdminReqSerializer,
+    ConfirmedSlotsbyCoachSerializer,
+    ConfirmedSlotsbyLearnerSerializer,
+    EditUserSerializer,
+    EventSerializer,
+    GetAdminReqSerializer,
+    CoachSerializer,
+    SlotForCoachSerializer,
+    UserSerializer,
+    ProfileSerializer,
+)
 
 from django.template.loader import render_to_string
 
@@ -141,7 +152,8 @@ import uuid
 
 # coach api
 
-@api_view(['GET'])
+
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def getcoach(request):
     coaches = Coach.objects.all()
@@ -149,19 +161,25 @@ def getcoach(request):
     return Response(serializer.data)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def addcoach(request):
     serializer = CoachSerializer(data=request.data)
-    email_message = render_to_string("addcoachmail.html", {
-                                     'coach_name': request.data['first_name'], 'username': request.data['email'], 'password': request.data['password']})
+    email_message = render_to_string(
+        "addcoachmail.html",
+        {
+            "coach_name": request.data["first_name"],
+            "username": request.data["email"],
+            "password": request.data["password"],
+        },
+    )
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data['email'], email=request.data['email'], password=request.data['password'])
+            username=request.data["email"], email=request.data["email"], password=request.data["password"]
+        )
         newUser.save()
-        userToSave = User.objects.get(username=request.data['email'])
-        newProfile = Profile(user=userToSave, type="coach",
-                             email=request.data['email'])
+        userToSave = User.objects.get(username=request.data["email"])
+        newProfile = Profile(user=userToSave, type="coach", email=request.data["email"])
         newProfile.save()
         serializer.save(user_id=newProfile.id)
         send_mail(
@@ -172,25 +190,25 @@ def addcoach(request):
             # from:0
             "info@meeraq.com",
             # to:
-            [request.data['email']],
-            html_message=email_message
+            [request.data["email"]],
+            html_message=email_message,
         )
         for user in User.objects.all():
             token = Token.objects.get_or_create(user=user)
     else:
         print(serializer.errors)
-        return Response(status='403')
-    return Response({'status': 200, 'payload': serializer.data, 'token': str(token[0])})
+        return Response(status="403")
+    return Response({"status": 200, "payload": serializer.data, "token": str(token[0])})
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def updateCoach(request, _id):
     coach = Coach.objects.get(id=_id)
     user = User.objects.get(username=coach.email)
     changedUser = {
-        'username': request.data['email'],
-        'email': request.data['email'],
+        "username": request.data["email"],
+        "email": request.data["email"],
     }
     editSerilizer = EditUserSerializer(instance=user, data=changedUser)
     if editSerilizer.is_valid():
@@ -199,6 +217,7 @@ def updateCoach(request, _id):
     if serializer.is_valid():
         serializer.save()
     return Response(serializer.data)
+
 
 # faculty api
 
@@ -422,70 +441,92 @@ def updateCoach(request, _id):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login_user(request):
-    username = request.data['username']
-    password = request.data['password']
+    username = request.data["username"]
+    password = request.data["password"]
     user = authenticate(username=username, password=password)
     if user is not None:
         print(user)
         print(user.last_login)
-        if user.profile.type == 'coach':
+        if user.profile.type == "coach":
             userProfile = Coach.objects.get(email=username)
             token = Token.objects.get_or_create(user=user)
-            return Response({'status': '200', 'username': user.username, 'first_name': userProfile.first_name, 'middle_name': userProfile.middle_name, 'last_name': userProfile.last_name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+            return Response(
+                {
+                    "status": "200",
+                    "username": user.username,
+                    "first_name": userProfile.first_name,
+                    "middle_name": userProfile.middle_name,
+                    "last_name": userProfile.last_name,
+                    "token": str(token[0]),
+                    "email": userProfile.email,
+                    "usertype": user.profile.type,
+                    "id": userProfile.id,
+                }
+            )
         # elif user.profile.type == 'learner':
         #     userProfile = Learners.objects.get(email=username)
         # elif user.profile.type == 'faculty':
         #     userProfile = Faculty.objects.get(email=username)
-        elif user.profile.type == 'admin':
+        elif user.profile.type == "admin":
             userProfile = User.objects.get(email=username)
             token = Token.objects.get_or_create(user=user)
-            return Response({'status': '200', 'username': user.username, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+            return Response(
+                {
+                    "status": "200",
+                    "username": user.username,
+                    "token": str(token[0]),
+                    "email": userProfile.email,
+                    "usertype": user.profile.type,
+                    "id": userProfile.id,
+                }
+            )
         # token = Token.objects.get_or_create(user=user)
         # return Response({'status': '200', 'username': user.username, 'name': userProfile.name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
     else:
         userFound = User.objects.filter(email=username)
         if userFound.exists():
-            return Response({'reason': 'Invalid Password'}, status=401)
+            return Response({"reason": "Invalid Password"}, status=401)
         else:
-            return Response({'reason': 'No user found'}, status=404)
+            return Response({"reason": "No user found"}, status=404)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def registerUser(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data['email'], email=request.data['email'], password=request.data['password'])
+            username=request.data["email"], email=request.data["email"], password=request.data["password"]
+        )
         newUser.save()
     else:
-        return Response(status='403')
-    user = User.objects.get(username=serializer.data['email'])
-    userToSave = User.objects.get(username=serializer.data['email'])
-    newProfile = Profile(user=userToSave, type="admin",
-                         email=serializer.data['email'])
+        return Response(status="403")
+    user = User.objects.get(username=serializer.data["email"])
+    userToSave = User.objects.get(username=serializer.data["email"])
+    newProfile = Profile(user=userToSave, type="admin", email=serializer.data["email"])
     newProfile.save()
     token, _ = Token.objects.get_or_create(user=user)
-    return Response({'status': 200, 'payload': serializer.data, 'token': str(token)})
+    return Response({"status": 200, "payload": serializer.data, "token": str(token)})
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def addProfileType(request):
     serializer = ProfileSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
     else:
-        return Response({'status': '400 Bad request', 'Reason': 'Wrong data sent'})
+        return Response({"status": "400 Bad request", "Reason": "Wrong data sent"})
     return Response(serializer.data)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def getProfile(request):
     session = Profile.objects.all()
     serializer = ProfileSerializer(session, many=True)
     return Response(serializer.data)
+
 
 # getAvailableSlots
 # [
@@ -582,16 +623,16 @@ def getProfile(request):
 # from django.template.loader import get_template
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def makeSlotRequest(request):
-    adminRequest = AdminRequest(
-        name=request.data['request_name'], expire_date=request.data['expiry_date'])
+    adminRequest = AdminRequest(name=request.data["request_name"], expire_date=request.data["expiry_date"])
     adminRequest.save()
-    for coach in request.data['coach_id']:
+    for coach in request.data["coach_id"]:
         single_coach = Coach.objects.get(id=coach)
-        email_message = render_to_string("makerequest.html", {
-                                         'expire_date': request.data['expiry_date'], 'coach_name': single_coach.first_name})
+        email_message = render_to_string(
+            "makerequest.html", {"expire_date": request.data["expiry_date"], "coach_name": single_coach.first_name}
+        )
 
         send_mail(
             # title:
@@ -602,21 +643,18 @@ def makeSlotRequest(request):
             "info@meeraq.com",
             # to:
             [single_coach.email],
-            html_message=email_message
+            html_message=email_message,
         )
         adminRequest.assigned_coach.add(single_coach)
-    for slot in request.data['slots']:
+    for slot in request.data["slots"]:
         newSlot = SlotForCoach(
-            start_time=slot['start_time'],
-            end_time=slot['end_time'],
-            date=slot['date'],
-            request=adminRequest
+            start_time=slot["start_time"], end_time=slot["end_time"], date=slot["date"], request=adminRequest
         )
         newSlot.save()
-    return Response({'details': 'success'}, status=200)
+    return Response({"details": "success"}, status=200)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def getAdminRequestData(request):
     today = date.today()
@@ -626,12 +664,11 @@ def getAdminRequestData(request):
     for _request in adminRequest:
         if today > _request.expire_date:
             newData = {
-                'isActive': False,
-                'expire_date': _request.expire_date,
-                'name': _request.name,
+                "isActive": False,
+                "expire_date": _request.expire_date,
+                "name": _request.name,
             }
-            newReq = AdminRequest.objects.filter(
-                expire_date=_request.expire_date).first()
+            newReq = AdminRequest.objects.filter(expire_date=_request.expire_date).first()
             adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
             if adminSerializer.is_valid():
                 adminSerializer.save()
@@ -639,10 +676,10 @@ def getAdminRequestData(request):
                 print(adminSerializer.errors)
     req = AdminRequest.objects.all()
     serilizedData = GetAdminReqSerializer(req, many=True)
-    return Response({'details': 'success', 'Data': serilizedData.data}, status=200)
+    return Response({"details": "success", "Data": serilizedData.data}, status=200)
 
 
-@api_view(['DELETE'])
+@api_view(["DELETE"])
 @permission_classes([AllowAny])
 def deleteRequest(request, req_id):
     all_slots = SlotForCoach.objects.filter(request=req_id)
@@ -654,17 +691,17 @@ def deleteRequest(request, req_id):
     req = AdminRequest.objects.get(id=req_id)
     req.delete()
 
-    return Response({'status': 'success, Data deleted'}, status=200)
+    return Response({"status": "success, Data deleted"}, status=200)
 
 
 def checkIfCoachExistsInQuerySet(querySet, id):
     for coach in querySet:
-        if (int(coach.id) == int(id)):
+        if int(coach.id) == int(id):
             return True
     return False
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def getSlotofRequest(request, coach_id, type):
     today = date.today()
@@ -674,12 +711,11 @@ def getSlotofRequest(request, coach_id, type):
     for _request in adminRequest:
         if today > _request.expire_date:
             newData = {
-                'isActive': False,
-                'expire_date': _request.expire_date,
-                'name': _request.name,
+                "isActive": False,
+                "expire_date": _request.expire_date,
+                "name": _request.name,
             }
-            newReq = AdminRequest.objects.filter(
-                expire_date=_request.expire_date).first()
+            newReq = AdminRequest.objects.filter(expire_date=_request.expire_date).first()
             adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
             if adminSerializer.is_valid():
                 adminSerializer.save()
@@ -690,143 +726,140 @@ def getSlotofRequest(request, coach_id, type):
 
     for _request in adminRequest:
         confirmedCoaches = _request.confirmed_coach.all()
-        if type == 'NEW':
+        if type == "NEW":
             if _request.isActive == True and (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
                 request_id_name[_request.id] = _request.name
-                all_slots += (SlotForCoach.objects.filter(request=_request))
+                all_slots += SlotForCoach.objects.filter(request=_request)
         if type == "ACTIVE":
             if _request.isActive == True and checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
                 request_id_name[_request.id] = _request.name
-                all_slots += (SlotForCoach.objects.filter(request=_request))
+                all_slots += SlotForCoach.objects.filter(request=_request)
         if type == "PAST":
             if _request.isActive == False and checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
                 request_id_name[_request.id] = _request.name
-                all_slots += (SlotForCoach.objects.filter(request=_request))
+                all_slots += SlotForCoach.objects.filter(request=_request)
         if type == "MISSED":
             if _request.isActive == False and (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
                 request_id_name[_request.id] = _request.name
-                all_slots += (SlotForCoach.objects.filter(request=_request))
+                all_slots += SlotForCoach.objects.filter(request=_request)
 
     serializers = SlotForCoachSerializer(all_slots, many=True)
-    return Response({'details': 'success', 'slots': serializers.data, 'requests': request_id_name}, status=200)
+    return Response({"details": "success", "slots": serializers.data, "requests": request_id_name}, status=200)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def confirmAvailableSlotsByCoach(request, coach_id, request_id):
     for slot in request.data:
-        start_timestamp = (int(slot['start_time'])/1000) + 19800
-        end_timestamp = (int(slot['end_time'])/1000) + 19800
+        start_timestamp = (int(slot["start_time"]) / 1000) + 19800
+        end_timestamp = (int(slot["end_time"]) / 1000) + 19800
         newSlot = ConfirmedSlotsbyCoach(
-            start_time=slot['start_time'],
-            end_time=slot['end_time'],
-            date=slot['date'],
+            start_time=slot["start_time"],
+            end_time=slot["end_time"],
+            date=slot["date"],
             coach_id=coach_id,
             request_ID=int(request_id),
-            SESSION_START_TIME=datetime.fromtimestamp(
-                start_timestamp).strftime('%I:%M %p'),
-            SESSION_END_TIME=datetime.fromtimestamp(
-                end_timestamp).strftime('%I:%M %p'),
-            SESSION_DATE=datetime.fromtimestamp(
-                int(start_timestamp)).strftime('%d %B %Y'),
-            COACH_NAME=Coach.objects.get(id=coach_id).first_name + " " + Coach.objects.get(
-                id=coach_id).middle_name + " " + Coach.objects.get(id=coach_id).last_name,
+            SESSION_START_TIME=datetime.fromtimestamp(start_timestamp).strftime("%I:%M %p"),
+            SESSION_END_TIME=datetime.fromtimestamp(end_timestamp).strftime("%I:%M %p"),
+            SESSION_DATE=datetime.fromtimestamp(int(start_timestamp)).strftime("%d %B %Y"),
+            COACH_NAME=Coach.objects.get(id=coach_id).first_name
+            + " "
+            + Coach.objects.get(id=coach_id).middle_name
+            + " "
+            + Coach.objects.get(id=coach_id).last_name,
             DESCRIPTION=AdminRequest.objects.get(id=request_id).name,
             CC=Coach.objects.get(id=coach_id).email,
-            MEETING_LINK=Coach.objects.get(id=coach_id).meet_link
+            MEETING_LINK=Coach.objects.get(id=coach_id).meet_link,
         )
         newSlot.save()
     coach = Coach.objects.get(id=coach_id)
     adminRequest = AdminRequest.objects.get(id=request_id)
     adminRequest.confirmed_coach.add(coach)
-    return Response({'details': 'success'}, status=200)
+    return Response({"details": "success"}, status=200)
 
 
 # Create your views here.
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def export(request, request_id):
     coach_slot_file = ConfirmedSlotResource()
-    dataset = coach_slot_file.export(
-        ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
-    response = HttpResponse(
-        dataset.xls, content_type='application/vnd.ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="slots.xls"'
+    dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
+    response = HttpResponse(dataset.xls, content_type="application/vnd.ms-excel")
+    response["Content-Disposition"] = 'attachment; filename="slots.xls"'
     return response
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def export_all(request):
     today = date.today()
     coach_slot_file = ConfirmedSlotResource()
     dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.all())
-    response = HttpResponse(
-        dataset.xls, content_type='application/vnd.ms-excel')
-    response['Content-Disposition'] = 'attachment; filename="allslots.xls"'
+    response = HttpResponse(dataset.xls, content_type="application/vnd.ms-excel")
+    response["Content-Disposition"] = 'attachment; filename="allslots.xls"'
     return response
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def getConfirmedSlotsbyCoach(request, coach_id):
     slot = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach_id)
     serializer = ConfirmedSlotsbyCoachSerializer(slot, many=True)
-    return Response({'details': 'success', 'data': serializer.data}, status=200)
+    return Response({"details": "success", "data": serializer.data}, status=200)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def getConfirmedSlotsbyRequestID(request, req_id):
     slot = ConfirmedSlotsbyCoach.objects.filter(request_ID=req_id)
     serializer = ConfirmedSlotsbyCoachSerializer(slot, many=True)
-    return Response({'details': 'success', 'data': serializer.data}, status=200)
+    return Response({"details": "success", "data": serializer.data}, status=200)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def updateConfirmedSlots(request, slot_id):
     slot = ConfirmedSlotsbyCoach.objects.filter(id=slot_id).first()
-    serializer = ConfirmedSlotsbyCoachSerializer(
-        instance=slot, data=request.data)
+    serializer = ConfirmedSlotsbyCoachSerializer(instance=slot, data=request.data)
     if serializer.is_valid():
         serializer.save()
-    return Response({'details': 'success', 'data': serializer.data}, status=201)
+    return Response({"details": "success", "data": serializer.data}, status=201)
 
 
-@api_view(['DELETE'])
+@api_view(["DELETE"])
 @permission_classes([AllowAny])
 def deleteConfirmedSlotsbyCoach(request, coach_id, slot_id):
     slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
     slot.delete()
     all_slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach_id)
     serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
-    return Response({'status': 'success, Data deleted', 'data': serializer.data}, status=200)
+    return Response({"status": "success, Data deleted", "data": serializer.data}, status=200)
 
 
 # update meet link by coach
 
-@api_view(['POST'])
+
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def updateMeetLinkByCoach(request, _id):
     coach = Coach.objects.get(id=_id)
     user = User.objects.get(email=coach.email)
     newMeetLink = {
-        'user': user,
-        'first_name': coach.first_name,
-        'middle_name': coach.middle_name,
-        'last_name': coach.last_name,
-        'email': coach.email,
-        'phone': coach.phone,
-        'dob': coach.dob,
-        'gender': coach.gender,
-        'fee': coach.fee,
-        'activeSince': coach.activeSince,
-        'isSlotBooked': coach.isSlotBooked,
-        'isActive': coach.isActive,
-        'meet_link': request.data['meet_link']
+        "user": user,
+        "first_name": coach.first_name,
+        "middle_name": coach.middle_name,
+        "last_name": coach.last_name,
+        "email": coach.email,
+        "phone": coach.phone,
+        "dob": coach.dob,
+        "gender": coach.gender,
+        "fee": coach.fee,
+        "activeSince": coach.activeSince,
+        "isSlotBooked": coach.isSlotBooked,
+        "isActive": coach.isActive,
+        "meet_link": request.data["meet_link"],
     }
     serializer = CoachSerializer(instance=coach, data=newMeetLink)
     if serializer.is_valid():
@@ -836,68 +869,68 @@ def updateMeetLinkByCoach(request, _id):
     return Response(serializer.data)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def addEvent(request):
     event_id = uuid.uuid1()
     event_data = {
-        'name': request.data['name'],
-        'start_date': request.data['start_date'],
-        'end_date': request.data['end_date'],
-        'expire_date': request.data['expire_date'],
-        'count': request.data['count'],
-        'link': 'https://slots.meeraq.com/' + str(event_id) + '/',
-        '_id': str(event_id),
-        'coach': request.data['coach']
+        "name": request.data["name"],
+        "start_date": request.data["start_date"],
+        "end_date": request.data["end_date"],
+        "expire_date": request.data["expire_date"],
+        "count": request.data["count"],
+        "link": "https://slots.meeraq.com/" + str(event_id) + "/",
+        "_id": str(event_id),
+        "coach": request.data["coach"],
     }
     serializer = EventSerializer(data=event_data)
     if serializer.is_valid():
         serializer.save()
     else:
         print(serializer.errors)
-        return Response({'status': '400 Bad request', 'reason': 'Wrong data sent'}, status=400)
+        return Response({"status": "400 Bad request", "reason": "Wrong data sent"}, status=400)
     return Response(status=201)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def getEvents(request):
     events = Events.objects.all()
     serializer = EventSerializer(events, many=True)
-    return Response({'status': 'success', 'data': serializer.data}, status=200)
+    return Response({"status": "success", "data": serializer.data}, status=200)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def editEvents(request, event_id):
     event = Events.objects.get(id=event_id)
     event_data = {
-        'name': request.data['name'],
-        'start_date': event.start_date,
-        'end_date': request.data['end_date'],
-        'expire_date': request.data['expire_date'],
-        'count': request.data['count'],
-        'link': event.link,
-        '_id': event._id,
-        'coach': request.data['coach']
+        "name": request.data["name"],
+        "start_date": event.data["start_date"],
+        "end_date": request.data["end_date"],
+        "expire_date": request.data["expire_date"],
+        "count": request.data["count"],
+        "link": event.link,
+        "_id": event._id,
+        "coach": request.data["coach"],
     }
     serializer = EventSerializer(instance=event, data=event_data)
     if serializer.is_valid():
         serializer.save()
     else:
-        return Response({'status': '400 Bad request', 'reason': 'Wrong data sent'}, status=400)
-    return Response({'status': 'success', 'data': serializer.data}, status=200)
+        return Response({"status": "400 Bad request", "reason": "Wrong data sent"}, status=400)
+    return Response({"status": "success", "data": serializer.data}, status=200)
 
 
-@api_view(['DELETE'])
+@api_view(["DELETE"])
 @permission_classes([AllowAny])
 def deleteEvents(request, event_id):
     event = Events.objects.get(id=event_id)
     event.delete()
-    return Response({'status': 'success, Data deleted'}, status=200)
+    return Response({"status": "success, Data deleted"}, status=200)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def getSlotsByEventID(request, event_id):
     event = Events.objects.get(_id=event_id)
@@ -909,52 +942,55 @@ def getSlotsByEventID(request, event_id):
                 all_slots.append(slot)
     serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
     eventserializer = EventSerializer(event)
-    return Response({'status': 'success', 'slots': serializer.data, 'event': eventserializer.data}, status=200)
+    return Response({"status": "success", "slots": serializer.data, "event": eventserializer.data}, status=200)
 
 
-def createIcs(start_time, end_time):
-    fp = open('event.ics', 'w')
-    fp.write('BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nDTSTAMP:20221014T170000Z\nORGANIZER;CN=Meeraq:MAILTO:nishant@meeraq.com\nDTSTART:' +
-             start_time+'\nDTEND:20221015T035959Z'+end_time+'nSUMMARY:Meeraq | Coaching Session\nLOCATION:MeeraqHQ\nGEO:48.85299;2.36885\nEND:VEVENT\nEND:VCALENDAR')
+def createIcs(start_time, end_time, meet_link):
+    fp = open("event.ics", "w")
+    fp.write(
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nDTSTAMP:20221014T170000Z\nORGANIZER;CN=Meeraq:MAILTO:nishant@meeraq.com\nDTSTART:"
+        + start_time
+        + "\nDTEND:"
+        + end_time
+        + "nSUMMARY:Meeraq | Coaching Session\nLOCATION:"
+        + meet_link
+        + "\nGEO:48.85299;2.36885\nEND:VEVENT\nEND:VCALENDAR"
+    )
     fp.close()
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def confirmSlotsByLearner(request, slot_id):
     coach_slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
     coach_slot_serializer = ConfirmedSlotsbyCoachSerializer(coach_slot)
     if coach_slot.is_confirmed == False:
         coach_mail = Coach.objects.get(id=coach_slot.coach_id).email
-        booked_slot_coach = {
-            **coach_slot_serializer.data,
-            'is_confirmed': True
-        }
-        coach_serilizer = ConfirmedSlotsbyCoachSerializer(
-            instance=coach_slot, data=booked_slot_coach)
-        event = Events.objects.get(_id=request.data['event'])
+        booked_slot_coach = {**coach_slot_serializer.data, "is_confirmed": True}
+        coach_serilizer = ConfirmedSlotsbyCoachSerializer(instance=coach_slot, data=booked_slot_coach)
+        event = Events.objects.get(_id=request.data["event"])
         Booked_slot = {
-            'name': request.data['name'],
-            'email': request.data['email'],
-            'organisation': request.data['organisation'],
-            'phone_no': request.data['phone_no'],
-            'slot': coach_slot.id,
-            'event': event.id
+            "name": request.data["name"],
+            "email": request.data["email"],
+            "organisation": request.data["organisation"],
+            "phone_no": request.data["phone_no"],
+            "slot": coach_slot.id,
+            "event": event.id,
         }
         count = int(event.count)
         coach_ids = []
         for coach in event.coach.all():
             coach_ids.append(coach.id)
-        new_count = count-1
+        new_count = count - 1
         new_event_data = {
-            'name': event.name,
-            'start_date': event.start_date,
-            'end_date': event.end_date,
-            'expire_date': event.expire_date,
-            'count': str(new_count),
-            'link': event.link,
-            '_id': event._id,
-            'coach': coach_ids
+            "name": event.name,
+            "start_date": event.start_date,
+            "end_date": event.end_date,
+            "expire_date": event.expire_date,
+            "count": str(new_count),
+            "link": event.link,
+            "_id": event._id,
+            "coach": coach_ids,
         }
         event_serializer = EventSerializer(instance=event, data=new_event_data)
         if event_serializer.is_valid():
@@ -965,10 +1001,10 @@ def confirmSlotsByLearner(request, slot_id):
         serializer = ConfirmedSlotsbyLearnerSerializer(data=Booked_slot)
         if serializer.is_valid():
             booked_slots = LeanerConfirmedSlots.objects.all()
-            if request.data['warning'] == True:
+            if request.data["warning"] == True:
                 for slot in booked_slots:
-                    if (slot.email == request.data['email']) & (event.id == slot.event.id):
-                        return Response({'status': '409 Bad request', 'reason': 'email already exist'}, status=409)
+                    if (slot.email == request.data["email"]) & (event.id == slot.event.id):
+                        return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
                     else:
                         serializer.save()
                         if event_serializer.is_valid():
@@ -983,55 +1019,63 @@ def confirmSlotsByLearner(request, slot_id):
                     print(event_serializer.errors)
         else:
             print(serializer.errors)
-            return Response({'status': '400 Bad request', 'reason': 'wrong data sent'}, status=400)
+            return Response({"status": "400 Bad request", "reason": "wrong data sent"}, status=400)
 
         if coach_serilizer.is_valid():
             coach_serilizer.save()
         else:
-            return Response({'status': '400 Bad request', 'reason': 'coach data is wrong'}, status=400)
-        
-        start_time = datetime.fromtimestamp(int(coach_slot.start_time)/1000) #converting timestamp to date
-        start = (start_time.replace(microsecond=0).astimezone(utc).replace(
-            tzinfo=None).isoformat() + 'Z').replace(':', '').replace('-', '')
-        end_time=datetime.fromtimestamp(int(coach_slot.end_time)/1000)
-        end = (end_time.replace(microsecond=0).astimezone(utc).replace(
-            tzinfo=None).isoformat() + 'Z').replace(':', '').replace('-', '')
+            return Response({"status": "400 Bad request", "reason": "coach data is wrong"}, status=400)
 
-
-        date = datetime.fromtimestamp(
-                int(coach_slot.start_time)).strftime('%d %B %Y')
-        email_message = render_to_string("addevent.html", {
-                                     'name': request.data['name'], 'time': start_time, 'duration': "30 Min",'date':date})
-        createIcs(start, end)
-        email = EmailMessage(
-            'Meeraq | Coaching Session',
-            email_message,
-            'info@meeraq.com',
-            [request.data['email'], coach_mail],
-            html_message=email_message
+        start_time = datetime.fromtimestamp((int(coach_slot.start_time) / 1000) + 19800)  # converting timestamp to date
+        start = (
+            (start_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + "Z")
+            .replace(":", "")
+            .replace("-", "")
         )
-        email.attach_file('event.ics', 'text/calendar')
+        end_time = datetime.fromtimestamp((int(coach_slot.end_time) / 1000) + 19800)
+        end = (
+            (end_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + "Z")
+            .replace(":", "")
+            .replace("-", "")
+        )
+
+        date = datetime.fromtimestamp((int(coach_slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
+        email_message = render_to_string(
+            "addevent.html", {"name": request.data["name"], "time": start_time, "duration": "30 Min", "date": date}
+        )
+        meet_link = coach_slot.MEETING_LINK
+        createIcs(start, end, meet_link)
+        email = EmailMessage(
+            "Meeraq | Coaching Session",
+            email_message,
+            "info@meeraq.com",
+            [request.data["email"], coach_mail],
+            # html_message=email_message
+        )
+        email.content_subtype = "html"
+        email.attach_file("event.ics", "text/calendar")
         email.send()
         if os.path.exists("event.ics"):
             os.remove("event.ics")
         else:
-            print('file not found')
-        return Response({'status': 'success', 'data': serializer.data}, status=200)
+            print("file not found")
+        return Response({"status": "success", "data": serializer.data}, status=200)
     else:
-        return Response({'status': 'Error', 'reason': "Slot is already Booked"}, status=409)
+        return Response({"status": "Error", "reason": "Slot is already Booked"}, status=409)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def getConfirmSlotsByLearner(request):
     booked_slots = LeanerConfirmedSlots.objects.all()
     serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
-    return Response({'status': 'success', 'data': serializer.data}, status=200)
+    return Response({"status": "success", "data": serializer.data}, status=200)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def getConfirmSlotsByLearnerByEventId(request, event_id):
     booked_slots = LeanerConfirmedSlots.objects.filter(event=event_id)
     serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
-    return Response({'status': 'success', 'data': serializer.data}, status=200)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
