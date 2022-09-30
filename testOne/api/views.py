@@ -914,8 +914,8 @@ def getSlotsByEventID(request, event_id):
 
 def createIcs(start_time, end_time):
     fp = open('event.ics', 'w')
-    fp.write('BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nDTSTAMP:20221014T170000Z\nORGANIZER;CN=Nishant:MAILTO:nishant@meeraq.com\nDTSTART:' +
-             start_time+'\nDTEND:20221015T035959Z'+end_time+'nSUMMARY:Meeraq | Coaching Session \nLOCATION:https://www.google.com/\nGEO:48.85299;2.36885\nEND:VEVENT\nEND:VCALENDAR')
+    fp.write('BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nDTSTAMP:20221014T170000Z\nORGANIZER;CN=Meeraq:MAILTO:nishant@meeraq.com\nDTSTART:' +
+             start_time+'\nDTEND:20221015T035959Z'+end_time+'nSUMMARY:Meeraq | Coaching Session\nLOCATION:MeeraqHQ\nGEO:48.85299;2.36885\nEND:VEVENT\nEND:VCALENDAR')
     fp.close()
 
 
@@ -989,15 +989,17 @@ def confirmSlotsByLearner(request, slot_id):
             coach_serilizer.save()
         else:
             return Response({'status': '400 Bad request', 'reason': 'coach data is wrong'}, status=400)
-        start = (coach_slot.start_time.replace(microsecond=0).astimezone(utc).replace(
+        
+        start_time = datetime.fromtimestamp(int(coach_slot.start_time)/1000) #converting timestamp to date
+        start = (start_time.replace(microsecond=0).astimezone(utc).replace(
             tzinfo=None).isoformat() + 'Z').replace(':', '').replace('-', '')
-        end = (coach_slot.end_time.replace(microsecond=0).astimezone(utc).replace(
+        end_time=datetime.fromtimestamp(int(coach_slot.end_time)/1000)
+        end = (end_time.replace(microsecond=0).astimezone(utc).replace(
             tzinfo=None).isoformat() + 'Z').replace(':', '').replace('-', '')
-
         createIcs(start, end)
         email = EmailMessage(
-            'Subject',
-            'Email body',
+            'Meeraq | Coaching Session',
+            'Your are Invited',
             'info@meeraq.com',
             [request.data['email'], coach_mail]
         )
