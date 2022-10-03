@@ -905,7 +905,7 @@ def editEvents(request, event_id):
     event = Events.objects.get(id=event_id)
     event_data = {
         "name": request.data["name"],
-        "start_date": event.data["start_date"],
+        "start_date": request.data["start_date"],
         "end_date": request.data["end_date"],
         "expire_date": request.data["expire_date"],
         "count": request.data["count"],
