@@ -83,6 +83,8 @@ class ConfirmedSlotsbyCoach(models.Model):
     DESCRIPTION = models.CharField(blank=True, max_length=200, default="null")
     CC = models.CharField(blank=True, max_length=200, default="null")
     MEETING_LINK = models.CharField(blank=True, max_length=200, default=" ")
+    is_confirmed = models.BooleanField(default=False)
+    is_realeased = models.BooleanField(default=False)
 
 
 @receiver(reset_password_token_created)
@@ -107,3 +109,27 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
 
 
 
+class Events(models.Model):
+    name = models.CharField(max_length=200,default="Event")
+    start_date = models.DateField(default="2022-09-09")
+    end_date = models.DateField(default="2022-09-09")
+    expire_date = models.DateField(default="2022-09-09")
+    count = models.IntegerField(default=0)
+    link = models.CharField(max_length=200,default=" ",blank=True)
+    _id = models.CharField(max_length=1000)
+    coach = models.ManyToManyField(Coach)
+
+    def __str__(self):
+        return self.name
+
+
+class LeanerConfirmedSlots(models.Model):
+    name = models.CharField(max_length=200,default=" ")
+    email = models.EmailField()
+    phone_no = models.CharField(max_length=200)
+    organisation = models.CharField(max_length=200,blank=True,default=" ")
+    slot = models.ForeignKey(ConfirmedSlotsbyCoach,null=True, on_delete=models.SET_NULL)
+    event = models.ForeignKey(Events,null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return self.name

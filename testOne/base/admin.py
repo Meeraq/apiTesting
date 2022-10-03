@@ -1,13 +1,13 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import SlotForCoach,AdminRequest,Coach,Profile,ConfirmedSlotsbyCoach
+from .models import SlotForCoach,AdminRequest,Coach,Profile,ConfirmedSlotsbyCoach,Events,LeanerConfirmedSlots
 from import_export.admin import ImportExportMixin
 
 admin.site.register(Profile)
 admin.site.register(SlotForCoach)
-# admin.site.register(Courses)
-# admin.site.register(Learners)
+admin.site.register(Events)
+admin.site.register(LeanerConfirmedSlots)
 # admin.site.register(Batch)
 # admin.site.register(CourseCategorys)
 admin.site.register(Coach)

@@ -71,5 +71,11 @@ urlpatterns = [
 
     path('password_reset/', include('django_rest_passwordreset.urls',
          namespace='password_reset')),
-
+    path('add-event/',views.addEvent),
+    path('events/',views.getEvents),
+    path('edit-event/<str:event_id>/', views.editEvents),
+    path('delete-event/<str:event_id>/', views.deleteEvents),
+    path('get-slots-by-event-id/<str:event_id>/', views.getSlotsByEventID),
+    path('confirm-slot-by-learner/<str:slot_id>/',views.confirmSlotsByLearner),
+    path('get-booked-slots-by-learner/',views.getConfirmSlotsByLearner),
 ]

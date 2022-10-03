@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import AdminRequest
+from base.models import Events, LeanerConfirmedSlots
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -122,4 +123,16 @@ class AdminReqSerializer(serializers.ModelSerializer):
 class GetAdminReqSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdminRequest
+        fields = '__all__'
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Events
+        fields = '__all__'
+
+class ConfirmedSlotsbyLearnerSerializer(serializers.ModelSerializer):
+    # event = EventSerializer()
+    # slot = ConfirmedSlotsbyCoachSerializer()
+    class Meta:
+        model = LeanerConfirmedSlots
         fields = '__all__'
