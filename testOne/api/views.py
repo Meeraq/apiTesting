@@ -1,6 +1,5 @@
 from datetime import datetime
 from django.core.mail import EmailMessage
-from multiprocessing import Event
 import os
 from django.core.mail import send_mail
 from base.resources import ConfirmedSlotResource
@@ -13,7 +12,7 @@ from base.models import Coach, AdminRequest, Profile
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from pytz import timezone, utc
+from pytz import utc
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
@@ -921,7 +920,7 @@ def editEvents(request, event_id):
     event = Events.objects.get(id=event_id)
     event_data = {
         "name": request.data["name"],
-        "start_date": event.data["start_date"],
+        "start_date": request.data["start_date"],
         "end_date": request.data["end_date"],
         "expire_date": request.data["expire_date"],
         "count": request.data["count"],
@@ -963,11 +962,11 @@ def getSlotsByEventID(request, event_id):
 def createIcs(start_time, end_time, meet_link):
     fp = open("event.ics", "w")
     fp.write(
-        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nDTSTAMP:20221014T170000Z\nORGANIZER;CN=Meeraq:MAILTO:nishant@meeraq.com\nDTSTART:"
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:nishant@meeraq.com\nDTSTART:"
         + start_time
         + "\nDTEND:"
         + end_time
-        + "nSUMMARY:Meeraq | Coaching Session\nLOCATION:"
+        + "\nSUMMARY:Meeraq | Coaching Session\nLOCATION:"
         + meet_link
         + "\nGEO:48.85299;2.36885\nEND:VEVENT\nEND:VCALENDAR"
     )
@@ -1041,24 +1040,28 @@ def confirmSlotsByLearner(request, slot_id):
         else:
             return Response({"status": "400 Bad request", "reason": "coach data is wrong"}, status=400)
 
-        start_time = datetime.fromtimestamp((int(coach_slot.start_time) / 1000) + 19800)  # converting timestamp to date
+        start_time = datetime.fromtimestamp((int(coach_slot.start_time) / 1000))  # converting timestamp to date
         start = (
             (start_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + "Z")
             .replace(":", "")
             .replace("-", "")
         )
-        end_time = datetime.fromtimestamp((int(coach_slot.end_time) / 1000) + 19800)
+        end_time = datetime.fromtimestamp((int(coach_slot.end_time) / 1000))
         end = (
             (end_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + "Z")
             .replace(":", "")
             .replace("-", "")
         )
+        print("start : " + start + " end : " + end)
 
         date = datetime.fromtimestamp((int(coach_slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
-        email_message_learner = render_to_string(
-            "addevent.html", {"name": request.data["name"], "time": start_time, "duration": "30 Min", "date": date}
-        )
 
+        start_time_for_mail = datetime.fromtimestamp((int(coach_slot.start_time) / 1000) + 19800)
+
+        email_message_learner = render_to_string(
+            "addevent.html", {"name": request.data["name"], "time": start_time_for_mail, "duration": "30 Min", "date": date}
+        
+        )
         email_message_coach = render_to_string(
             "addevent.html", {"name": coach_data.first_name, "time": start_time, "duration": "30 Min", "date": date}
         )
@@ -1108,4 +1111,3 @@ def getConfirmSlotsByLearnerByEventId(request, event_id):
     booked_slots = LeanerConfirmedSlots.objects.filter(event=event_id)
     serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
-
