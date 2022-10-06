@@ -115,6 +115,7 @@ class Events(models.Model):
     end_date = models.DateField(default="2022-09-09")
     expire_date = models.DateField(default="2022-09-09")
     count = models.IntegerField(default=0)
+    min_count = models.IntegerField(default=0,blank=True)
     link = models.CharField(max_length=200,default=" ",blank=True)
     _id = models.CharField(max_length=1000)
     coach = models.ManyToManyField(Coach)
@@ -134,3 +135,10 @@ class LeanerConfirmedSlots(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class DeleteConfirmedSlotsbyAdmin(models.Model):
+    requested_person = models.CharField(max_length=200,default=" ")
+    reason = models.CharField(max_length=200,default=" ")
+    slot_id = models.CharField(max_length=200,default=" ")
+    admin_name = models.CharField(max_length=200,default=" ")
