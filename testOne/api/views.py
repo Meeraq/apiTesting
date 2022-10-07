@@ -963,7 +963,7 @@ def getSlotsByEventID(request, event_id):
 def createIcs(start_time, end_time, meet_link):
     fp = open("event.ics", "w")
     fp.write(
-        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:nishant@meeraq.com\nDTSTART:"
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:info@meeraq.com\nDTSTART:"
         + start_time
         + "\nDTEND:"
         + end_time
@@ -1018,7 +1018,6 @@ def confirmSlotsByLearner(request, slot_id):
         if serializer.is_valid():
             booked_slots = LeanerConfirmedSlots.objects.all()
             if request.data["warning"] == True:
-                print(bool(booked_slots))
                 if not bool(booked_slots):
                     serializer.save()
                 else:
@@ -1097,7 +1096,7 @@ def confirmSlotsByLearner(request, slot_id):
             print("file not found")
         return Response({"status": "success", "data": serializer.data}, status=200)
     else:
-        return Response({"status": "Error", "reason": "Slot is already Booked"}, status=409)
+        return Response({"status": "Error", "reason": "Slot is already Booked"}, status=408)
 
 
 @api_view(["GET"])
@@ -1119,11 +1118,12 @@ def getConfirmSlotsByLearnerByEventId(request, event_id):
 def createCancledIcs(start_time, end_time):
     fp = open("cancelevent.ics", "w")
     fp.write(
-        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nMETHOD:CANCEL\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:nishant@meeraq.com\nDTSTART:"
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:info@meeraq.com\nDTSTART:"
         + start_time
         + "\nDTEND:"
         + end_time
-        + "\nSUMMARY:Meeraq | Coaching Session\nGEO:48.85299;2.36885\nEND:VEVENT\nEND:VCALENDAR\nSTATUS:CANCELED"
+        + "\nSUMMARY:Meeraq |Canceled Coaching Session"
+        + "\nGEO:48.85299;2.36885\nEND:VEVENT\nEND:VCALENDAR"
     )
     fp.close()
 
@@ -1156,6 +1156,10 @@ def deleteConfirmSlotsAdmin(request, slot_id):
     # email.content_subtype = "html"
     email.attach_file("cancelevent.ics", "text/calendar")
     email.send()
+    if os.path.exists("cancelevent.ics"):
+        os.remove("cancelevent.ics")
+    else:
+        print("file not found")
 
     dlt_data_serializer = dltSlotSerializer(data=request.data)
     if dlt_data_serializer.is_valid():
