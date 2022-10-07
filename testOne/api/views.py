@@ -19,6 +19,7 @@ from base.models import Events
 from base.models import LeanerConfirmedSlots
 from .serializers import (
     AdminReqSerializer,
+    ConfirmedLearnerSerializer,
     ConfirmedSlotsbyCoachSerializer,
     ConfirmedSlotsbyLearnerSerializer,
     EditUserSerializer,
@@ -1173,6 +1174,6 @@ def deleteConfirmSlotsAdmin(request,slot_id):
 
     
     new_booked_slots = LeanerConfirmedSlots.objects.all()
-    serializer = ConfirmedSlotsbyLearnerSerializer(new_booked_slots, many=True)
+    serializer = ConfirmedLearnerSerializer(new_booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 

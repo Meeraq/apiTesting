@@ -133,6 +133,12 @@ class EventSerializer(serializers.ModelSerializer):
 
 class ConfirmedSlotsbyLearnerSerializer(serializers.ModelSerializer):
     # event = EventSerializer()
+    # slot = ConfirmedSlotsbyCoachSerializer()
+    class Meta:
+        model = LeanerConfirmedSlots
+        fields = '__all__'
+
+class ConfirmedLearnerSerializer(serializers.ModelSerializer):
     slot = ConfirmedSlotsbyCoachSerializer()
     class Meta:
         model = LeanerConfirmedSlots
