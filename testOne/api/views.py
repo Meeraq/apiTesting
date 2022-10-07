@@ -1112,7 +1112,7 @@ def getConfirmSlotsByLearner(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getConfirmSlotsByLearnerByEventId(request, event_id):
-    booked_slots = LeanerConfirmedSlots.objects.get(event=event_id)
+    booked_slots = LeanerConfirmedSlots.objects.filter(event=event_id)
     serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
@@ -1150,7 +1150,7 @@ def deleteConfirmSlotsAdmin(request,slot_id):
             .replace("-", "")
         ) 
     createCancledIcs(start, end)
-    coach = Coach.objects.filter(id = booked_slots.slot.coach_id)
+    coach = Coach.objects.get(id = booked_slots.slot.coach_id)
     email = EmailMessage(
             "Meeraq | Canceled Coaching Session",
             "Canceled Session",
@@ -1167,10 +1167,7 @@ def deleteConfirmSlotsAdmin(request,slot_id):
         dlt_data_serializer.save()
     else:
         print(dlt_data_serializer.errors)
-    dlt_reason = ConfirmedSlotsbyLearnerSerializer(
-        reason=request.data['reason'],requested_person=request.data['requested_person'],slot_id=request.data['slot_id'],admin_name=request.data['admin_name']
-    )
-    dlt_reason.save()
+
 
     booked_slots.delete()
 
