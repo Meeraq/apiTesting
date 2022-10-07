@@ -963,7 +963,7 @@ def getSlotsByEventID(request, event_id):
 def createIcs(start_time, end_time, meet_link):
     fp = open("event.ics", "w")
     fp.write(
-        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:nishant@meeraq.com\nDTSTART:"
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:info@meeraq.com\nDTSTART:"
         + start_time
         + "\nDTEND:"
         + end_time
@@ -1119,7 +1119,7 @@ def getConfirmSlotsByLearnerByEventId(request, event_id):
 def createCancledIcs(start_time, end_time):
     fp = open("cancelevent.ics", "w")
     fp.write(
-        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nMETHOD:CANCEL\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:nishant@meeraq.com\nDTSTART:"
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nMETHOD:CANCEL\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:info@meeraq.com\nDTSTART:"
         + start_time
         + "\nDTEND:"
         + end_time
