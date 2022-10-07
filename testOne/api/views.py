@@ -1106,7 +1106,7 @@ def confirmSlotsByLearner(request, slot_id):
 @permission_classes([AllowAny])
 def getConfirmSlotsByLearner(request):
     booked_slots = LeanerConfirmedSlots.objects.all()
-    serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
+    serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
@@ -1174,6 +1174,6 @@ def deleteConfirmSlotsAdmin(request,slot_id):
 
     
     new_booked_slots = LeanerConfirmedSlots.objects.all()
-    serializer = ConfirmedLearnerSerializer(new_booked_slots, many=True)
+    serializer = ConfirmedSlotsbyLearnerSerializer(new_booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
