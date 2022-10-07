@@ -900,7 +900,7 @@ def getEvents(request):
     today = date.today()
     events = Events.objects.all()
     for event in events:
-        if event.expire_date > today:
+        if event.expire_date < today:
             event_query_to_dict = EventSerializer(event)
             new_event = {
                 **event_query_to_dict.data,
