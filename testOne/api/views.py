@@ -28,6 +28,7 @@ from .serializers import (
     SlotForCoachSerializer,
     UserSerializer,
     ProfileSerializer,
+    dltSlotSerializer,
 )
 
 from django.template.loader import render_to_string
@@ -1111,7 +1112,7 @@ def getConfirmSlotsByLearner(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getConfirmSlotsByLearnerByEventId(request, event_id):
-    booked_slots = LeanerConfirmedSlots.objects.filter(event=event_id)
+    booked_slots = LeanerConfirmedSlots.objects.get(event=event_id)
     serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
@@ -1133,7 +1134,7 @@ def createCancledIcs(start_time, end_time):
 @api_view(["DELETE"])
 @permission_classes([AllowAny])
 def deleteConfirmSlotsAdmin(request,slot_id):
-    booked_slots = LeanerConfirmedSlots.objects.filter(id=slot_id)
+    booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
     
 
     start_time = datetime.fromtimestamp((int(booked_slots.slot.start_time) / 1000))  # converting timestamp to date
@@ -1148,7 +1149,7 @@ def deleteConfirmSlotsAdmin(request,slot_id):
             .replace(":", "")
             .replace("-", "")
         ) 
-
+    createCancledIcs(start, end)
     coach = Coach.objects.filter(id = booked_slots.slot.coach_id)
     email = EmailMessage(
             "Meeraq | Canceled Coaching Session",
@@ -1161,6 +1162,11 @@ def deleteConfirmSlotsAdmin(request,slot_id):
     email.attach_file("cancelevent.ics", "text/calendar")
     email.send()
 
+    dlt_data_serializer = dltSlotSerializer(data=request.data)
+    if dlt_data_serializer.is_valid():
+        dlt_data_serializer.save()
+    else:
+        print(dlt_data_serializer.errors)
     dlt_reason = ConfirmedSlotsbyLearnerSerializer(
         reason=request.data['reason'],requested_person=request.data['requested_person'],slot_id=request.data['slot_id'],admin_name=request.data['admin_name']
     )
@@ -1168,7 +1174,7 @@ def deleteConfirmSlotsAdmin(request,slot_id):
 
     booked_slots.delete()
 
-    createCancledIcs(start, end)
+    
     new_booked_slots = LeanerConfirmedSlots.objects.all()
     serializer = ConfirmedSlotsbyLearnerSerializer(new_booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
