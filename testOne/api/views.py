@@ -19,6 +19,7 @@ from base.models import Events
 from base.models import LeanerConfirmedSlots
 from .serializers import (
     AdminReqSerializer,
+    ConfirmedLearnerSerializer,
     ConfirmedSlotsbyCoachSerializer,
     ConfirmedSlotsbyLearnerSerializer,
     EditUserSerializer,
@@ -28,6 +29,7 @@ from .serializers import (
     SlotForCoachSerializer,
     UserSerializer,
     ProfileSerializer,
+    dltSlotSerializer,
 )
 
 from django.template.loader import render_to_string
@@ -178,7 +180,8 @@ def addcoach(request):
         )
         newUser.save()
         userToSave = User.objects.get(username=request.data["email"])
-        newProfile = Profile(user=userToSave, type="coach", email=request.data["email"])
+        newProfile = Profile(user=userToSave, type="coach",
+                             email=request.data["email"])
         newProfile.save()
         serializer.save(user_id=newProfile.id)
         send_mail(
@@ -502,7 +505,8 @@ def registerUser(request):
         return Response(status="403")
     user = User.objects.get(username=serializer.data["email"])
     userToSave = User.objects.get(username=serializer.data["email"])
-    newProfile = Profile(user=userToSave, type="admin", email=serializer.data["email"])
+    newProfile = Profile(user=userToSave, type="admin",
+                         email=serializer.data["email"])
     newProfile.save()
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"status": 200, "payload": serializer.data, "token": str(token)})
@@ -625,12 +629,14 @@ def getProfile(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def makeSlotRequest(request):
-    adminRequest = AdminRequest(name=request.data["request_name"], expire_date=request.data["expiry_date"])
+    adminRequest = AdminRequest(
+        name=request.data["request_name"], expire_date=request.data["expiry_date"])
     adminRequest.save()
     for coach in request.data["coach_id"]:
         single_coach = Coach.objects.get(id=coach)
         email_message = render_to_string(
-            "makerequest.html", {"expire_date": request.data["expiry_date"], "coach_name": single_coach.first_name}
+            "makerequest.html", {
+                "expire_date": request.data["expiry_date"], "coach_name": single_coach.first_name}
         )
 
         send_mail(
@@ -667,7 +673,8 @@ def getAdminRequestData(request):
                 "expire_date": _request.expire_date,
                 "name": _request.name,
             }
-            newReq = AdminRequest.objects.filter(expire_date=_request.expire_date).first()
+            newReq = AdminRequest.objects.filter(
+                expire_date=_request.expire_date).first()
             adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
             if adminSerializer.is_valid():
                 adminSerializer.save()
@@ -714,7 +721,8 @@ def getSlotofRequest(request, coach_id, type):
                 "expire_date": _request.expire_date,
                 "name": _request.name,
             }
-            newReq = AdminRequest.objects.filter(expire_date=_request.expire_date).first()
+            newReq = AdminRequest.objects.filter(
+                expire_date=_request.expire_date).first()
             adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
             if adminSerializer.is_valid():
                 adminSerializer.save()
@@ -758,9 +766,12 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
             date=slot["date"],
             coach_id=coach_id,
             request_ID=int(request_id),
-            SESSION_START_TIME=datetime.fromtimestamp(start_timestamp).strftime("%I:%M %p"),
-            SESSION_END_TIME=datetime.fromtimestamp(end_timestamp).strftime("%I:%M %p"),
-            SESSION_DATE=datetime.fromtimestamp(int(start_timestamp)).strftime("%d %B %Y"),
+            SESSION_START_TIME=datetime.fromtimestamp(
+                start_timestamp).strftime("%I:%M %p"),
+            SESSION_END_TIME=datetime.fromtimestamp(
+                end_timestamp).strftime("%I:%M %p"),
+            SESSION_DATE=datetime.fromtimestamp(
+                int(start_timestamp)).strftime("%d %B %Y"),
             COACH_NAME=Coach.objects.get(id=coach_id).first_name
             + " "
             + Coach.objects.get(id=coach_id).middle_name
@@ -784,8 +795,10 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
 @permission_classes([AllowAny])
 def export(request, request_id):
     coach_slot_file = ConfirmedSlotResource()
-    dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
-    response = HttpResponse(dataset.xls, content_type="application/vnd.ms-excel")
+    dataset = coach_slot_file.export(
+        ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
+    response = HttpResponse(
+        dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="slots.xls"'
     return response
 
@@ -796,7 +809,8 @@ def export_all(request):
     today = date.today()
     coach_slot_file = ConfirmedSlotResource()
     dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.all())
-    response = HttpResponse(dataset.xls, content_type="application/vnd.ms-excel")
+    response = HttpResponse(
+        dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="allslots.xls"'
     return response
 
@@ -821,7 +835,8 @@ def getConfirmedSlotsbyRequestID(request, req_id):
 @permission_classes([AllowAny])
 def updateConfirmedSlots(request, slot_id):
     slot = ConfirmedSlotsbyCoach.objects.filter(id=slot_id).first()
-    serializer = ConfirmedSlotsbyCoachSerializer(instance=slot, data=request.data)
+    serializer = ConfirmedSlotsbyCoachSerializer(
+        instance=slot, data=request.data)
     if serializer.is_valid():
         serializer.save()
     return Response({"details": "success", "data": serializer.data}, status=201)
@@ -878,7 +893,8 @@ def addEvent(request):
         "end_date": request.data["end_date"],
         "expire_date": request.data["expire_date"],
         "count": request.data["count"],
-        "link": "https://slots.meeraq.com/" + str(event_id) + "/",
+        "min_count": request.data["count"],
+        "link": "https://learner.meeraq.com/book-slot/" + str(event_id) + "/",
         "_id": str(event_id),
         "coach": request.data["coach"],
     }
@@ -894,8 +910,20 @@ def addEvent(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getEvents(request):
+    today = date.today()
     events = Events.objects.all()
-    serializer = EventSerializer(events, many=True)
+    for event in events:
+        if event.expire_date < today:
+            event_query_to_dict = EventSerializer(event)
+            new_event = {**event_query_to_dict.data, "is_expired": True}
+            event_serilizer = EventSerializer(instance=event, data=new_event)
+            if event_serilizer.is_valid():
+                event_serilizer.save()
+            else:
+                print(event_serilizer.errors)
+                return Response({"status": "error", "reason": "error in expire event"}, status=401)
+    updated_events = Events.objects.all()
+    serializer = EventSerializer(updated_events, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
@@ -909,6 +937,7 @@ def editEvents(request, event_id):
         "end_date": request.data["end_date"],
         "expire_date": request.data["expire_date"],
         "count": request.data["count"],
+        "min_count": request.data["count"],
         "link": event.link,
         "_id": event._id,
         "coach": request.data["coach"],
@@ -947,7 +976,7 @@ def getSlotsByEventID(request, event_id):
 def createIcs(start_time, end_time, meet_link):
     fp = open("event.ics", "w")
     fp.write(
-        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:nishant@meeraq.com\nDTSTART:"
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:info@meeraq.com\nDTSTART:"
         + start_time
         + "\nDTEND:"
         + end_time
@@ -964,9 +993,11 @@ def confirmSlotsByLearner(request, slot_id):
     coach_slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
     coach_slot_serializer = ConfirmedSlotsbyCoachSerializer(coach_slot)
     if coach_slot.is_confirmed == False:
-        coach_mail = Coach.objects.get(id=coach_slot.coach_id).email
-        booked_slot_coach = {**coach_slot_serializer.data, "is_confirmed": True}
-        coach_serilizer = ConfirmedSlotsbyCoachSerializer(instance=coach_slot, data=booked_slot_coach)
+        coach_data = Coach.objects.get(id=coach_slot.coach_id)
+        booked_slot_coach = {
+            **coach_slot_serializer.data, "is_confirmed": True}
+        coach_serilizer = ConfirmedSlotsbyCoachSerializer(
+            instance=coach_slot, data=booked_slot_coach)
         event = Events.objects.get(_id=request.data["event"])
         Booked_slot = {
             "name": request.data["name"],
@@ -987,6 +1018,7 @@ def confirmSlotsByLearner(request, slot_id):
             "end_date": event.end_date,
             "expire_date": event.expire_date,
             "count": str(new_count),
+            "min_count": event.min_count,
             "link": event.link,
             "_id": event._id,
             "coach": coach_ids,
@@ -1001,15 +1033,18 @@ def confirmSlotsByLearner(request, slot_id):
         if serializer.is_valid():
             booked_slots = LeanerConfirmedSlots.objects.all()
             if request.data["warning"] == True:
-                for slot in booked_slots:
-                    if (slot.email == request.data["email"]) & (event.id == slot.event.id):
-                        return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
-                    else:
-                        serializer.save()
-                        if event_serializer.is_valid():
-                            event_serializer.save()
+                if not bool(booked_slots):
+                    serializer.save()
+                else:
+                    for slot in booked_slots:
+                        if (slot.email == request.data["email"]) & (event.id == slot.event.id):
+                            return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
                         else:
-                            print(event_serializer.errors)
+                            serializer.save()
+                            if event_serializer.is_valid():
+                                event_serializer.save()
+                            else:
+                                print(event_serializer.errors)
             else:
                 serializer.save()
                 if event_serializer.is_valid():
@@ -1025,53 +1060,72 @@ def confirmSlotsByLearner(request, slot_id):
         else:
             return Response({"status": "400 Bad request", "reason": "coach data is wrong"}, status=400)
 
-        start_time = datetime.fromtimestamp((int(coach_slot.start_time) / 1000))  # converting timestamp to date
+        start_time = datetime.fromtimestamp(
+            (int(coach_slot.start_time) / 1000))  # converting timestamp to date
         start = (
-            (start_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + "Z")
+            (start_time.replace(microsecond=0).astimezone(
+                utc).replace(tzinfo=None).isoformat() + "Z")
             .replace(":", "")
             .replace("-", "")
         )
         end_time = datetime.fromtimestamp((int(coach_slot.end_time) / 1000))
         end = (
-            (end_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + "Z")
+            (end_time.replace(microsecond=0).astimezone(
+                utc).replace(tzinfo=None).isoformat() + "Z")
             .replace(":", "")
             .replace("-", "")
         )
-        print("start : " + start + " end : " + end)
 
-        date = datetime.fromtimestamp((int(coach_slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
-        start_time_for_mail = datetime.fromtimestamp((int(coach_slot.start_time) / 1000) + 19800)
+        date = datetime.fromtimestamp(
+            (int(coach_slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
 
-        email_message = render_to_string(
+        start_time_for_mail = datetime.fromtimestamp(
+            (int(coach_slot.start_time) / 1000) + 19800)
+
+        email_message_learner = render_to_string(
             "addevent.html",
-            {"name": request.data["name"], "time": start_time_for_mail, "duration": "30 Min", "date": date},
+            {"name": request.data["name"], "time": start_time_for_mail,
+                "duration": "30 Min", "date": date},
+        )
+        email_message_coach = render_to_string(
+            "addevent.html", {"name": coach_data.first_name,
+                              "time": start_time, "duration": "30 Min", "date": date}
         )
         meet_link = coach_slot.MEETING_LINK
         createIcs(start, end, meet_link)
         email = EmailMessage(
             "Meeraq | Coaching Session",
-            email_message,
+            email_message_learner,
             "info@meeraq.com",
-            [request.data["email"], coach_mail],
-            # html_message=email_message
+            [request.data["email"]],
         )
         email.content_subtype = "html"
         email.attach_file("event.ics", "text/calendar")
         email.send()
+
+        email_coach = EmailMessage(
+            "Meeraq | Coaching Session",
+            email_message_coach,
+            "info@meeraq.com",
+            [coach_data.email],
+        )
+        email_coach.content_subtype = "html"
+        email_coach.attach_file("event.ics", "text/calendar")
+        email_coach.send()
         if os.path.exists("event.ics"):
             os.remove("event.ics")
         else:
             print("file not found")
         return Response({"status": "success", "data": serializer.data}, status=200)
     else:
-        return Response({"status": "Error", "reason": "Slot is already Booked"}, status=409)
+        return Response({"status": "Error", "reason": "Slot is already Booked"}, status=408)
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getConfirmSlotsByLearner(request):
     booked_slots = LeanerConfirmedSlots.objects.all()
-    serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
+    serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
@@ -1079,5 +1133,67 @@ def getConfirmSlotsByLearner(request):
 @permission_classes([AllowAny])
 def getConfirmSlotsByLearnerByEventId(request, event_id):
     booked_slots = LeanerConfirmedSlots.objects.filter(event=event_id)
-    serializer = ConfirmedSlotsbyLearnerSerializer(booked_slots, many=True)
+    serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+def createCancledIcs(start_time, end_time):
+    fp = open("cancelevent.ics", "w")
+    fp.write(
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\nBEGIN:VEVENT\nUID:uid1@example.com\nORGANIZER;CN=Meeraq:MAILTO:info@meeraq.com\nDTSTART:"
+        + start_time
+        + "\nDTEND:"
+        + end_time
+        + "\nSUMMARY:Meeraq |Canceled Coaching Session"
+        + "\nGEO:48.85299;2.36885\nEND:VEVENT\nEND:VCALENDAR"
+    )
+    fp.close()
+
+
+@api_view(["DELETE"])
+@permission_classes([AllowAny])
+def deleteConfirmSlotsAdmin(request, slot_id):
+    booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
+
+    start_time = datetime.fromtimestamp(
+        (int(booked_slots.slot.start_time) / 1000))  # converting timestamp to date
+    start = (
+        (start_time.replace(microsecond=0).astimezone(
+            utc).replace(tzinfo=None).isoformat() + "Z")
+        .replace(":", "")
+        .replace("-", "")
+    )
+    end_time = datetime.fromtimestamp((int(booked_slots.slot.end_time) / 1000))
+    end = (
+        (end_time.replace(microsecond=0).astimezone(
+            utc).replace(tzinfo=None).isoformat() + "Z")
+        .replace(":", "")
+        .replace("-", "")
+    )
+    createCancledIcs(start, end)
+    coach = Coach.objects.get(id=booked_slots.slot.coach_id)
+    email = EmailMessage(
+        "Meeraq | Canceled Coaching Session",
+        "Canceled Session",
+        "info@meeraq.com",
+        [booked_slots.email, coach.email],
+    )
+    # email.content_subtype = "html"
+    email.attach_file("cancelevent.ics", "text/calendar")
+    email.send()
+    if os.path.exists("cancelevent.ics"):
+        os.remove("cancelevent.ics")
+    else:
+        print("file not found")
+
+    dlt_data_serializer = dltSlotSerializer(data=request.data)
+    if dlt_data_serializer.is_valid():
+        dlt_data_serializer.save()
+    else:
+        print(dlt_data_serializer.errors)
+
+    booked_slots.delete()
+
+    new_booked_slots = LeanerConfirmedSlots.objects.all()
+    serializer = ConfirmedSlotsbyLearnerSerializer(new_booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)

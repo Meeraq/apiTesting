@@ -8,6 +8,7 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import AdminRequest
 from base.models import Events, LeanerConfirmedSlots
+from base.models import DeleteConfirmedSlotsbyAdmin
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -135,4 +136,15 @@ class ConfirmedSlotsbyLearnerSerializer(serializers.ModelSerializer):
     # slot = ConfirmedSlotsbyCoachSerializer()
     class Meta:
         model = LeanerConfirmedSlots
+        fields = '__all__'
+
+class ConfirmedLearnerSerializer(serializers.ModelSerializer):
+    slot = ConfirmedSlotsbyCoachSerializer()
+    class Meta:
+        model = LeanerConfirmedSlots
+        fields = '__all__'
+
+class dltSlotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeleteConfirmedSlotsbyAdmin
         fields = '__all__'
