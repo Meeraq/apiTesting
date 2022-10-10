@@ -180,7 +180,8 @@ def addcoach(request):
         )
         newUser.save()
         userToSave = User.objects.get(username=request.data["email"])
-        newProfile = Profile(user=userToSave, type="coach", email=request.data["email"])
+        newProfile = Profile(user=userToSave, type="coach",
+                             email=request.data["email"])
         newProfile.save()
         serializer.save(user_id=newProfile.id)
         send_mail(
@@ -446,43 +447,41 @@ def login_user(request):
     password = request.data["password"]
     user = authenticate(username=username, password=password)
     if user is not None:
-        print(user)
-        print(user.last_login)
         if user.profile.type == "coach":
-            userProfile = Coach.objects.get(email=username)
-            token = Token.objects.get_or_create(user=user)
-            return Response(
-                {
-                    "status": "200",
-                    "username": user.username,
-                    "first_name": userProfile.first_name,
-                    "middle_name": userProfile.middle_name,
-                    "last_name": userProfile.last_name,
-                    "token": str(token[0]),
-                    "email": userProfile.email,
-                    "usertype": user.profile.type,
-                    "id": userProfile.id,
-                }
-            )
-        # elif user.profile.type == 'learner':
-        #     userProfile = Learners.objects.get(email=username)
-        # elif user.profile.type == 'faculty':
-        #     userProfile = Faculty.objects.get(email=username)
+            if request.data['type'] == 'coach':
+                userProfile = Coach.objects.get(email=username)
+                token = Token.objects.get_or_create(user=user)
+                return Response(
+                    {
+                        "status": "200",
+                        "username": user.username,
+                        "first_name": userProfile.first_name,
+                        "middle_name": userProfile.middle_name,
+                        "last_name": userProfile.last_name,
+                        "token": str(token[0]),
+                        "email": userProfile.email,
+                        "usertype": user.profile.type,
+                        "id": userProfile.id,
+                    }
+                )
+            else:
+                return Response({"reason": "No user found"}, status=404)
         elif user.profile.type == "admin":
-            userProfile = User.objects.get(email=username)
-            token = Token.objects.get_or_create(user=user)
-            return Response(
-                {
-                    "status": "200",
-                    "username": user.username,
-                    "token": str(token[0]),
-                    "email": userProfile.email,
-                    "usertype": user.profile.type,
-                    "id": userProfile.id,
-                }
-            )
-        # token = Token.objects.get_or_create(user=user)
-        # return Response({'status': '200', 'username': user.username, 'name': userProfile.name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+            if request.data['type'] == 'admin':
+                userProfile = User.objects.get(email=username)
+                token = Token.objects.get_or_create(user=user)
+                return Response(
+                    {
+                        "status": "200",
+                        "username": user.username,
+                        "token": str(token[0]),
+                        "email": userProfile.email,
+                        "usertype": user.profile.type,
+                        "id": userProfile.id,
+                    }
+                )
+            else:
+                return Response({"reason": "No user found"}, status=404)
     else:
         userFound = User.objects.filter(email=username)
         if userFound.exists():
@@ -504,7 +503,8 @@ def registerUser(request):
         return Response(status="403")
     user = User.objects.get(username=serializer.data["email"])
     userToSave = User.objects.get(username=serializer.data["email"])
-    newProfile = Profile(user=userToSave, type="admin", email=serializer.data["email"])
+    newProfile = Profile(user=userToSave, type="admin",
+                         email=serializer.data["email"])
     newProfile.save()
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"status": 200, "payload": serializer.data, "token": str(token)})
@@ -627,12 +627,14 @@ def getProfile(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def makeSlotRequest(request):
-    adminRequest = AdminRequest(name=request.data["request_name"], expire_date=request.data["expiry_date"])
+    adminRequest = AdminRequest(
+        name=request.data["request_name"], expire_date=request.data["expiry_date"])
     adminRequest.save()
     for coach in request.data["coach_id"]:
         single_coach = Coach.objects.get(id=coach)
         email_message = render_to_string(
-            "makerequest.html", {"expire_date": request.data["expiry_date"], "coach_name": single_coach.first_name}
+            "makerequest.html", {
+                "expire_date": request.data["expiry_date"], "coach_name": single_coach.first_name}
         )
 
         send_mail(
@@ -669,7 +671,8 @@ def getAdminRequestData(request):
                 "expire_date": _request.expire_date,
                 "name": _request.name,
             }
-            newReq = AdminRequest.objects.filter(expire_date=_request.expire_date).first()
+            newReq = AdminRequest.objects.filter(
+                expire_date=_request.expire_date).first()
             adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
             if adminSerializer.is_valid():
                 adminSerializer.save()
@@ -716,7 +719,8 @@ def getSlotofRequest(request, coach_id, type):
                 "expire_date": _request.expire_date,
                 "name": _request.name,
             }
-            newReq = AdminRequest.objects.filter(expire_date=_request.expire_date).first()
+            newReq = AdminRequest.objects.filter(
+                expire_date=_request.expire_date).first()
             adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
             if adminSerializer.is_valid():
                 adminSerializer.save()
@@ -760,9 +764,12 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
             date=slot["date"],
             coach_id=coach_id,
             request_ID=int(request_id),
-            SESSION_START_TIME=datetime.fromtimestamp(start_timestamp).strftime("%I:%M %p"),
-            SESSION_END_TIME=datetime.fromtimestamp(end_timestamp).strftime("%I:%M %p"),
-            SESSION_DATE=datetime.fromtimestamp(int(start_timestamp)).strftime("%d %B %Y"),
+            SESSION_START_TIME=datetime.fromtimestamp(
+                start_timestamp).strftime("%I:%M %p"),
+            SESSION_END_TIME=datetime.fromtimestamp(
+                end_timestamp).strftime("%I:%M %p"),
+            SESSION_DATE=datetime.fromtimestamp(
+                int(start_timestamp)).strftime("%d %B %Y"),
             COACH_NAME=Coach.objects.get(id=coach_id).first_name
             + " "
             + Coach.objects.get(id=coach_id).middle_name
@@ -786,8 +793,10 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
 @permission_classes([AllowAny])
 def export(request, request_id):
     coach_slot_file = ConfirmedSlotResource()
-    dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
-    response = HttpResponse(dataset.xls, content_type="application/vnd.ms-excel")
+    dataset = coach_slot_file.export(
+        ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
+    response = HttpResponse(
+        dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="slots.xls"'
     return response
 
@@ -798,7 +807,8 @@ def export_all(request):
     today = date.today()
     coach_slot_file = ConfirmedSlotResource()
     dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.all())
-    response = HttpResponse(dataset.xls, content_type="application/vnd.ms-excel")
+    response = HttpResponse(
+        dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="allslots.xls"'
     return response
 
@@ -823,7 +833,8 @@ def getConfirmedSlotsbyRequestID(request, req_id):
 @permission_classes([AllowAny])
 def updateConfirmedSlots(request, slot_id):
     slot = ConfirmedSlotsbyCoach.objects.filter(id=slot_id).first()
-    serializer = ConfirmedSlotsbyCoachSerializer(instance=slot, data=request.data)
+    serializer = ConfirmedSlotsbyCoachSerializer(
+        instance=slot, data=request.data)
     if serializer.is_valid():
         serializer.save()
     return Response({"details": "success", "data": serializer.data}, status=201)
@@ -981,8 +992,10 @@ def confirmSlotsByLearner(request, slot_id):
     coach_slot_serializer = ConfirmedSlotsbyCoachSerializer(coach_slot)
     if coach_slot.is_confirmed == False:
         coach_data = Coach.objects.get(id=coach_slot.coach_id)
-        booked_slot_coach = {**coach_slot_serializer.data, "is_confirmed": True}
-        coach_serilizer = ConfirmedSlotsbyCoachSerializer(instance=coach_slot, data=booked_slot_coach)
+        booked_slot_coach = {
+            **coach_slot_serializer.data, "is_confirmed": True}
+        coach_serilizer = ConfirmedSlotsbyCoachSerializer(
+            instance=coach_slot, data=booked_slot_coach)
         event = Events.objects.get(_id=request.data["event"])
         Booked_slot = {
             "name": request.data["name"],
@@ -1046,29 +1059,36 @@ def confirmSlotsByLearner(request, slot_id):
         else:
             return Response({"status": "400 Bad request", "reason": "coach data is wrong"}, status=400)
 
-        start_time = datetime.fromtimestamp((int(coach_slot.start_time) / 1000))  # converting timestamp to date
+        start_time = datetime.fromtimestamp(
+            (int(coach_slot.start_time) / 1000))  # converting timestamp to date
         start = (
-            (start_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + "Z")
+            (start_time.replace(microsecond=0).astimezone(
+                utc).replace(tzinfo=None).isoformat() + "Z")
             .replace(":", "")
             .replace("-", "")
         )
         end_time = datetime.fromtimestamp((int(coach_slot.end_time) / 1000))
         end = (
-            (end_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + "Z")
+            (end_time.replace(microsecond=0).astimezone(
+                utc).replace(tzinfo=None).isoformat() + "Z")
             .replace(":", "")
             .replace("-", "")
         )
 
-        date = datetime.fromtimestamp((int(coach_slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
+        date = datetime.fromtimestamp(
+            (int(coach_slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
 
-        start_time_for_mail = datetime.fromtimestamp((int(coach_slot.start_time) / 1000) + 19800)
+        start_time_for_mail = datetime.fromtimestamp(
+            (int(coach_slot.start_time) / 1000) + 19800)
 
         email_message_learner = render_to_string(
             "addevent.html",
-            {"name": request.data["name"], "time": start_time_for_mail, "duration": "30 Min", "date": date},
+            {"name": request.data["name"], "time": start_time_for_mail,
+                "duration": "30 Min", "date": date},
         )
         email_message_coach = render_to_string(
-            "addevent.html", {"name": coach_data.first_name, "time": start_time, "duration": "30 Min", "date": date}
+            "addevent.html", {"name": coach_data.first_name,
+                              "time": start_time, "duration": "30 Min", "date": date}
         )
         meet_link = coach_slot.MEETING_LINK
         createIcs(start, end, meet_link)
@@ -1133,15 +1153,18 @@ def createCancledIcs(start_time, end_time):
 def deleteConfirmSlotsAdmin(request, slot_id):
     booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
 
-    start_time = datetime.fromtimestamp((int(booked_slots.slot.start_time) / 1000))  # converting timestamp to date
+    start_time = datetime.fromtimestamp(
+        (int(booked_slots.slot.start_time) / 1000))  # converting timestamp to date
     start = (
-        (start_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + "Z")
+        (start_time.replace(microsecond=0).astimezone(
+            utc).replace(tzinfo=None).isoformat() + "Z")
         .replace(":", "")
         .replace("-", "")
     )
     end_time = datetime.fromtimestamp((int(booked_slots.slot.end_time) / 1000))
     end = (
-        (end_time.replace(microsecond=0).astimezone(utc).replace(tzinfo=None).isoformat() + "Z")
+        (end_time.replace(microsecond=0).astimezone(
+            utc).replace(tzinfo=None).isoformat() + "Z")
         .replace(":", "")
         .replace("-", "")
     )
