@@ -920,7 +920,7 @@ def getEvents(request):
             else:
                 print(event_serilizer.errors)
                 return Response({"status": "error", "reason": "error in expire event"}, status=401)
-    updated_events = Events.objects.all()
+    updated_events = Events.objects.filter(is_delete = False)
     serializer = EventSerializer(updated_events, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
@@ -952,7 +952,16 @@ def editEvents(request, event_id):
 @permission_classes([AllowAny])
 def deleteEvents(request, event_id):
     event = Events.objects.get(id=event_id)
-    event.delete()
+    event_obj = EventSerializer(event)
+    new_event = {
+        **event_obj,
+        "is_delete" : True
+    }
+    serializer = EventSerializer(instance=event, data=new_event)
+    if serializer.is_valid():
+        serializer.save()
+    else:
+        return Response({"status": "400 Bad request", "reason": "something went wrong"}, status=400)
     return Response({"status": "success, Data deleted"}, status=200)
 
 
@@ -960,15 +969,19 @@ def deleteEvents(request, event_id):
 @permission_classes([AllowAny])
 def getSlotsByEventID(request, event_id):
     event = Events.objects.get(_id=event_id)
-    all_slots = []
-    for coach in event.coach.all():
-        slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach.id)
-        for slot in slots:
-            if slot.is_confirmed == False & slot.is_realeased == False:
-                all_slots.append(slot)
-    serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
-    eventserializer = EventSerializer(event)
-    return Response({"status": "success", "slots": serializer.data, "event": eventserializer.data}, status=200)
+    if event.is_delete == True:
+        return Response({"status": "404 not found", "reason": "data not found"}, status=404)
+    else:
+
+        all_slots = []
+        for coach in event.coach.all():
+            slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach.id)
+            for slot in slots:
+                if slot.is_confirmed == False & slot.is_realeased == False:
+                    all_slots.append(slot)
+        serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
+        eventserializer = EventSerializer(event)
+        return Response({"status": "success", "slots": serializer.data, "event": eventserializer.data}, status=200)
 
 
 def createIcs(start_time, end_time, meet_link):
@@ -1162,7 +1175,7 @@ def deleteConfirmSlotsAdmin(request, slot_id):
         .replace("-", "")
     )
     end_time = datetime.fromtimestamp((int(booked_slots.slot.end_time) / 1000))
-    end = (
+    end = ( 
         (end_time.replace(microsecond=0).astimezone(
             utc).replace(tzinfo=None).isoformat() + "Z")
         .replace(":", "")
@@ -1172,7 +1185,7 @@ def deleteConfirmSlotsAdmin(request, slot_id):
     coach = Coach.objects.get(id=booked_slots.slot.coach_id)
     email = EmailMessage(
         "Meeraq | Canceled Coaching Session",
-        "Canceled Session",
+        "your session is Canceled.",
         "info@meeraq.com",
         [booked_slots.email, coach.email],
     )

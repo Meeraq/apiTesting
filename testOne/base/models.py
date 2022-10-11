@@ -120,6 +120,7 @@ class Events(models.Model):
     _id = models.CharField(max_length=1000)
     coach = models.ManyToManyField(Coach)
     is_expired = models.BooleanField(default=False,blank=True)
+    is_delete = models.BooleanField(default=False,blank=True)
 
     def __str__(self):
         return self.name
