@@ -671,8 +671,9 @@ def getAdminRequestData(request):
                 "expire_date": _request.expire_date,
                 "name": _request.name,
             }
-            newReq = AdminRequest.objects.filter(
-                expire_date=_request.expire_date).first()
+            # newReq = AdminRequest.objects.filter(
+            #     expire_date=_request.expire_date).first()
+            newReq = AdminRequest.objects.get(id=_request.id)
             adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
             if adminSerializer.is_valid():
                 adminSerializer.save()
@@ -1098,31 +1099,33 @@ def confirmSlotsByLearner(request, slot_id):
             {"name": request.data["name"], "time": start_time_for_mail,
                 "duration": "30 Min", "date": date},
         )
-        email_message_coach = render_to_string(
-            "addevent.html", {"name": coach_data.first_name,
-                              "time": start_time, "duration": "30 Min", "date": date}
-        )
+        # email_message_coach = render_to_string(
+        #     "addevent.html", {"name": coach_data.first_name,
+        #                       "time": start_time, "duration": "30 Min", "date": date}
+        # )
         meet_link = coach_slot.MEETING_LINK
         createIcs(start, end, meet_link)
         email = EmailMessage(
             "Meeraq | Coaching Session",
             email_message_learner,
-            "info@meeraq.com",
-            [request.data["email"]],
+            "info@meeraq.com",  # from email address
+            [request.data["email"]],  # to email address
+            [coach_data.email],  # bcc email address
+            # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
         )
         email.content_subtype = "html"
         email.attach_file("event.ics", "text/calendar")
         email.send()
 
-        email_coach = EmailMessage(
-            "Meeraq | Coaching Session",
-            email_message_coach,
-            "info@meeraq.com",
-            [coach_data.email],
-        )
-        email_coach.content_subtype = "html"
-        email_coach.attach_file("event.ics", "text/calendar")
-        email_coach.send()
+        # email_coach = EmailMessage(
+        #     "Meeraq | Coaching Session",
+        #     email_message_coach,
+        #     "info@meeraq.com",
+        #     [coach_data.email],
+        # )
+        # email_coach.content_subtype = "html"
+        # email_coach.attach_file("event.ics", "text/calendar")
+        # email_coach.send()
         if os.path.exists("event.ics"):
             os.remove("event.ics")
         else:
@@ -1207,4 +1210,12 @@ def deleteConfirmSlotsAdmin(request, slot_id):
 
     new_booked_slots = LeanerConfirmedSlots.objects.all()
     serializer = ConfirmedSlotsbyLearnerSerializer(new_booked_slots, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getLearnerConfirmedSlotsByCoachId(request,coach_id):
+    booked_slots = LeanerConfirmedSlots.objects.filter(slot__coach_id = coach_id)
+    serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
