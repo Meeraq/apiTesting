@@ -447,43 +447,41 @@ def login_user(request):
     password = request.data["password"]
     user = authenticate(username=username, password=password)
     if user is not None:
-        print(user)
-        print(user.last_login)
         if user.profile.type == "coach":
-            userProfile = Coach.objects.get(email=username)
-            token = Token.objects.get_or_create(user=user)
-            return Response(
-                {
-                    "status": "200",
-                    "username": user.username,
-                    "first_name": userProfile.first_name,
-                    "middle_name": userProfile.middle_name,
-                    "last_name": userProfile.last_name,
-                    "token": str(token[0]),
-                    "email": userProfile.email,
-                    "usertype": user.profile.type,
-                    "id": userProfile.id,
-                }
-            )
-        # elif user.profile.type == 'learner':
-        #     userProfile = Learners.objects.get(email=username)
-        # elif user.profile.type == 'faculty':
-        #     userProfile = Faculty.objects.get(email=username)
+            if request.data['type'] == 'coach':
+                userProfile = Coach.objects.get(email=username)
+                token = Token.objects.get_or_create(user=user)
+                return Response(
+                    {
+                        "status": "200",
+                        "username": user.username,
+                        "first_name": userProfile.first_name,
+                        "middle_name": userProfile.middle_name,
+                        "last_name": userProfile.last_name,
+                        "token": str(token[0]),
+                        "email": userProfile.email,
+                        "usertype": user.profile.type,
+                        "id": userProfile.id,
+                    }
+                )
+            else:
+                return Response({"reason": "No user found"}, status=404)
         elif user.profile.type == "admin":
-            userProfile = User.objects.get(email=username)
-            token = Token.objects.get_or_create(user=user)
-            return Response(
-                {
-                    "status": "200",
-                    "username": user.username,
-                    "token": str(token[0]),
-                    "email": userProfile.email,
-                    "usertype": user.profile.type,
-                    "id": userProfile.id,
-                }
-            )
-        # token = Token.objects.get_or_create(user=user)
-        # return Response({'status': '200', 'username': user.username, 'name': userProfile.name, 'token': str(token[0]), 'email': userProfile.email, 'usertype': user.profile.type, "id": userProfile.id})
+            if request.data['type'] == 'admin':
+                userProfile = User.objects.get(email=username)
+                token = Token.objects.get_or_create(user=user)
+                return Response(
+                    {
+                        "status": "200",
+                        "username": user.username,
+                        "token": str(token[0]),
+                        "email": userProfile.email,
+                        "usertype": user.profile.type,
+                        "id": userProfile.id,
+                    }
+                )
+            else:
+                return Response({"reason": "No user found"}, status=404)
     else:
         userFound = User.objects.filter(email=username)
         if userFound.exists():
@@ -673,8 +671,9 @@ def getAdminRequestData(request):
                 "expire_date": _request.expire_date,
                 "name": _request.name,
             }
-            newReq = AdminRequest.objects.filter(
-                expire_date=_request.expire_date).first()
+            # newReq = AdminRequest.objects.filter(
+            #     expire_date=_request.expire_date).first()
+            newReq = AdminRequest.objects.get(id=_request.id)
             adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
             if adminSerializer.is_valid():
                 adminSerializer.save()
@@ -922,7 +921,7 @@ def getEvents(request):
             else:
                 print(event_serilizer.errors)
                 return Response({"status": "error", "reason": "error in expire event"}, status=401)
-    updated_events = Events.objects.all()
+    updated_events = Events.objects.filter(is_delete = False)
     serializer = EventSerializer(updated_events, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
@@ -954,7 +953,16 @@ def editEvents(request, event_id):
 @permission_classes([AllowAny])
 def deleteEvents(request, event_id):
     event = Events.objects.get(id=event_id)
-    event.delete()
+    event_obj = EventSerializer(event)
+    new_event = {
+        **event_obj,
+        "is_delete" : True
+    }
+    serializer = EventSerializer(instance=event, data=new_event)
+    if serializer.is_valid():
+        serializer.save()
+    else:
+        return Response({"status": "400 Bad request", "reason": "something went wrong"}, status=400)
     return Response({"status": "success, Data deleted"}, status=200)
 
 
@@ -962,15 +970,19 @@ def deleteEvents(request, event_id):
 @permission_classes([AllowAny])
 def getSlotsByEventID(request, event_id):
     event = Events.objects.get(_id=event_id)
-    all_slots = []
-    for coach in event.coach.all():
-        slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach.id)
-        for slot in slots:
-            if slot.is_confirmed == False & slot.is_realeased == False:
-                all_slots.append(slot)
-    serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
-    eventserializer = EventSerializer(event)
-    return Response({"status": "success", "slots": serializer.data, "event": eventserializer.data}, status=200)
+    if event.is_delete == True:
+        return Response({"status": "404 not found", "reason": "data not found"}, status=404)
+    else:
+
+        all_slots = []
+        for coach in event.coach.all():
+            slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach.id)
+            for slot in slots:
+                if slot.is_confirmed == False & slot.is_realeased == False:
+                    all_slots.append(slot)
+        serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
+        eventserializer = EventSerializer(event)
+        return Response({"status": "success", "slots": serializer.data, "event": eventserializer.data}, status=200)
 
 
 def createIcs(start_time, end_time, meet_link):
@@ -1087,31 +1099,33 @@ def confirmSlotsByLearner(request, slot_id):
             {"name": request.data["name"], "time": start_time_for_mail,
                 "duration": "30 Min", "date": date},
         )
-        email_message_coach = render_to_string(
-            "addevent.html", {"name": coach_data.first_name,
-                              "time": start_time, "duration": "30 Min", "date": date}
-        )
+        # email_message_coach = render_to_string(
+        #     "addevent.html", {"name": coach_data.first_name,
+        #                       "time": start_time, "duration": "30 Min", "date": date}
+        # )
         meet_link = coach_slot.MEETING_LINK
         createIcs(start, end, meet_link)
         email = EmailMessage(
             "Meeraq | Coaching Session",
             email_message_learner,
-            "info@meeraq.com",
-            [request.data["email"]],
+            "info@meeraq.com",  # from email address
+            [request.data["email"]],  # to email address
+            [coach_data.email],  # bcc email address
+            # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
         )
         email.content_subtype = "html"
         email.attach_file("event.ics", "text/calendar")
         email.send()
 
-        email_coach = EmailMessage(
-            "Meeraq | Coaching Session",
-            email_message_coach,
-            "info@meeraq.com",
-            [coach_data.email],
-        )
-        email_coach.content_subtype = "html"
-        email_coach.attach_file("event.ics", "text/calendar")
-        email_coach.send()
+        # email_coach = EmailMessage(
+        #     "Meeraq | Coaching Session",
+        #     email_message_coach,
+        #     "info@meeraq.com",
+        #     [coach_data.email],
+        # )
+        # email_coach.content_subtype = "html"
+        # email_coach.attach_file("event.ics", "text/calendar")
+        # email_coach.send()
         if os.path.exists("event.ics"):
             os.remove("event.ics")
         else:
@@ -1164,7 +1178,7 @@ def deleteConfirmSlotsAdmin(request, slot_id):
         .replace("-", "")
     )
     end_time = datetime.fromtimestamp((int(booked_slots.slot.end_time) / 1000))
-    end = (
+    end = ( 
         (end_time.replace(microsecond=0).astimezone(
             utc).replace(tzinfo=None).isoformat() + "Z")
         .replace(":", "")
@@ -1174,7 +1188,7 @@ def deleteConfirmSlotsAdmin(request, slot_id):
     coach = Coach.objects.get(id=booked_slots.slot.coach_id)
     email = EmailMessage(
         "Meeraq | Canceled Coaching Session",
-        "Canceled Session",
+        "your session is Canceled.",
         "info@meeraq.com",
         [booked_slots.email, coach.email],
     )
@@ -1196,4 +1210,12 @@ def deleteConfirmSlotsAdmin(request, slot_id):
 
     new_booked_slots = LeanerConfirmedSlots.objects.all()
     serializer = ConfirmedSlotsbyLearnerSerializer(new_booked_slots, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getLearnerConfirmedSlotsByCoachId(request,coach_id):
+    booked_slots = LeanerConfirmedSlots.objects.filter(slot__coach_id = coach_id)
+    serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
