@@ -929,7 +929,11 @@ def getEvents(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def editEvents(request, event_id):
+    today = date.today()
     event = Events.objects.get(id=event_id)
+    expire_check = event.is_expired
+    if request.data["expire_date"] > today:
+        expire_check = False
     event_data = {
         "name": request.data["name"],
         "start_date": request.data["start_date"],
@@ -940,6 +944,7 @@ def editEvents(request, event_id):
         "link": event.link,
         "_id": event._id,
         "coach": request.data["coach"],
+        "is_expired":expire_check
     }
     serializer = EventSerializer(instance=event, data=event_data)
     if serializer.is_valid():
@@ -953,6 +958,9 @@ def editEvents(request, event_id):
 @permission_classes([AllowAny])
 def deleteEvents(request, event_id):
     event = Events.objects.get(id=event_id)
+    coach_id =[]
+    for coach in event.coach.all():
+        coach_id.append(coach.id)
     new_event = {
         "name": event.name,
         "start_date": event.start_date,
@@ -962,7 +970,7 @@ def deleteEvents(request, event_id):
         "min_count": event.min_count,
         "link": event.link,
         "_id": event._id,
-        "coach": event.coach,
+        "coach": coach_id,
         "is_delete": True
     }
     serializer = EventSerializer(instance=event, data=new_event)
@@ -1104,7 +1112,7 @@ def confirmSlotsByLearner(request, slot_id):
         email_message_learner = render_to_string(
             "addevent.html",
             {"name": request.data["name"], "time": start_time_for_mail,
-                "duration": "30 Min", "date": date},
+                "duration": "30 Min", "date": date,"link":coach_data.meet_link},
         )
         # email_message_coach = render_to_string(
         #     "addevent.html", {"name": coach_data.first_name,
