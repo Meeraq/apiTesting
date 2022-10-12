@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from django.core.mail import EmailMessage
 import os
 from django.core.mail import send_mail
@@ -921,7 +921,7 @@ def getEvents(request):
             else:
                 print(event_serilizer.errors)
                 return Response({"status": "error", "reason": "error in expire event"}, status=401)
-    updated_events = Events.objects.filter(is_delete = False)
+    updated_events = Events.objects.filter(is_delete=False)
     serializer = EventSerializer(updated_events, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
@@ -929,7 +929,11 @@ def getEvents(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def editEvents(request, event_id):
+    today = date.today()
     event = Events.objects.get(id=event_id)
+    expire_check = event.is_expired
+    if  datetime.strptime(request.data["expire_date"], "%Y-%m-%d") > datetime.strptime(str(today), "%Y-%m-%d"):
+        expire_check = False
     event_data = {
         "name": request.data["name"],
         "start_date": request.data["start_date"],
@@ -940,6 +944,7 @@ def editEvents(request, event_id):
         "link": event.link,
         "_id": event._id,
         "coach": request.data["coach"],
+        "is_expired":expire_check
     }
     serializer = EventSerializer(instance=event, data=event_data)
     if serializer.is_valid():
@@ -953,10 +958,20 @@ def editEvents(request, event_id):
 @permission_classes([AllowAny])
 def deleteEvents(request, event_id):
     event = Events.objects.get(id=event_id)
-    event_obj = EventSerializer(event)
+    coach_id =[]
+    for coach in event.coach.all():
+        coach_id.append(coach.id)
     new_event = {
-        **event_obj,
-        "is_delete" : True
+        "name": event.name,
+        "start_date": event.start_date,
+        "end_date": event.end_date,
+        "expire_date": event.expire_date,
+        "count": event.count,
+        "min_count": event.min_count,
+        "link": event.link,
+        "_id": event._id,
+        "coach": coach_id,
+        "is_delete": True
     }
     serializer = EventSerializer(instance=event, data=new_event)
     if serializer.is_valid():
@@ -1097,7 +1112,7 @@ def confirmSlotsByLearner(request, slot_id):
         email_message_learner = render_to_string(
             "addevent.html",
             {"name": request.data["name"], "time": start_time_for_mail,
-                "duration": "30 Min", "date": date},
+                "duration": "30 Min", "date": date,"link":coach_data.meet_link},
         )
         # email_message_coach = render_to_string(
         #     "addevent.html", {"name": coach_data.first_name,
@@ -1178,7 +1193,7 @@ def deleteConfirmSlotsAdmin(request, slot_id):
         .replace("-", "")
     )
     end_time = datetime.fromtimestamp((int(booked_slots.slot.end_time) / 1000))
-    end = ( 
+    end = (
         (end_time.replace(microsecond=0).astimezone(
             utc).replace(tzinfo=None).isoformat() + "Z")
         .replace(":", "")
@@ -1215,7 +1230,7 @@ def deleteConfirmSlotsAdmin(request, slot_id):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getLearnerConfirmedSlotsByCoachId(request,coach_id):
-    booked_slots = LeanerConfirmedSlots.objects.filter(slot__coach_id = coach_id)
+def getLearnerConfirmedSlotsByCoachId(request, coach_id):
+    booked_slots = LeanerConfirmedSlots.objects.filter(slot__coach_id=coach_id)
     serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
