@@ -921,7 +921,7 @@ def getEvents(request):
             else:
                 print(event_serilizer.errors)
                 return Response({"status": "error", "reason": "error in expire event"}, status=401)
-    updated_events = Events.objects.filter(is_delete = False)
+    updated_events = Events.objects.filter(is_delete=False)
     serializer = EventSerializer(updated_events, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
@@ -953,10 +953,17 @@ def editEvents(request, event_id):
 @permission_classes([AllowAny])
 def deleteEvents(request, event_id):
     event = Events.objects.get(id=event_id)
-    event_obj = EventSerializer(event)
     new_event = {
-        **event_obj,
-        "is_delete" : True
+        "name": event.name,
+        "start_date": event.start_date,
+        "end_date": event.end_date,
+        "expire_date": event.expire_date,
+        "count": event.count,
+        "min_count": event.min_count,
+        "link": event.link,
+        "_id": event._id,
+        "coach": event.coach,
+        "is_delete": True
     }
     serializer = EventSerializer(instance=event, data=new_event)
     if serializer.is_valid():
@@ -1178,7 +1185,7 @@ def deleteConfirmSlotsAdmin(request, slot_id):
         .replace("-", "")
     )
     end_time = datetime.fromtimestamp((int(booked_slots.slot.end_time) / 1000))
-    end = ( 
+    end = (
         (end_time.replace(microsecond=0).astimezone(
             utc).replace(tzinfo=None).isoformat() + "Z")
         .replace(":", "")
@@ -1215,7 +1222,7 @@ def deleteConfirmSlotsAdmin(request, slot_id):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getLearnerConfirmedSlotsByCoachId(request,coach_id):
-    booked_slots = LeanerConfirmedSlots.objects.filter(slot__coach_id = coach_id)
+def getLearnerConfirmedSlotsByCoachId(request, coach_id):
+    booked_slots = LeanerConfirmedSlots.objects.filter(slot__coach_id=coach_id)
     serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
