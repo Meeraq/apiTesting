@@ -932,7 +932,7 @@ def editEvents(request, event_id):
     today = date.today()
     event = Events.objects.get(id=event_id)
     expire_check = event.is_expired
-    if  datetime.strptime(request.data["expire_date"], "%y/%m/%d") > today:
+    if  datetime.strptime(request.data["expire_date"], "%Y-%m-%d") > datetime.strptime(str(today), "%Y-%m-%d"):
         expire_check = False
     event_data = {
         "name": request.data["name"],
