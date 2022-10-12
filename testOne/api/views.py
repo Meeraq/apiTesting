@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from django.core.mail import EmailMessage
 import os
 from django.core.mail import send_mail
@@ -932,7 +932,7 @@ def editEvents(request, event_id):
     today = date.today()
     event = Events.objects.get(id=event_id)
     expire_check = event.is_expired
-    if request.data["expire_date"] > today:
+    if  datetime.strptime(request.data["expire_date"], "%y/%m/%d") > today:
         expire_check = False
     event_data = {
         "name": request.data["name"],
