@@ -834,8 +834,34 @@ def getConfirmedSlotsbyRequestID(request, req_id):
 @permission_classes([AllowAny])
 def updateConfirmedSlots(request, slot_id):
     slot = ConfirmedSlotsbyCoach.objects.filter(id=slot_id).first()
+    start_timestamp = ((request.data["start_time"]) / 1000) + 19800
+    end_timestamp = ((request.data["end_time"]) / 1000) + 19800
+    print(str(request.data['start_time']),
+          type(str(request.data['start_time'])))
+    newSlot = {
+        "start_time": request.data['start_time'],
+        "end_time": request.data["end_time"],
+        "date": request.data["date"],
+        "coach_id": slot.coach_id,
+        "request_ID": int(slot.request_ID),
+        "SESSION_START_TIME": datetime.fromtimestamp(
+            start_timestamp).strftime("%I:%M %p"),
+        "SESSION_END_TIME": datetime.fromtimestamp(
+            end_timestamp).strftime("%I:%M %p"),
+        "SESSION_DATE": datetime.fromtimestamp(
+            start_timestamp).strftime("%d %B %Y"),
+        "COACH_NAME": Coach.objects.get(id=slot.coach_id).first_name
+        + " "
+        + Coach.objects.get(id=slot.coach_id).middle_name
+        + " "
+        + Coach.objects.get(id=slot.coach_id).last_name,
+        "DESCRIPTION": AdminRequest.objects.get(id=slot.request_ID).name,
+        "CC": Coach.objects.get(id=slot.coach_id).email,
+        "MEETING_LINK": Coach.objects.get(id=slot.coach_id).meet_link,
+    }
+
     serializer = ConfirmedSlotsbyCoachSerializer(
-        instance=slot, data=request.data)
+        instance=slot, data=newSlot)
     if serializer.is_valid():
         serializer.save()
     return Response({"details": "success", "data": serializer.data}, status=201)
@@ -932,7 +958,7 @@ def editEvents(request, event_id):
     today = date.today()
     event = Events.objects.get(id=event_id)
     expire_check = event.is_expired
-    if  datetime.strptime(request.data["expire_date"], "%Y-%m-%d") > datetime.strptime(str(today), "%Y-%m-%d"):
+    if datetime.strptime(request.data["expire_date"], "%Y-%m-%d") > datetime.strptime(str(today), "%Y-%m-%d"):
         expire_check = False
     event_data = {
         "name": request.data["name"],
@@ -944,7 +970,7 @@ def editEvents(request, event_id):
         "link": event.link,
         "_id": event._id,
         "coach": request.data["coach"],
-        "is_expired":expire_check
+        "is_expired": expire_check
     }
     serializer = EventSerializer(instance=event, data=event_data)
     if serializer.is_valid():
@@ -958,7 +984,7 @@ def editEvents(request, event_id):
 @permission_classes([AllowAny])
 def deleteEvents(request, event_id):
     event = Events.objects.get(id=event_id)
-    coach_id =[]
+    coach_id = []
     for coach in event.coach.all():
         coach_id.append(coach.id)
     new_event = {
@@ -971,7 +997,8 @@ def deleteEvents(request, event_id):
         "link": event.link,
         "_id": event._id,
         "coach": coach_id,
-        "is_delete": True
+        "is_delete": True,
+        "is_expired": True
     }
     serializer = EventSerializer(instance=event, data=new_event)
     if serializer.is_valid():
@@ -1112,7 +1139,7 @@ def confirmSlotsByLearner(request, slot_id):
         email_message_learner = render_to_string(
             "addevent.html",
             {"name": request.data["name"], "time": start_time_for_mail,
-                "duration": "30 Min", "date": date,"link":coach_data.meet_link},
+                "duration": "30 Min", "date": date, "link": coach_data.meet_link},
         )
         # email_message_coach = render_to_string(
         #     "addevent.html", {"name": coach_data.first_name,
@@ -1199,15 +1226,26 @@ def deleteConfirmSlotsAdmin(request, slot_id):
         .replace(":", "")
         .replace("-", "")
     )
+
+    date = datetime.fromtimestamp(
+        (int(booked_slots.slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
+    start_time_for_mail = datetime.fromtimestamp(
+        (int(booked_slots.slot.start_time) / 1000) + 19800)
+    email_message_learner = render_to_string(
+        "cancelEvent.html",
+        {"time": start_time_for_mail,
+         "date": date},
+    )
+
     createCancledIcs(start, end)
     coach = Coach.objects.get(id=booked_slots.slot.coach_id)
     email = EmailMessage(
         "Meeraq | Canceled Coaching Session",
-        "your session is Canceled.",
+        email_message_learner,
         "info@meeraq.com",
         [booked_slots.email, coach.email],
     )
-    # email.content_subtype = "html"
+    email.content_subtype = "html"
     email.attach_file("cancelevent.ics", "text/calendar")
     email.send()
     if os.path.exists("cancelevent.ics"):
