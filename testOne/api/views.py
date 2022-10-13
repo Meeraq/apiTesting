@@ -834,28 +834,31 @@ def getConfirmedSlotsbyRequestID(request, req_id):
 @permission_classes([AllowAny])
 def updateConfirmedSlots(request, slot_id):
     slot = ConfirmedSlotsbyCoach.objects.filter(id=slot_id).first()
-
-    newSlot = ConfirmedSlotsbyCoach(
-        start_time=slot["start_time"],
-        end_time=slot["end_time"],
-        date=slot["date"],
-        coach_id=slot.coach_id,
-        request_ID=int(slot.request_ID),
-        SESSION_START_TIME=datetime.fromtimestamp(
-            slot["start_time"]).strftime("%I:%M %p"),
-        SESSION_END_TIME=datetime.fromtimestamp(
-            slot["end_time"]).strftime("%I:%M %p"),
-        SESSION_DATE=datetime.fromtimestamp(
-            slot["start_time"]).strftime("%d %B %Y"),
-        COACH_NAME=Coach.objects.get(id=slot.coach_id).first_name
+    start_timestamp = ((request.data["start_time"]) / 1000) + 19800
+    end_timestamp = ((request.data["end_time"]) / 1000) + 19800
+    print(str(request.data['start_time']),
+          type(str(request.data['start_time'])))
+    newSlot = {
+        "start_time": request.data['start_time'],
+        "end_time": request.data["end_time"],
+        "date": request.data["date"],
+        "coach_id": slot.coach_id,
+        "request_ID": int(slot.request_ID),
+        "SESSION_START_TIME": datetime.fromtimestamp(
+            start_timestamp).strftime("%I:%M %p"),
+        "SESSION_END_TIME": datetime.fromtimestamp(
+            end_timestamp).strftime("%I:%M %p"),
+        "SESSION_DATE": datetime.fromtimestamp(
+            start_timestamp).strftime("%d %B %Y"),
+        "COACH_NAME": Coach.objects.get(id=slot.coach_id).first_name
         + " "
         + Coach.objects.get(id=slot.coach_id).middle_name
         + " "
         + Coach.objects.get(id=slot.coach_id).last_name,
-        DESCRIPTION=AdminRequest.objects.get(id=slot.request_ID).name,
-        CC=Coach.objects.get(id=slot.coach_id).email,
-        MEETING_LINK=Coach.objects.get(id=slot.coach_id).meet_link,
-    )
+        "DESCRIPTION": AdminRequest.objects.get(id=slot.request_ID).name,
+        "CC": Coach.objects.get(id=slot.coach_id).email,
+        "MEETING_LINK": Coach.objects.get(id=slot.coach_id).meet_link,
+    }
 
     serializer = ConfirmedSlotsbyCoachSerializer(
         instance=slot, data=newSlot)
