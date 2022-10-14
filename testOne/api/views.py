@@ -186,7 +186,7 @@ def addcoach(request):
         serializer.save(user_id=newProfile.id)
         send_mail(
             # title:
-            "You are added as Coach in {title}".format(title="Meeraq"),
+            "You are added as a Coach on {title}".format(title="Meeraq"),
             # message:
             email_message,
             # from:0
@@ -1078,10 +1078,7 @@ def confirmSlotsByLearner(request, slot_id):
             "coach": coach_ids,
         }
         event_serializer = EventSerializer(instance=event, data=new_event_data)
-        if event_serializer.is_valid():
-            event_serializer.save()
-        else:
-            print(event_serializer.errors)
+        
 
         serializer = ConfirmedSlotsbyLearnerSerializer(data=Booked_slot)
         if serializer.is_valid():
@@ -1109,6 +1106,10 @@ def confirmSlotsByLearner(request, slot_id):
             print(serializer.errors)
             return Response({"status": "400 Bad request", "reason": "wrong data sent"}, status=400)
 
+        if event_serializer.is_valid():
+            event_serializer.save()
+        else:
+            print(event_serializer.errors)
         if coach_serilizer.is_valid():
             coach_serilizer.save()
         else:
