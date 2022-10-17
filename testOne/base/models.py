@@ -133,7 +133,7 @@ class LeanerConfirmedSlots(models.Model):
     organisation = models.CharField(max_length=200,blank=True,default=" ")
     slot = models.ForeignKey(ConfirmedSlotsbyCoach,null=True, on_delete=models.SET_NULL)
     event = models.ForeignKey(Events,null=True, on_delete=models.SET_NULL)
-    status = models.CharField(max_length=200,blank=True,default=null)
+    status = models.CharField(max_length=200,blank=True,default='null')
     def __str__(self):
         return self.name
 
