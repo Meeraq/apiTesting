@@ -1078,7 +1078,6 @@ def confirmSlotsByLearner(request, slot_id):
             "coach": coach_ids,
         }
         event_serializer = EventSerializer(instance=event, data=new_event_data)
-        
 
         serializer = ConfirmedSlotsbyLearnerSerializer(data=Booked_slot)
         if serializer.is_valid():
@@ -1193,6 +1192,22 @@ def getConfirmSlotsByLearnerByEventId(request, event_id):
     serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def editConfirmSlotsByLearnerBySlotId(request, slot_id):
+    booked_slots = LeanerConfirmedSlots.objects.get(slot=slot_id)
+    serializedSlot = ConfirmedLearnerSerializer(booked_slots)
+    newSlot = {
+        **serializedSlot,"status":request.data['status']
+    }
+    serializer = ConfirmedLearnerSerializer(instance = booked_slots, data = newSlot)
+
+    if serializer.is_valid():
+        serializer.save()
+    else:
+        print(serializer.errors)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
 
 def createCancledIcs(start_time, end_time):
     fp = open("cancelevent.ics", "w")
@@ -1253,12 +1268,6 @@ def deleteConfirmSlotsAdmin(request, slot_id):
         os.remove("cancelevent.ics")
     else:
         print("file not found")
-
-    dlt_data_serializer = dltSlotSerializer(data=request.data)
-    if dlt_data_serializer.is_valid():
-        dlt_data_serializer.save()
-    else:
-        print(dlt_data_serializer.errors)
 
     booked_slots.delete()
 
