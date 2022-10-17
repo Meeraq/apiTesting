@@ -1195,10 +1195,15 @@ def getConfirmSlotsByLearnerByEventId(request, event_id):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def editConfirmSlotsByLearnerBySlotId(request, slot_id):
-    booked_slots = LeanerConfirmedSlots.objects.get(slot=slot_id)
-    serializedSlot = ConfirmedLearnerSerializer(booked_slots)
+    booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
     newSlot = {
-        **serializedSlot,"status":request.data['status']
+        "name":booked_slots.name,
+        "status":request.data['status'],
+        "email":booked_slots.email,
+        "phone_no":booked_slots.phone_no,
+        "organisation":booked_slots.organisation,
+        "event":booked_slots.event,
+        "slot":booked_slots.slot
     }
     serializer = ConfirmedLearnerSerializer(instance = booked_slots, data = newSlot)
 
