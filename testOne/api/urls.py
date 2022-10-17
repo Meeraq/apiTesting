@@ -83,5 +83,6 @@ urlpatterns = [
     path('delete-booked-slots-of-learner/<str:slot_id>/',
          views.deleteConfirmSlotsAdmin),
     path('booked-slot-by-coach/<str:coach_id>/',
-         views.getLearnerConfirmedSlotsByCoachId)
+         views.getLearnerConfirmedSlotsByCoachId),
+    path('booked-slot-by-coach/<str:slot_id>/',views.editConfirmSlotsByLearnerBySlotId)
 ]
