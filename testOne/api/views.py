@@ -1303,10 +1303,10 @@ def learnerDataUpload(request):
             continue
         else:
             if 'phone' in learner.keys():
-                learner_data = Learner(first_name=learner['first_name'],last_name=learner['last_name'], email = learner['email'], batch = learner['batch'],phone = learner['phone'],unique_check = learner['first_name']+ learner['last_name']+"|"+ learner['email'],course = request.data['course'])
+                learner_data = Learner(first_name=learner['first_name'],last_name=learner['last_name'], email = learner['email'], batch = learner['batch'],phone = learner['phone'],unique_check = learner['first_name']+ learner['last_name']+"|"+ learner['email'],course = learner['course'])
                 batches.add(learner['batch'])
             else:
-                learner_data = Learner(first_name=learner['first_name'],last_name=learner['last_name'], email = learner['email'], batch = learner['batch'],unique_check = learner['first_name']+learner['last_name']+"|"+ learner['email'],course = request.data['course'])
+                learner_data = Learner(first_name=learner['first_name'],last_name=learner['last_name'], email = learner['email'], batch = learner['batch'],unique_check = learner['first_name']+learner['last_name']+"|"+ learner['email'],course = learner['course'])
                 batches.add(learner['batch'])
             learner_data.save()
     for batch in batches:
