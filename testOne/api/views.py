@@ -17,8 +17,10 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
+from base.models import Batch, Learner
 from .serializers import (
     AdminReqSerializer,
+    BatchSerializer,
     ConfirmedLearnerSerializer,
     ConfirmedSlotsbyCoachSerializer,
     ConfirmedSlotsbyLearnerSerializer,
@@ -26,6 +28,7 @@ from .serializers import (
     EventSerializer,
     GetAdminReqSerializer,
     CoachSerializer,
+    LearnerDataUploadSerializer,
     SlotForCoachSerializer,
     UserSerializer,
     ProfileSerializer,
@@ -1287,3 +1290,46 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
     booked_slots = LeanerConfirmedSlots.objects.filter(slot__coach_id=coach_id)
     serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def learnerDataUpload(request):
+    batches = set()
+    arr_set = Batch.objects.all()
+    batch_serilizer = BatchSerializer(arr_set,many=True)
+    for batch in batch_serilizer.data:
+        batches.add(batch['batch'])
+    arr_set.delete()
+    for learner in request.data['participent']:
+        is_exist = Learner.objects.filter(unique_check= learner['first_name']+learner['last_name']+"|"+learner['email'] )
+        if len(is_exist) > 0:
+            print("already exist")
+        else:
+            if 'phone' in learner.keys():
+                learner_data = Learner(first_name=learner['first_name'],last_name=learner['last_name'], email = learner['email'], batch = learner['batch'],phone = learner['phone'],unique_check = learner['first_name']+ learner['last_name']+"|"+ learner['email'],course = request.data['course'])
+                batches.add(learner['batch'])
+            else:
+                learner_data = Learner(first_name=learner['first_name'],last_name=learner['last_name'], email = learner['email'], batch = learner['batch'],unique_check = learner['first_name']+learner['last_name']+"|"+ learner['email'],course = request.data['course'])
+                batches.add(learner['batch'])
+            learner_data.save()
+        
+    for batch in batches:
+        batch_data = Batch(batch = batch)
+        batch_data.save()
+    return Response({"status": "success"}, status=200)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getLearnerBatchwise(request,batch_id):
+    learners = Learner.objects.filter(batch = batch_id)
+    serilizer = LearnerDataUploadSerializer(learners,many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getBatches(request):
+    batches = Batch.objects.all()
+    serilizer = BatchSerializer(batches,many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)

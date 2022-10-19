@@ -84,5 +84,8 @@ urlpatterns = [
          views.deleteConfirmSlotsAdmin),
     path('booked-slot-by-coach/<str:coach_id>/',
          views.getLearnerConfirmedSlotsByCoachId),
-    path('update-session-status/<str:slot_id>/',views.editConfirmSlotsByLearnerBySlotId)
+    path('update-session-status/<str:slot_id>/',views.editConfirmSlotsByLearnerBySlotId),
+    path('learner-upload/', views.learnerDataUpload),
+    path('get-batches/', views.getBatches),
+    path('get-learner-by-batch/<str:batch_id>/', views.getLearnerBatchwise),
 ]

@@ -143,3 +143,23 @@ class DeleteConfirmedSlotsbyAdmin(models.Model):
     reason = models.CharField(max_length=200,default=" ")
     slot_id = models.CharField(max_length=200,default=" ")
     admin_name = models.CharField(max_length=200,default=" ")
+
+
+class DeleteConfirmedSlotsbyAdmin(models.Model):
+    requested_person = models.CharField(max_length=200,default=" ")
+    reason = models.CharField(max_length=200,default=" ")
+    slot_id = models.CharField(max_length=200,default=" ")
+    admin_name = models.CharField(max_length=200,default=" ")
+
+
+class Learner(models.Model):
+    first_name = models.CharField(max_length=200,default=" ")
+    last_name = models.CharField(max_length=200,default=" ",blank=True)
+    email = models.EmailField()
+    batch = models.CharField(max_length=200,default=" ")
+    phone = models.CharField(max_length=200,default=" ",blank=True)
+    unique_check = models.CharField(max_length=200,default="null")
+    course = models.CharField(max_length=200,default=" ",blank=True)
+
+class Batch(models.Model):
+    batch = models.CharField(max_length=200,default=" ", primary_key = True)

@@ -9,6 +9,8 @@ from base.models import ConfirmedSlotsbyCoach
 from base.models import AdminRequest
 from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
+from base.models import Learner
+from base.models import Batch
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -147,4 +149,15 @@ class ConfirmedLearnerSerializer(serializers.ModelSerializer):
 class dltSlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeleteConfirmedSlotsbyAdmin
+        fields = '__all__'
+
+
+class LearnerDataUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Learner
+        fields = '__all__'
+
+class BatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Batch
         fields = '__all__'
