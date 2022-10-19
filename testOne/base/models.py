@@ -119,6 +119,7 @@ class Events(models.Model):
     link = models.CharField(max_length=200,default=" ",blank=True)
     _id = models.CharField(max_length=1000)
     coach = models.ManyToManyField(Coach)
+    batch = models.CharField(max_length=200,blank=True,default=" ")
     is_expired = models.BooleanField(default=False,blank=True)
     is_delete = models.BooleanField(default=False,blank=True)
 
