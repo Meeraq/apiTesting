@@ -1,4 +1,7 @@
-from datetime import datetime, time
+import uuid
+from django.template.loader import render_to_string
+import jwt
+from datetime import datetime, time, timedelta
 from django.core.mail import EmailMessage
 import os
 from django.core.mail import send_mail
@@ -34,7 +37,9 @@ from .serializers import (
     ProfileSerializer,
 )
 
-from django.template.loader import render_to_string
+import environ
+env = environ.Env()
+environ.Env.read_env()
 
 # sesame
 # from sesame.utils import get_query_string, get_user
@@ -42,7 +47,6 @@ from django.template.loader import render_to_string
 # from sesame.utils import get_query_string, get_user
 
 # flattening array
-import uuid
 
 
 # courses api functions
@@ -1050,7 +1054,8 @@ def createIcs(start_time, end_time, meet_link):
 @permission_classes([AllowAny])
 def confirmSlotsByLearner(request, slot_id):
     event = Events.objects.get(_id=request.data["event"])
-    learners = Learner.objects.filter(batch = event.batch,email=request.data["email"])
+    learners = Learner.objects.filter(
+        batch=event.batch, email=request.data["email"])
     if len(learners) == 0:
         return Response({"status": "Error", "reason": "user may have entered different email"}, status=405)
     else:
@@ -1087,7 +1092,8 @@ def confirmSlotsByLearner(request, slot_id):
                 "_id": event._id,
                 "coach": coach_ids,
             }
-            event_serializer = EventSerializer(instance=event, data=new_event_data)
+            event_serializer = EventSerializer(
+                instance=event, data=new_event_data)
 
             serializer = ConfirmedSlotsbyLearnerSerializer(data=Booked_slot)
             if serializer.is_valid():
@@ -1132,7 +1138,8 @@ def confirmSlotsByLearner(request, slot_id):
                 .replace(":", "")
                 .replace("-", "")
             )
-            end_time = datetime.fromtimestamp((int(coach_slot.end_time) / 1000))
+            end_time = datetime.fromtimestamp(
+                (int(coach_slot.end_time) / 1000))
             end = (
                 (end_time.replace(microsecond=0).astimezone(
                     utc).replace(tzinfo=None).isoformat() + "Z")
@@ -1190,20 +1197,22 @@ def getConfirmSlotsByLearnerByEventId(request, event_id):
     serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def editConfirmSlotsByLearnerBySlotId(request, slot_id):
     booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
     newSlot = {
-        "name":booked_slots.name,
-        "status":request.data['status'],
-        "email":booked_slots.email,
-        "phone_no":booked_slots.phone_no,
-        "organisation":booked_slots.organisation,
-        "event":booked_slots.event,
-        "slot":booked_slots.slot
+        "name": booked_slots.name,
+        "status": request.data['status'],
+        "email": booked_slots.email,
+        "phone_no": booked_slots.phone_no,
+        "organisation": booked_slots.organisation,
+        "event": booked_slots.event,
+        "slot": booked_slots.slot
     }
-    serializer = ConfirmedLearnerSerializer(instance = booked_slots, data = newSlot)
+    serializer = ConfirmedLearnerSerializer(
+        instance=booked_slots, data=newSlot)
 
     if serializer.is_valid():
         serializer.save()
@@ -1287,43 +1296,69 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
-
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def learnerDataUpload(request):
     batches = set()
     arr_set = Batch.objects.all()
-    batch_serilizer = BatchSerializer(arr_set,many=True)
+    batch_serilizer = BatchSerializer(arr_set, many=True)
     for batch in batch_serilizer.data:
         batches.add(batch['batch'])
     arr_set.delete()
     for learner in request.data['participent']:
-        is_exist = Learner.objects.filter(unique_check= learner['batch']+"|"+learner['email'] )
+        is_exist = Learner.objects.filter(
+            unique_check=learner['batch']+"|"+learner['email'])
         if len(is_exist) > 0:
             continue
         else:
             if 'phone' in learner.keys():
-                learner_data = Learner(first_name=learner['first_name'],last_name=learner['last_name'], email = learner['email'], batch = learner['batch'],phone = learner['phone'],unique_check = learner['batch']+"|"+ learner['email'],course = learner['course'])
+                learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
+                                       batch=learner['batch'], phone=learner['phone'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
                 batches.add(learner['batch'])
             else:
-                learner_data = Learner(first_name=learner['first_name'],last_name=learner['last_name'], email = learner['email'], batch = learner['batch'],unique_check = learner['batch']+"|"+ learner['email'],course = learner['course'])
+                learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
+                                       batch=learner['batch'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
                 batches.add(learner['batch'])
             learner_data.save()
     for batch in batches:
-        batch_data = Batch(batch = batch)
+        batch_data = Batch(batch=batch)
         batch_data.save()
     return Response({"status": "success"}, status=200)
 
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getLearnerBatchwise(request,batch_id):
-    learners = Learner.objects.filter(batch = batch_id)
-    serilizer = LearnerDataUploadSerializer(learners,many=True)
+def getLearnerBatchwise(request, batch_id):
+    learners = Learner.objects.filter(batch=batch_id)
+    serilizer = LearnerDataUploadSerializer(learners, many=True)
     return Response({"status": "success", "data": serilizer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getBatches(request):
     batches = Batch.objects.all()
-    serilizer = BatchSerializer(batches,many=True)
+    serilizer = BatchSerializer(batches, many=True)
     return Response({"status": "success", "data": serilizer.data}, status=200)
+
+def generateManagementToken():
+    print('app access key', env('100MS_APP_ACCESS_KEY'))
+    expires = 24 * 3600
+    now = datetime.utcnow()
+    exp = now + timedelta(seconds=expires)
+    return jwt.encode(payload={
+        'access_key': env('100MS_APP_ACCESS_KEY'),
+        'type': 'management',
+        'version': 2,
+        'jti': str(uuid.uuid4()),
+        'iat': now,
+        'exp': exp,
+        'nbf': now
+    }, key=env('100MS_APP_SECRET'))
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getManagementToken(request):
+    management_token = generateManagementToken()
+    return Response({"message": "Success", "management_token": management_token}, status=200)
