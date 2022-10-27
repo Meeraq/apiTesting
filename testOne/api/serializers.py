@@ -11,6 +11,7 @@ from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
 from base.models import Learner
 from base.models import Batch
+from base.models import Competency, CourseAssesment, Question, SubCompetency
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -31,32 +32,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# class CourseCategorySerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = CourseCategorys
-#         fields = '__all__'
-
-
-# class CourseSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Courses
-#         fields = '__all__'
-
-
-# class LearnerSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Learners
-#         fields = ['id', 'name', 'email', 'phone', 'company', 'industry', 'designation', 'dob', 'gender',
-#                   'course', 'batch', 'isActive']
-
-
-# class BatchSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Batch
-#         fields = '__all__'
-
-# # class Coach():
-
 
 class CoachSerializer(serializers.ModelSerializer):
     class Meta:
@@ -65,44 +40,6 @@ class CoachSerializer(serializers.ModelSerializer):
                   'activeSince', 'isSlotBooked', 'isActive', 'meet_link']
 
 
-# class FacultySerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Faculty
-#         fields = ['id', 'name', 'email', 'phone', 'dob', 'gender', 'fee',
-#                   'activeSince', 'isActive']
-
-
-# class SlotSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Slot
-#         fields = '__all__'
-
-
-# class CoachCoachySessionSerializer(serializers.ModelSerializer):
-
-#     class Meta:
-#         model = CoachCoachySession
-#         fields = '__all__'
-
-
-# class SlotTimeDaySerializer(serializers.ModelSerializer):
-#     coachcoachysession = CoachCoachySessionSerializer(required=False)
-
-#     class Meta:
-#         model = DayTimeSlot
-#         fields = '__all__'
-
-
-# class LearnerSlotTimeDaySerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = LearnerdayTimeSlot
-#         fields = '__all__'
-
-
-# class SessionSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Sessions
-#         fields = '__all__'
 
 
 class SlotForCoachSerializer(serializers.ModelSerializer):
@@ -160,6 +97,33 @@ class LearnerDataUploadSerializer(serializers.ModelSerializer):
 class BatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Batch
+        fields = '__all__'
+
+class Questionserializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = '__all__'
+
+
+class SubCompetencyserializer(serializers.ModelSerializer):
+    questions = Questionserializer()
+    class Meta:
+        model = SubCompetency
+        fields = '__all__'
+
+class Competencyserializer(serializers.ModelSerializer):
+    sub_competency = SubCompetencyserializer()
+    class Meta:
+        model = Competency
+        fields = '__all__'
+
+
+
+class CourseAssesmentserializer(serializers.ModelSerializer):
+    competency = Competencyserializer()
+    questions = Questionserializer()
+    class Meta:
+        model = CourseAssesment
         fields = '__all__'
 
 

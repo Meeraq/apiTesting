@@ -1,6 +1,6 @@
 import uuid
 from django.template.loader import render_to_string
-import jwt
+import jwt 
 from datetime import datetime, time, timedelta
 from django.core.mail import EmailMessage
 import os
@@ -21,18 +21,23 @@ from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
 from base.models import Batch, Learner
+from base.models import Competency, CourseAssesment, Question, SubCompetency
 from .serializers import (
     AdminReqSerializer,
     BatchSerializer,
+    Competencyserializer,
     ConfirmedLearnerSerializer,
     ConfirmedSlotsbyCoachSerializer,
     ConfirmedSlotsbyLearnerSerializer,
+    CourseAssesmentserializer,
     EditUserSerializer,
     EventSerializer,
     GetAdminReqSerializer,
     CoachSerializer,
     LearnerDataUploadSerializer,
+    Questionserializer,
     SlotForCoachSerializer,
+    SubCompetencyserializer,
     UserSerializer,
     ProfileSerializer,
 )
@@ -1362,3 +1367,139 @@ def generateManagementToken():
 def getManagementToken(request):
     management_token = generateManagementToken()
     return Response({"message": "Success", "management_token": management_token}, status=200)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def addQuestions(request):
+    for question in request.data['questions']:
+        if question.type == 'meeraqsingle':
+            new_question = Question(
+                ques = question['question'],
+                option_one = question['option_one'],
+                option_two = question['option_two'],
+                option_three = question['option_three'],
+                option_four = question['option_four'],
+                correct= question['correct'],
+                score_one = question['score_one'],
+                type = question['type'],
+            )
+            new_question.save()
+        elif question.type == 'meeraqmulti':
+            new_question = Question(
+                ques = question['question'],
+                option_one = question['option_one'],
+                option_two = question['option_two'],
+                option_three = question['option_three'],
+                option_four = question['option_four'],
+                score_two = question['score_two '],
+                score_one = question['score_one'],
+                score_three = question['score_three'],
+                score_four = question['score_four'],
+                type = question['type'],
+            )
+            new_question.save()
+        elif question.type == '360':
+            new_question = Question(
+                ques = question['question'],
+                scale = question['scale'],
+                type = question['type'],
+            )
+            new_question.save()
+    return Response({"status": "success"}, status=200)
+
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def addSubCompitency(request):
+    new_sub_competency = SubCompetency(
+        name = request.data['name'],
+        questions = request.data['questions'],
+    )
+
+    new_sub_competency.save()
+    return Response({"status": "success"}, status=200)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def addCompitency(request):
+    new_competency = Competency(
+        name = request.data['name'],
+        sub_competency = request.data['sub_competency'],
+    )
+    new_competency.save()
+    return Response({"status": "success"}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def addCourseAssesment(request):
+    new_assesment = CourseAssesment(
+        name = request.data['name'],
+        type = request.data['type'],
+        competency = request.data['competency'],
+        questions = request.data['questions'],
+    )
+    new_assesment.save()
+    return Response({"status": "success"}, status=200)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getCourseAssesment(request):
+    assesment = CourseAssesment.objects.all()
+    serilizer = CourseAssesmentserializer(assesment,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getCourseAssesmentById(request,assesment_id):
+    assesment = CourseAssesment.objects.filter(id=assesment_id)
+    serilizer = CourseAssesmentserializer(assesment,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getCompitency(request):
+    competency = Competency.objects.all()
+    serilizer = Competencyserializer(competency,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getCompitencyById(request,comp_id):
+    competency = Competency.objects.filter(id=comp_id)
+    serilizer = Competencyserializer(competency,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getSubCompitency(request):
+    sub_competency =  SubCompetency.objects.all()
+    serilizer = SubCompetencyserializer(sub_competency ,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getSubCompitencyById(request,subcom_id):
+    sub_competency =  SubCompetency.objects.filter(id=subcom_id)
+    serilizer = SubCompetencyserializer(sub_competency ,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getQuestionbyType(request,type):
+    question =  Question.objects.filter(type = type)
+    serilizer = Questionserializer(question ,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getQuestionbyId(request,ques_id):
+    question =  Question.objects.filter(id = ques_id)
+    serilizer = Questionserializer(question ,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+

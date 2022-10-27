@@ -164,3 +164,44 @@ class Learner(models.Model):
 
 class Batch(models.Model):
     batch = models.CharField(max_length=200,default=" ", primary_key = True)
+
+
+class Question(models.Model):
+    ques = models.CharField(max_length=200,default=" ")
+    option_one = models.CharField(max_length=200,default="null")
+    option_two = models.CharField(max_length=200,default="null")
+    option_three = models.CharField(max_length=200,default="null")
+    option_four = models.CharField(max_length=200,default="null")
+    correct = models.CharField(max_length=200,default="null",blank=True)
+    score_one  = models.IntegerField(default=1,blank=True)
+    score_two  = models.IntegerField(default=1,blank=True)
+    score_three  = models.IntegerField(default=1,blank=True)
+    score_four  = models.IntegerField(default=1,blank=True)
+    scale = models.IntegerField(default=5,blank=True)
+    type = models.CharField(max_length=200,default=" ")
+
+class SubCompetency(models.Model):
+    name = models.CharField(max_length=200,default=" ")
+    questions = models.ManyToManyField(Question)
+
+class Competency(models.Model):
+    name = models.CharField(max_length=200,default=" ")
+    sub_competency = models.ManyToManyField(SubCompetency)
+
+
+class CourseAssesment(models.Model):
+    name = models.CharField(max_length=200,default=" ")
+    type = models.CharField(max_length=200,default=" ")
+    competency = models.ManyToManyField(Competency)
+    questions = models.ManyToManyField(Question)
+
+
+class Assesment(models.Model):
+    name = models.CharField(max_length=200,default=" ")
+    type = models.CharField(max_length=200,default=" ")
+    course_assesment =  models.ForeignKey(Competency,null=True, on_delete=models.SET_NULL)
+    _id = models.CharField(max_length=200,default=" ")
+    batch = models.CharField(max_length=200,default=" ")
+    company = models.CharField(max_length=200,default="null")
+    leader = models.CharField(max_length=200,default="null")
+

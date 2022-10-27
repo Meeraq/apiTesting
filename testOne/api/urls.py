@@ -90,6 +90,16 @@ urlpatterns = [
     path('learner-upload/', views.learnerDataUpload),
     path('get-batches/', views.getBatches),
     path('get-learner-by-batch/<str:batch_id>/', views.getLearnerBatchwise),
-    path('management-token/', views.getManagementToken),
-
+    path('add-questions/', views.addQuestions),
+    path('add-subcompetency/', views.addSubCompitency),
+    path('add-competency/', views.addCompitency),
+    path('add-course-assesment/', views.addCourseAssesment),
+    path('get-course-assesment/', views.getCourseAssesment),
+    path('get-course-assesment/<str:assesment_id>/', views.getCourseAssesmentById),
+    path('get-competency/<str:comp_id>/', views.getCompitencyById),
+    path('get-competency/', views.getCompitency),
+    path('get-sub-competency/', views.getSubCompitency),
+    path('get-sub-competency/<str:subcom_id>/', views.getSubCompitencyById),
+    path('get-questions/<str:type>/', views.getQuestionbyType),
+    path('get-questions/<str:ques_id>/', views.getQuestionbyId),
 ]
