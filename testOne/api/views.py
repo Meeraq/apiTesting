@@ -1461,6 +1461,8 @@ def addCourseAssesment(request):
         name = request.data['name'],
         type = request.data['type'],
         competency = request.data['competency'],
+        sub_competency = request.data['sub_competency'],
+        question = request.data['question'],
     )
     new_assesment.save()
     return Response({"status": "success"}, status=200)

@@ -198,6 +198,8 @@ class CourseAssesment(models.Model):
     name = models.CharField(max_length=200,default=" ")
     type = models.CharField(max_length=200,default=" ")
     competency = models.ManyToManyField(Competency)
+    sub_competency = models.ManyToManyField(SubCompetency)
+    question = models.ManyToManyField(Question)
 
 class Assesment(models.Model):
     name = models.CharField(max_length=200,default=" ")
