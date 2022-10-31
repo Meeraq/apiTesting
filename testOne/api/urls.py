@@ -103,5 +103,7 @@ urlpatterns = [
     path('get-questions/<str:type>/', views.getQuestionbyType),
     path('get-questions/<str:ques_id>/', views.getQuestionbyId),
     path('get-question-by-subcompetency/<str:sub_competency>/',views.getQuestionbySubCompetency),
-    path('scheduled-sessions/',views.getScheduledSession)
+    path('scheduled-sessions/',views.getScheduledSession),
+    path('create-course-assesment-link/',views.addCourseAssesmentLink),
+    path('assesment/<str:_id>',views.getCourseAssesmentById),
 ]

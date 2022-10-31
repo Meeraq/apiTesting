@@ -12,6 +12,7 @@ from base.models import DeleteConfirmedSlotsbyAdmin
 from base.models import Learner
 from base.models import Batch
 from base.models import Competency, CourseAssesment, Question, SubCompetency
+from base.models import Assesment
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -126,4 +127,8 @@ class CourseAssesmentserializer(serializers.ModelSerializer):
         model = CourseAssesment
         fields = '__all__'
 
+class AssesmentLinkserializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assesment
+        fields = '__all__'
 

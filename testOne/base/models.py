@@ -204,7 +204,7 @@ class CourseAssesment(models.Model):
 class Assesment(models.Model):
     name = models.CharField(max_length=200,default=" ")
     type = models.CharField(max_length=200,default=" ")
-    course_assesment =  models.ForeignKey(Competency,null=True, on_delete=models.SET_NULL)
+    course_assesment =  models.ForeignKey(CourseAssesment,null=True, on_delete=models.SET_NULL)
     _id = models.CharField(max_length=200,default=" ")
     batch = models.CharField(max_length=200,default=" ")
     company = models.CharField(max_length=200,default="null")

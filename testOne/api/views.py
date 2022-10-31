@@ -23,8 +23,10 @@ from base.models import Events
 from base.models import LeanerConfirmedSlots
 from base.models import Batch, Learner
 from base.models import Competency, CourseAssesment, Question, SubCompetency
+from base.models import Assesment
 from .serializers import (
     AdminReqSerializer,
+    AssesmentLinkserializer,
     BatchSerializer,
     Competencyserializer,
     ConfirmedLearnerSerializer,
@@ -1535,3 +1537,25 @@ def getQuestionbySubCompetency(request,sub_competency):
     serilizer = Questionserializer(question ,many=True)
     return Response({"status": "success","data":serilizer.data}, status=200)
 
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def addCourseAssesmentLink(request):
+    new_assesment = CourseAssesment(
+        name = request.data['name'],
+        type = request.data['type'],
+        course_assesment = request.data['course_assesment'],
+        batch = request.data['batch'],
+        company = request.data['company'],
+        leader = request.data['leader'],
+        _id = str(uuid.uuid1()),
+    )
+    new_assesment.save()
+    return Response({"status": "success"}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getCourseAssesmentById(request,_id):
+    assesment = Assesment.objects.filter(id=_id)
+    serilizer = AssesmentLinkserializer(assesment,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
