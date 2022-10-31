@@ -1,3 +1,4 @@
+import email
 import uuid
 from django.template.loader import render_to_string
 import jwt 
@@ -1368,11 +1369,31 @@ def getManagementToken(request):
     management_token = generateManagementToken()
     return Response({"message": "Success", "management_token": management_token}, status=200)
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getScheduledSession(request):
+    learner_email = request.data['learner_email']
+    meet_link = "https://coach.meeraq.com/join-session/"+ request.data['room_id']
+    current_time = request.data['time']
+    today_date = datetime.date(datetime.today())
+    print("today's date", today_date)
+    print('current time',current_time)
+    try:
+        coach = Coach.objects.get(meet_link=meet_link)
+        try:
+            booked_slot = LeanerConfirmedSlots.objects.filter(slot__coach_id=coach.id,email=learner_email,slot__date = today_date) 
+            print(booked_slot)
+            return Response({"message": "Success"}, status=200)
+        except:
+            return Response({"message": "No session found"}, status=400)
+    except:
+        return Response({"message": "Invalid Link"},status=400)
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addQuestions(request):
     for question in request.data['questions']:
-        if question.type == 'meeraqsingle':
+        if question['type'] == 'meeraqsingle':
             new_question = Question(
                 ques = question['question'],
                 option_one = question['option_one'],
@@ -1382,9 +1403,10 @@ def addQuestions(request):
                 correct= question['correct'],
                 score_one = question['score_one'],
                 type = question['type'],
+                sub_competency = question['sub_competency']
             )
             new_question.save()
-        elif question.type == 'meeraqmulti':
+        elif question['type'] == 'meeraqmulti':
             new_question = Question(
                 ques = question['question'],
                 option_one = question['option_one'],
@@ -1396,13 +1418,15 @@ def addQuestions(request):
                 score_three = question['score_three'],
                 score_four = question['score_four'],
                 type = question['type'],
+                sub_competency = question['sub_competency']
             )
             new_question.save()
-        elif question.type == '360':
+        elif question['type'] == '360':
             new_question = Question(
                 ques = question['question'],
                 scale = question['scale'],
                 type = question['type'],
+                sub_competency = question['sub_competency']
             )
             new_question.save()
     return Response({"status": "success"}, status=200)
@@ -1414,7 +1438,7 @@ def addQuestions(request):
 def addSubCompitency(request):
     new_sub_competency = SubCompetency(
         name = request.data['name'],
-        questions = request.data['questions'],
+        competency = request.data['competency'],
     )
 
     new_sub_competency.save()
@@ -1425,7 +1449,6 @@ def addSubCompitency(request):
 def addCompitency(request):
     new_competency = Competency(
         name = request.data['name'],
-        sub_competency = request.data['sub_competency'],
     )
     new_competency.save()
     return Response({"status": "success"}, status=200)
@@ -1438,7 +1461,6 @@ def addCourseAssesment(request):
         name = request.data['name'],
         type = request.data['type'],
         competency = request.data['competency'],
-        questions = request.data['questions'],
     )
     new_assesment.save()
     return Response({"status": "success"}, status=200)
@@ -1500,6 +1522,14 @@ def getQuestionbyType(request,type):
 @permission_classes([AllowAny])
 def getQuestionbyId(request,ques_id):
     question =  Question.objects.filter(id = ques_id)
+    serilizer = Questionserializer(question ,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getQuestionbySubCompetency(request,sub_competency):
+    question =  Question.objects.filter(sub_competency = sub_competency)
     serilizer = Questionserializer(question ,many=True)
     return Response({"status": "success","data":serilizer.data}, status=200)
 
