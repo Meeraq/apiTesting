@@ -107,13 +107,11 @@ class Questionserializer(serializers.ModelSerializer):
 
 
 class SubCompetencyserializer(serializers.ModelSerializer):
-    questions = Questionserializer()
     class Meta:
         model = SubCompetency
         fields = '__all__'
 
 class Competencyserializer(serializers.ModelSerializer):
-    sub_competency = SubCompetencyserializer()
     class Meta:
         model = Competency
         fields = '__all__'
@@ -121,8 +119,6 @@ class Competencyserializer(serializers.ModelSerializer):
 
 
 class CourseAssesmentserializer(serializers.ModelSerializer):
-    competency = Competencyserializer()
-    questions = Questionserializer()
     class Meta:
         model = CourseAssesment
         fields = '__all__'
