@@ -1394,56 +1394,65 @@ def getScheduledSession(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addQuestions(request):
-    for question in request.data['questions']:
-        if question['type'] == 'meeraqsingle':
-            new_question = Question(
-                ques = question['question'],
-                option_one = question['option_one'],
-                option_two = question['option_two'],
-                option_three = question['option_three'],
-                option_four = question['option_four'],
-                correct= question['correct'],
-                score_one = question['score_one'],
-                type = question['type'],
-                sub_competency = question['sub_competency']
-            )
-            new_question.save()
-        elif question['type'] == 'meeraqmulti':
-            new_question = Question(
-                ques = question['question'],
-                option_one = question['option_one'],
-                option_two = question['option_two'],
-                option_three = question['option_three'],
-                option_four = question['option_four'],
-                score_two = question['score_two '],
-                score_one = question['score_one'],
-                score_three = question['score_three'],
-                score_four = question['score_four'],
-                type = question['type'],
-                sub_competency = question['sub_competency']
-            )
-            new_question.save()
-        elif question['type'] == '360':
-            new_question = Question(
-                ques = question['question'],
-                scale = question['scale'],
-                type = question['type'],
-                sub_competency = question['sub_competency']
-            )
-            new_question.save()
+    for question in request.data:
+            serilizer = Questionserializer(data=question)
+            if serilizer.is_valid():
+                serilizer.save()
+            else:
+                print(serilizer.errors)
+                return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
 
-
-
+            # new_question = Question(
+            #     ques = question['question'],
+            #     scale = question['scale'],
+            #     type = question['type'],
+            #     sub_competency = question['sub_competency']
+            # )
+            # new_question.save()
+        # if question['type'] == 'meeraqsingle':
+        #     new_question = Question(
+        #         ques = question['question'],
+        #         option_one = question['option_one'],
+        #         option_two = question['option_two'],
+        #         option_three = question['option_three'],
+        #         option_four = question['option_four'],
+        #         correct= question['correct'],
+        #         score_one = question['score_one'],
+        #         type = question['type'],
+        #         sub_competency = question['sub_competency']
+        #     )
+        #     new_question.save()
+        # elif question['type'] == 'meeraqmulti':
+        #     new_question = Question(
+        #         ques = question['question'],
+        #         option_one = question['option_one'],
+        #         option_two = question['option_two'],
+        #         option_three = question['option_three'],
+        #         option_four = question['option_four'],
+        #         score_two = question['score_two '],
+        #         score_one = question['score_one'],
+        #         score_three = question['score_three'],
+        #         score_four = question['score_four'],
+        #         type = question['type'],
+        #         sub_competency = question['sub_competency']
+        #     )
+        #     new_question.save()
+        # elif question['type'] == '360':
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addSubCompitency(request):
-    new_sub_competency = SubCompetency(
-        name = request.data['name'],
-        competency = request.data['competency'],
-    )
-
-    new_sub_competency.save()
+    # new_sub_competency = SubCompetency(
+    #     name = request.data['name'],
+    #     competency = request.data['competency'],
+    # )
+    # new_sub_competency.save()
+    serilizer = SubCompetencyserializer(data=request.data)
+    if serilizer.is_valid():
+        serilizer.save()
+    else:
+        return Response({"status": "bad request"}, status=400)
+    
     return Response({"status": "success"}, status=200)
 
 @api_view(["POST"])
@@ -1459,14 +1468,19 @@ def addCompitency(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addCourseAssesment(request):
-    new_assesment = CourseAssesment(
-        name = request.data['name'],
-        type = request.data['type'],
-        competency = request.data['competency'],
-        sub_competency = request.data['sub_competency'],
-        question = request.data['question'],
-    )
-    new_assesment.save()
+    # new_assesment = CourseAssesment(
+    #     name = request.data['name'],
+    #     type = request.data['type'],
+    #     competency = request.data['competency'],
+    #     sub_competency = request.data['sub_competency'],
+    #     question = request.data['question'],
+    # )
+    # new_assesment.save()
+    serilizer = CourseAssesmentserializer(data=request.data)
+    if serilizer.is_valid():
+        serilizer.save()
+    else:
+        return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
 
 @api_view(["GET"])
@@ -1549,7 +1563,11 @@ def addCourseAssesmentLink(request):
         leader = request.data['leader'],
         _id = str(uuid.uuid1()),
     )
-    new_assesment.save()
+    serilizer = AssesmentLinkserializer(data=new_assesment)
+    if serilizer.is_valid():
+        serilizer.save()
+    else:
+        return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
 
 

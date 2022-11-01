@@ -181,17 +181,17 @@ class SubCompetency(models.Model):
 
 class Question(models.Model):
     ques = models.CharField(max_length=200,default=" ")
-    option_one = models.CharField(max_length=200,default="null")
-    option_two = models.CharField(max_length=200,default="null")
-    option_three = models.CharField(max_length=200,default="null")
-    option_four = models.CharField(max_length=200,default="null")
+    option_one = models.CharField(max_length=200,default="null",blank=True)
+    option_two = models.CharField(max_length=200,default="null",blank=True)
+    option_three = models.CharField(max_length=200,default="null",blank=True)
+    option_four = models.CharField(max_length=200,default="null",blank=True)
     correct = models.CharField(max_length=200,default="null",blank=True)
     score_one  = models.IntegerField(default=1,blank=True)
     score_two  = models.IntegerField(default=1,blank=True)
     score_three  = models.IntegerField(default=1,blank=True)
     score_four  = models.IntegerField(default=1,blank=True)
     scale = models.IntegerField(default=5,blank=True)
-    type = models.CharField(max_length=200,default=" ")
+    type = models.CharField(max_length=200,default=" ",blank=True)
     sub_competency = models.ManyToManyField(SubCompetency)
 
 class CourseAssesment(models.Model):
