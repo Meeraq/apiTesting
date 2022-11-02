@@ -91,5 +91,6 @@ urlpatterns = [
     path('get-batches/', views.getBatches),
     path('get-learner-by-batch/<str:batch_id>/', views.getLearnerBatchwise),
     path('management-token/', views.getManagementToken),
+    path('current-booked-slot/', views.getCurrentBookedSlot),
 
 ]
