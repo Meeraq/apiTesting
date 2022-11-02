@@ -1517,6 +1517,12 @@ def getCourseAssesmentById(request,assesment_id):
     serilizer = CourseAssesmentserializer(assesment,many=True)
     return Response({"status": "success","data":serilizer.data}, status=200)
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getCourseAssesmentByType(request,type):
+    assesment = CourseAssesment.objects.filter(type = type)
+    serilizer = CourseAssesmentserializer(assesment,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -1600,12 +1606,17 @@ def addCourseAssesmentLink(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getCourseAssesmentById(request,_id):
+def getCourseAssesmentLinkById(request,_id):
     assesment = Assesment.objects.filter(id=_id)
     serilizer = AssesmentLinkserializer(assesment,many=True)
     return Response({"status": "success","data":serilizer.data}, status=200)
 
-
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getCourseAssesmentLinkByType(request,type):
+    assesment = Assesment.objects.filter(type = type)
+    serilizer = AssesmentLinkserializer(assesment,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
 
 @api_view(["POST"])
 @permission_classes([AllowAny])

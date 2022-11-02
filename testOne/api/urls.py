@@ -96,6 +96,7 @@ urlpatterns = [
     path('add-course-assesment/', views.addCourseAssesment),
     path('get-course-assesment/', views.getCourseAssesment),
     path('get-course-assesment/<str:assesment_id>/', views.getCourseAssesmentById),
+    path('get-course-assesment/<str:type>',views.getCourseAssesmentByType),
     path('get-competency/<str:comp_id>/', views.getCompitencyById),
     path('get-competency/', views.getCompitency),
     path('get-sub-competency/', views.getSubCompitency),
@@ -106,5 +107,7 @@ urlpatterns = [
     path('get-question-by-subcompetency/<str:sub_competency>/',views.getQuestionbySubCompetency),
     path('scheduled-sessions/',views.getScheduledSession),
     path('create-course-assesment-link/',views.addCourseAssesmentLink),
-    path('assesment/<str:_id>',views.getCourseAssesmentById),
+    path('assesment/<str:_id>',views.getCourseAssesmentLinkById),
+    path('course-assesment/<str:type>',views.getCourseAssesmentLinkByType),
+    path('add-leader/', views.addLeader),
 ]
