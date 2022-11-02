@@ -206,8 +206,8 @@ class Assesment(models.Model):
     type = models.CharField(max_length=200,default=" ")
     course_assesment =  models.ForeignKey(CourseAssesment,null=True, on_delete=models.SET_NULL)
     _id = models.CharField(max_length=200,default=" ")
-    batch = models.CharField(max_length=200,default=" ")
-    company = models.CharField(max_length=200,default="null")
+    batch = models.CharField(max_length=200,default="null",blank=True)
+    company = models.CharField(max_length=200,default="null",blank=True)
     leader = models.CharField(max_length=200,default="null")
 
 class Leader(models.Model):

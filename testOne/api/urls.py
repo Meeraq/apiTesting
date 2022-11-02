@@ -107,7 +107,9 @@ urlpatterns = [
     path('get-question-by-subcompetency/<str:sub_competency>/',views.getQuestionbySubCompetency),
     path('scheduled-sessions/',views.getScheduledSession),
     path('create-course-assesment-link/',views.addCourseAssesmentLink),
-    path('assesment/<str:_id>',views.getCourseAssesmentLinkById),
-    path('course-assesment/<str:type>',views.getCourseAssesmentLinkByType),
+    path('assesment/<str:_id>/',views.getCourseAssesmentLinkById),
+    path('course-assesment/<str:type>/',views.getCourseAssesmentLinkByType),
     path('add-leader/', views.addLeader),
+    path('leader/<str:leader_id>', views.getLeader),
+    path('leader/', views.getAllLeader),
 ]

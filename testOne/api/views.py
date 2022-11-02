@@ -1657,3 +1657,20 @@ def addLeader(request):
         print(serializer.errors)
         return Response(status="400")
     return Response({"status": 200, "payload": serializer.data, "token": str(token[0])})
+
+
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getLeader(request,leader_id):
+    leader = Leader.objects.filter(id = leader_id)
+    serilizer = LeaderSerializer(leader,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getAllLeader(request):
+    leader = Leader.objects.all()
+    serilizer = LeaderSerializer(leader,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
