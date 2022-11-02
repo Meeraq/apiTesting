@@ -1535,6 +1535,13 @@ def getQuestionbyType(request,type):
     serilizer = Questionserializer(question ,many=True)
     return Response({"status": "success","data":serilizer.data}, status=200)
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getQuestion(request,type):
+    question =  Question.objects.all()
+    serilizer = Questionserializer(question ,many=True)
+    return Response({"status": "success","data":serilizer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
