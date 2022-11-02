@@ -10,7 +10,7 @@ class Profile(models.Model):
     user_choice = [
         ('coach', 'coach'),
         ('admin', 'admin'),
-        ('learner', 'learner'),
+        ('leader', 'leader'),
         ('faculty', 'faculty')
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -210,3 +210,12 @@ class Assesment(models.Model):
     company = models.CharField(max_length=200,default="null")
     leader = models.CharField(max_length=200,default="null")
 
+class Leader(models.Model):
+    user = models.OneToOneField(Profile, on_delete=models.CASCADE, blank=True)
+    first_name = models.CharField(max_length=200)
+    middle_name = models.CharField(max_length=200, blank=True, default=" ")
+    last_name = models.CharField(max_length=200, default=" ")
+    email = models.CharField(max_length=200)
+    phone = models.CharField(max_length=200)
+    gender = models.CharField(max_length=200, blank=True, default="NA")
+    isActive = models.BooleanField(default=False, blank=True)

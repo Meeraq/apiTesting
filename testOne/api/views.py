@@ -24,6 +24,7 @@ from base.models import LeanerConfirmedSlots
 from base.models import Batch, Learner
 from base.models import Competency, CourseAssesment, Question, SubCompetency
 from base.models import Assesment
+from base.models import Leader
 from .serializers import (
     AdminReqSerializer,
     AssesmentLinkserializer,
@@ -37,6 +38,7 @@ from .serializers import (
     EventSerializer,
     GetAdminReqSerializer,
     CoachSerializer,
+    LeaderSerializer,
     LearnerDataUploadSerializer,
     Questionserializer,
     SlotForCoachSerializer,
@@ -488,6 +490,24 @@ def login_user(request):
                     {
                         "status": "200",
                         "username": user.username,
+                        "token": str(token[0]),
+                        "email": userProfile.email,
+                        "usertype": user.profile.type,
+                        "id": userProfile.id,
+                    }
+                )
+            else:
+                return Response({"reason": "No user found"}, status=404)
+        elif user.profile.type == "leader":
+            if request.data['type'] == 'leader':
+                userProfile = Leader.objects.get(email=username)
+                token = Token.objects.get_or_create(user=user)
+                return Response(
+                    {
+                        "username": user.username,
+                        "first_name": userProfile.first_name,
+                        "middle_name": userProfile.middle_name,
+                        "last_name": userProfile.last_name,
                         "token": str(token[0]),
                         "email": userProfile.email,
                         "usertype": user.profile.type,
@@ -1584,3 +1604,45 @@ def getCourseAssesmentById(request,_id):
     assesment = Assesment.objects.filter(id=_id)
     serilizer = AssesmentLinkserializer(assesment,many=True)
     return Response({"status": "success","data":serilizer.data}, status=200)
+
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def addLeader(request):
+    serializer = LeaderSerializer(data=request.data)
+    email_message = render_to_string(
+        "addcoachmail.html",
+        {
+            "coach_name": request.data["first_name"],
+            "username": request.data["email"],
+            "password": request.data["password"],
+        },
+    )
+    if serializer.is_valid():
+        newUser = User.objects.create_user(
+            username=request.data["email"], email=request.data["email"], password=request.data["password"]
+        )
+        newUser.save()
+        userToSave = User.objects.get(username=request.data["email"])
+        newProfile = Profile(user=userToSave, type="leader",
+                             email=request.data["email"])
+        newProfile.save()
+        serializer.save(user_id=newProfile.id)
+        send_mail(
+            # title:
+            "You are added as a Leader on {title}".format(title="Meeraq"),
+            # message:
+            email_message,
+            # from:0
+            "info@meeraq.com",
+            # to:
+            [request.data["email"]],
+            html_message=email_message,
+        )
+        for user in User.objects.all():
+            token = Token.objects.get_or_create(user=user)
+    else:
+        print(serializer.errors)
+        return Response(status="400")
+    return Response({"status": 200, "payload": serializer.data, "token": str(token[0])})

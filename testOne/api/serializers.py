@@ -13,6 +13,7 @@ from base.models import Learner
 from base.models import Batch
 from base.models import Competency, CourseAssesment, Question, SubCompetency
 from base.models import Assesment
+from base.models import Leader
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -128,3 +129,9 @@ class AssesmentLinkserializer(serializers.ModelSerializer):
         model = Assesment
         fields = '__all__'
 
+
+class LeaderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Leader
+        fields = ['id', 'first_name', 'middle_name', 'last_name', 'email', 'phone','gender', 
+                   'isActive']
