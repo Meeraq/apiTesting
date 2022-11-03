@@ -1604,7 +1604,7 @@ def getQuestionbySubCompetency(request, sub_competency):
 @permission_classes([AllowAny])
 def addCourseAssesmentLink(request):
     if request.data['type'] == '360':
-        new_assesment = CourseAssesment(
+        new_assesment = Assesment(
             name=request.data['name'],
             type=request.data['type'],
             course_assesment=request.data['course_assesment'],
@@ -1614,7 +1614,7 @@ def addCourseAssesmentLink(request):
             _id=str(uuid.uuid1()),
         )
     elif request.data['type'] == 'pre' or request.data['type'] == 'post':
-        new_assesment = CourseAssesment(
+        new_assesment = Assesment(
             name=request.data['name'],
             type=request.data['type'],
             course_assesment=request.data['course_assesment'],
