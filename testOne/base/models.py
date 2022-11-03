@@ -209,6 +209,9 @@ class Assesment(models.Model):
     batch = models.CharField(max_length=200,default="null",blank=True)
     company = models.CharField(max_length=200,default="null",blank=True)
     leader = models.CharField(max_length=200,default="null")
+    count = models.IntegerField(default=0,blank=True)
+    start_date = models.DateField(default=" ")
+    end_date = models.DateField(default=" ")
 
 class Leader(models.Model):
     user = models.OneToOneField(Profile, on_delete=models.CASCADE, blank=True)
