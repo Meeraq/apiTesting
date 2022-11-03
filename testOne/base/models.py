@@ -210,8 +210,8 @@ class Assesment(models.Model):
     company = models.CharField(max_length=200,default="null",blank=True)
     leader = models.CharField(max_length=200,default="null")
     count = models.IntegerField(default=0,blank=True)
-    start_date = models.DateField(default=" ")
-    end_date = models.DateField(default=" ")
+    start_date = models.DateField(blank=True,default="2000-01-01")
+    end_date = models.DateField(blank=True,default="2000-01-01")
 
 class Leader(models.Model):
     user = models.OneToOneField(Profile, on_delete=models.CASCADE, blank=True)
