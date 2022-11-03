@@ -1,7 +1,7 @@
 import email
 import uuid
 from django.template.loader import render_to_string
-import jwt 
+import jwt
 from datetime import datetime, time, timedelta
 from django.core.mail import EmailMessage
 import os
@@ -1369,6 +1369,7 @@ def getBatches(request):
     serilizer = BatchSerializer(batches, many=True)
     return Response({"status": "success", "data": serilizer.data}, status=200)
 
+
 def generateManagementToken():
     print('app access key', env('100MS_APP_ACCESS_KEY'))
     expires = 24 * 3600
@@ -1391,74 +1392,80 @@ def getManagementToken(request):
     management_token = generateManagementToken()
     return Response({"message": "Success", "management_token": management_token}, status=200)
 
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getScheduledSession(request):
     learner_email = request.data['learner_email']
-    meet_link = "https://coach.meeraq.com/join-session/"+ request.data['room_id']
+    meet_link = "https://coach.meeraq.com/join-session/" + \
+        request.data['room_id']
     current_time = request.data['time']
     today_date = datetime.date(datetime.today())
     print("today's date", today_date)
-    print('current time',current_time)
+    print('current time', current_time)
     try:
         coach = Coach.objects.get(meet_link=meet_link)
         try:
-            booked_slot = LeanerConfirmedSlots.objects.filter(slot__coach_id=coach.id,email=learner_email,slot__date = today_date) 
+            booked_slot = LeanerConfirmedSlots.objects.filter(
+                slot__coach_id=coach.id, email=learner_email, slot__date=today_date)
             print(booked_slot)
             return Response({"message": "Success"}, status=200)
         except:
             return Response({"message": "No session found"}, status=400)
     except:
-        return Response({"message": "Invalid Link"},status=400)
+        return Response({"message": "Invalid Link"}, status=400)
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addQuestions(request):
     for question in request.data:
-            serilizer = Questionserializer(data=question)
-            if serilizer.is_valid():
-                serilizer.save()
-            else:
-                print(serilizer.errors)
-                return Response({"status": "bad request"}, status=400)
+        serilizer = Questionserializer(data=question)
+        if serilizer.is_valid():
+            serilizer.save()
+        else:
+            print(serilizer.errors)
+            return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
 
-            # new_question = Question(
-            #     ques = question['question'],
-            #     scale = question['scale'],
-            #     type = question['type'],
-            #     sub_competency = question['sub_competency']
-            # )
-            # new_question.save()
-        # if question['type'] == 'meeraqsingle':
-        #     new_question = Question(
-        #         ques = question['question'],
-        #         option_one = question['option_one'],
-        #         option_two = question['option_two'],
-        #         option_three = question['option_three'],
-        #         option_four = question['option_four'],
-        #         correct= question['correct'],
-        #         score_one = question['score_one'],
-        #         type = question['type'],
-        #         sub_competency = question['sub_competency']
-        #     )
-        #     new_question.save()
-        # elif question['type'] == 'meeraqmulti':
-        #     new_question = Question(
-        #         ques = question['question'],
-        #         option_one = question['option_one'],
-        #         option_two = question['option_two'],
-        #         option_three = question['option_three'],
-        #         option_four = question['option_four'],
-        #         score_two = question['score_two '],
-        #         score_one = question['score_one'],
-        #         score_three = question['score_three'],
-        #         score_four = question['score_four'],
-        #         type = question['type'],
-        #         sub_competency = question['sub_competency']
-        #     )
-        #     new_question.save()
-        # elif question['type'] == '360':
+    # new_question = Question(
+    #     ques = question['question'],
+    #     scale = question['scale'],
+    #     type = question['type'],
+    #     sub_competency = question['sub_competency']
+    # )
+    # new_question.save()
+    # if question['type'] == 'meeraqsingle':
+    #     new_question = Question(
+    #         ques = question['question'],
+    #         option_one = question['option_one'],
+    #         option_two = question['option_two'],
+    #         option_three = question['option_three'],
+    #         option_four = question['option_four'],
+    #         correct= question['correct'],
+    #         score_one = question['score_one'],
+    #         type = question['type'],
+    #         sub_competency = question['sub_competency']
+    #     )
+    #     new_question.save()
+    # elif question['type'] == 'meeraqmulti':
+    #     new_question = Question(
+    #         ques = question['question'],
+    #         option_one = question['option_one'],
+    #         option_two = question['option_two'],
+    #         option_three = question['option_three'],
+    #         option_four = question['option_four'],
+    #         score_two = question['score_two '],
+    #         score_one = question['score_one'],
+    #         score_three = question['score_three'],
+    #         score_four = question['score_four'],
+    #         type = question['type'],
+    #         sub_competency = question['sub_competency']
+    #     )
+    #     new_question.save()
+    # elif question['type'] == '360':
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addSubCompitency(request):
@@ -1472,14 +1479,15 @@ def addSubCompitency(request):
         serilizer.save()
     else:
         return Response({"status": "bad request"}, status=400)
-    
+
     return Response({"status": "success"}, status=200)
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addCompitency(request):
     new_competency = Competency(
-        name = request.data['name'],
+        name=request.data['name'],
     )
     new_competency.save()
     return Response({"status": "success"}, status=200)
@@ -1503,99 +1511,116 @@ def addCourseAssesment(request):
         return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
 
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getCourseAssesment(request):
     assesment = CourseAssesment.objects.all()
-    serilizer = CourseAssesmentserializer(assesment,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+    serilizer = CourseAssesmentserializer(assesment, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getCourseAssesmentById(request,assesment_id):
+def getCourseAssesmentById(request, assesment_id):
     assesment = CourseAssesment.objects.filter(id=assesment_id)
-    serilizer = CourseAssesmentserializer(assesment,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+    serilizer = CourseAssesmentserializer(assesment, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getCourseAssesmentByType(request,type):
-    assesment = CourseAssesment.objects.filter(type = type)
-    serilizer = CourseAssesmentserializer(assesment,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+def getCourseAssesmentByType(request, type):
+    assesment = CourseAssesment.objects.filter(type=type)
+    serilizer = CourseAssesmentserializer(assesment, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getCompitency(request):
     competency = Competency.objects.all()
-    serilizer = Competencyserializer(competency,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+    serilizer = Competencyserializer(competency, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getCompitencyById(request,comp_id):
+def getCompitencyById(request, comp_id):
     competency = Competency.objects.filter(id=comp_id)
-    serilizer = Competencyserializer(competency,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+    serilizer = Competencyserializer(competency, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getSubCompitency(request):
-    sub_competency =  SubCompetency.objects.all()
-    serilizer = SubCompetencyserializer(sub_competency ,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
-
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def getSubCompitencyById(request,subcom_id):
-    sub_competency =  SubCompetency.objects.filter(id=subcom_id)
-    serilizer = SubCompetencyserializer(sub_competency ,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+    sub_competency = SubCompetency.objects.all()
+    serilizer = SubCompetencyserializer(sub_competency, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getQuestionbyType(request,type):
-    question =  Question.objects.filter(type = type)
-    serilizer = Questionserializer(question ,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
-
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def getQuestion(request,type):
-    question =  Question.objects.all()
-    serilizer = Questionserializer(question ,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+def getSubCompitencyById(request, subcom_id):
+    sub_competency = SubCompetency.objects.filter(id=subcom_id)
+    serilizer = SubCompetencyserializer(sub_competency, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getQuestionbyId(request,ques_id):
-    question =  Question.objects.filter(id = ques_id)
-    serilizer = Questionserializer(question ,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+def getQuestionbyType(request, type):
+    question = Question.objects.filter(type=type)
+    serilizer = Questionserializer(question, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getQuestionbySubCompetency(request,sub_competency):
-    question =  Question.objects.filter(sub_competency = sub_competency)
-    serilizer = Questionserializer(question ,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+def getQuestion(request, type):
+    question = Question.objects.all()
+    serilizer = Questionserializer(question, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getQuestionbyId(request, ques_id):
+    question = Question.objects.filter(id=ques_id)
+    serilizer = Questionserializer(question, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getQuestionbySubCompetency(request, sub_competency):
+    question = Question.objects.filter(sub_competency=sub_competency)
+    serilizer = Questionserializer(question, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addCourseAssesmentLink(request):
-    new_assesment = CourseAssesment(
-        name = request.data['name'],
-        type = request.data['type'],
-        course_assesment = request.data['course_assesment'],
-        batch = request.data['batch'],
-        company = request.data['company'],
-        leader = request.data['leader'],
-        _id = str(uuid.uuid1()),
-    )
+    if request.data['type'] == '360':
+        new_assesment = CourseAssesment(
+            name=request.data['name'],
+            type=request.data['type'],
+            course_assesment=request.data['course_assesment'],
+            batch=request.data['batch'],
+            company=request.data['company'],
+            leader=request.data['leader'],
+            _id=str(uuid.uuid1()),
+        )
+    elif request.data['type'] == 'pre' or request.data['type'] == 'post':
+        new_assesment = CourseAssesment(
+            name=request.data['name'],
+            type=request.data['type'],
+            course_assesment=request.data['course_assesment'],
+            batch=request.data['batch'],
+            _id=str(uuid.uuid1()),
+        )
     serilizer = AssesmentLinkserializer(data=new_assesment)
     if serilizer.is_valid():
         serilizer.save()
@@ -1606,17 +1631,19 @@ def addCourseAssesmentLink(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getCourseAssesmentLinkById(request,_id):
+def getCourseAssesmentLinkById(request, _id):
     assesment = Assesment.objects.filter(id=_id)
-    serilizer = AssesmentLinkserializer(assesment,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+    serilizer = AssesmentLinkserializer(assesment, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getCourseAssesmentLinkByType(request,type):
-    assesment = Assesment.objects.filter(type = type)
-    serilizer = AssesmentLinkserializer(assesment,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+def getCourseAssesmentLinkByType(request, type):
+    assesment = Assesment.objects.filter(type=type)
+    serilizer = AssesmentLinkserializer(assesment, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -1659,18 +1686,17 @@ def addLeader(request):
     return Response({"status": 200, "payload": serializer.data, "token": str(token[0])})
 
 
-
-
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getLeader(request,leader_id):
-    leader = Leader.objects.filter(id = leader_id)
-    serilizer = LeaderSerializer(leader,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+def getLeader(request, leader_id):
+    leader = Leader.objects.filter(id=leader_id)
+    serilizer = LeaderSerializer(leader, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getAllLeader(request):
     leader = Leader.objects.all()
-    serilizer = LeaderSerializer(leader,many=True)
-    return Response({"status": "success","data":serilizer.data}, status=200)
+    serilizer = LeaderSerializer(leader, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
