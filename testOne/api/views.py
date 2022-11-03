@@ -1603,6 +1603,7 @@ def getQuestionbySubCompetency(request, sub_competency):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addCourseAssesmentLink(request):
+    
     if request.data['type'] == '360':
         new_assesment = Assesment(
             name=request.data['name'],
