@@ -208,7 +208,7 @@ class Assesment(models.Model):
     _id = models.CharField(max_length=200,default=" ")
     batch = models.CharField(max_length=200,default="null",blank=True)
     company = models.CharField(max_length=200,default="null",blank=True)
-    leader = models.CharField(max_length=200,default="null")
+    leader = models.CharField(max_length=200,default="null",blank=True)
     count = models.IntegerField(default=0,blank=True)
     start_date = models.DateField(blank=True,default="2000-01-01")
     end_date = models.DateField(blank=True,default="2000-01-01")
