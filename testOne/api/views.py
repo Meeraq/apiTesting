@@ -1159,8 +1159,7 @@ def confirmSlotsByLearner(request, slot_id):
                 {"name": request.data["name"], "time": start_time_for_mail,
                     "duration": "30 Min", "date": date, "link": coach_data.meet_link},
             )
-
-            meet_link = coach_slot.MEETING_LINK
+            meet_link = coach_data.meet_link
             createIcs(start, end, meet_link)
             email = EmailMessage(
                 "Meeraq | Coaching Session",
