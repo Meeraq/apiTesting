@@ -1603,29 +1603,30 @@ def getQuestionbySubCompetency(request, sub_competency):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addCourseAssesmentLink(request):
-    
+
     if request.data['type'] == '360':
-        new_assesment = Assesment(
-            name=request.data['name'],
-            type=request.data['type'],
-            course_assesment=request.data['course_assesment'],
-            batch=request.data['batch'],
-            company=request.data['company'],
-            leader=request.data['leader'],
-            _id=str(uuid.uuid1()),
-        )
+        new_assesment = {
+            "name":request.data['name'],
+            "type":request.data['type'],
+            "course_assesment":request.data['course_assesment'],
+            "batch":request.data['batch'],
+            "company":request.data['company'],
+            "leader":request.data['leader'],
+            "_id":str(uuid.uuid1()),
+        }
     elif request.data['type'] == 'pre' or request.data['type'] == 'post':
-        new_assesment = Assesment(
-            name=request.data['name'],
-            type=request.data['type'],
-            course_assesment=request.data['course_assesment'],
-            batch=request.data['batch'],
-            _id=str(uuid.uuid1()),
-        )
-    serilizer = AssesmentLinkserializer(data=new_assesment)
+        new_assesment = {
+            "name":request.data['name'],
+            "type":request.data['type'],
+            "course_assesment":request.data['course_assesment'],
+            "batch":request.data['batch'],
+           " _id":str(uuid.uuid1()),
+        }
+    serilizer = AssesmentLinkserializer(data= new_assesment)
     if serilizer.is_valid():
         serilizer.save()
     else:
+        print(serilizer.errors)
         return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
 
