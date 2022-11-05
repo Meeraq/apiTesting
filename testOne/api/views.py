@@ -19,13 +19,14 @@ from rest_framework.authtoken.models import Token
 from pytz import utc
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
-from base.models import Events
+from base.models import Events,SubmitedQuestion
 from base.models import LeanerConfirmedSlots
 from base.models import Batch, Learner
 from base.models import Competency, CourseAssesment, Question, SubCompetency
 from base.models import Assesment
 from base.models import Leader
 from .serializers import (
+    SubmitedQuestionserializer,SubmittedAssesmentserializer,
     AdminReqSerializer,
     AssesmentLinkserializer,
     BatchSerializer,
@@ -1496,14 +1497,6 @@ def addCompitency(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addCourseAssesment(request):
-    # new_assesment = CourseAssesment(
-    #     name = request.data['name'],
-    #     type = request.data['type'],
-    #     competency = request.data['competency'],
-    #     sub_competency = request.data['sub_competency'],
-    #     question = request.data['question'],
-    # )
-    # new_assesment.save()
     serilizer = CourseAssesmentserializer(data=request.data)
     if serilizer.is_valid():
         serilizer.save()
@@ -1603,16 +1596,15 @@ def getQuestionbySubCompetency(request, sub_competency):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addCourseAssesmentLink(request):
-
+    id = uuid.uuid1()
     if request.data['type'] == '360':
         new_assesment = {
             "name":request.data['name'],
             "type":request.data['type'],
             "course_assesment":request.data['course_assesment'],
-            "batch":request.data['batch'],
             "company":request.data['company'],
             "leader":request.data['leader'],
-            "_id":str(uuid.uuid1()),
+            "_id":str(id),
         }
     elif request.data['type'] == 'pre' or request.data['type'] == 'post':
         new_assesment = {
@@ -1620,7 +1612,7 @@ def addCourseAssesmentLink(request):
             "type":request.data['type'],
             "course_assesment":request.data['course_assesment'],
             "batch":request.data['batch'],
-           " _id":str(uuid.uuid1()),
+           " _id":str(id),
         }
     serilizer = AssesmentLinkserializer(data= new_assesment)
     if serilizer.is_valid():
@@ -1628,7 +1620,7 @@ def addCourseAssesmentLink(request):
     else:
         print(serilizer.errors)
         return Response({"status": "bad request"}, status=400)
-    return Response({"status": "success"}, status=200)
+    return Response({"status": "success","data":serilizer.data}, status=200)
 
 
 @api_view(["GET"])
@@ -1702,3 +1694,32 @@ def getAllLeader(request):
     leader = Leader.objects.all()
     serilizer = LeaderSerializer(leader, many=True)
     return Response({"status": "success", "data": serilizer.data}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def submmitedAssesment(request):
+    for question in request.data['questions']:
+        serilizer = SubmitedQuestionserializer(data=question)
+        if serilizer.is_valid():
+            serilizer.save()
+        else:
+            return Response({"status": "bad request"}, status=400)
+    questions = SubmitedQuestion.objects.filter(gmail = request.data['assesment']['email'])
+    
+    ques_id = []
+    for question in questions.all():
+        ques_id.append(question['id'])
+    new_assesment = {
+        "assesment" :  request.data['assesment']['assesment_name'],
+        "question" : ques_id,
+        "name" : request.data['assesment']['person_name'],
+        "email" : request.data['assesment']['email'],
+        "score" : request.data['assesment']['score']
+    }
+    sub_serilizer = SubmittedAssesmentserializer(data=new_assesment)
+    if sub_serilizer.is_valid():
+        sub_serilizer.save()
+    else:
+        return Response({"status": "bad request"}, status=400)
+    return Response({"status": "success"}, status=200)

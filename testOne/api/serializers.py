@@ -11,7 +11,7 @@ from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
 from base.models import Learner
 from base.models import Batch
-from base.models import Competency, CourseAssesment, Question, SubCompetency
+from base.models import Competency, CourseAssesment, Question, SubCompetency,SubmitedQuestion,SubmittedAssesment
 from base.models import Assesment
 from base.models import Leader
 
@@ -135,3 +135,13 @@ class LeaderSerializer(serializers.ModelSerializer):
         model = Leader
         fields = ['id', 'first_name', 'middle_name', 'last_name', 'email', 'phone','gender', 
                    'isActive']
+
+class SubmitedQuestionserializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmitedQuestion
+        fields = '__all__'
+
+class SubmittedAssesmentserializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmittedAssesment
+        fields = '__all__'

@@ -205,7 +205,7 @@ class Assesment(models.Model):
     name = models.CharField(max_length=200,default=" ")
     type = models.CharField(max_length=200,default=" ")
     course_assesment =  models.ForeignKey(CourseAssesment,null=True, on_delete=models.SET_NULL)
-    _id = models.CharField(max_length=200,default=" ")
+    _id = models.CharField(max_length=2000,default=" ")
     batch = models.CharField(max_length=200,default="null",blank=True )
     company = models.CharField(max_length=200,default="null",blank=True)
     leader = models.CharField(max_length=200,default="null",blank=True)
@@ -222,3 +222,18 @@ class Leader(models.Model):
     phone = models.CharField(max_length=200)
     gender = models.CharField(max_length=200, blank=True, default="NA")
     isActive = models.BooleanField(default=False, blank=True)
+
+class SubmitedQuestion(models.Model):
+    question = models.ForeignKey(Question,null=True, on_delete=models.SET_NULL)
+    selected_option_one = models.CharField(max_length=200, blank=True, default="null")
+    selected_option_two = models.CharField(max_length=200, blank=True, default="null")
+    selected_option_three = models.CharField(max_length=200, blank=True, default="null")
+    selected_option_four = models.CharField(max_length=200, blank=True, default="null")
+    gmail = models.CharField(max_length=200, blank=True, default="NA")
+
+class SubmittedAssesment(models.Model):
+    assesment =  models.ForeignKey(Assesment,null=True, on_delete=models.SET_NULL)
+    question = models.ManyToManyField(SubmitedQuestion)
+    name = models.CharField(max_length=200,default=" ")
+    email = models.CharField(max_length=200,default=" ")
+    score = models.CharField(max_length=200,default=" ")
