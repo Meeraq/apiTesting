@@ -112,4 +112,5 @@ urlpatterns = [
     path('add-leader/', views.addLeader),
     path('leader/<str:leader_id>', views.getLeader),
     path('leader/', views.getAllLeader),
+    path('submit-assesment/', views.submmitedAssesment),
 ]
