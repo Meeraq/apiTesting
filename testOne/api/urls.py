@@ -105,7 +105,7 @@ urlpatterns = [
     path('scheduled-sessions/',views.getScheduledSession),
     path('create-course-assesment-link/',views.addCourseAssesmentLink),
     path('assesment/<str:_id>/',views.getCourseAssesmentLinkById),
-    path('assesment/<str:leader_id>/',views.getCourseAssesmentLinkByLeader),
+    path('get-assessments-by-leader/<str:leader_id>/',views.getCourseAssesmentLinkByLeader),
     path('course-assesment/<str:type>/',views.getCourseAssesmentLinkByType),
     path('add-leader/', views.addLeader),
     path('leader/<str:leader_id>/', views.getLeader),
