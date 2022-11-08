@@ -1516,8 +1516,8 @@ def getCourseAssesment(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getCourseAssesmentById(request, assesment_id):
-    assesment = CourseAssesment.objects.filter(id=assesment_id)
-    serilizer = CourseAssesmentserializer(assesment, many=True)
+    assesment = CourseAssesment.objects.get(id=assesment_id)
+    serilizer = CourseAssesmentserializer(assesment)
     return Response({"status": "success", "data": serilizer.data}, status=200)
 
 
@@ -1596,12 +1596,14 @@ def getQuestionbySubCompetency(request, sub_competency):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addCourseAssesmentLink(request):
-    id = uuid.uuid1()
+    id = uuid.uuid4()
+    print(str(id))
     if request.data['type'] == '360':
         new_assesment = {
             "name":request.data['name'],
             "type":request.data['type'],
             "course_assesment":request.data['course_assesment'],
+            # "batch":request.data['batch'],
             "company":request.data['company'],
             "leader":request.data['leader'],
             "_id":str(id),
@@ -1612,7 +1614,7 @@ def addCourseAssesmentLink(request):
             "type":request.data['type'],
             "course_assesment":request.data['course_assesment'],
             "batch":request.data['batch'],
-           " _id":str(id),
+            "_id":str(id),
         }
     serilizer = AssesmentLinkserializer(data= new_assesment)
     if serilizer.is_valid():
@@ -1715,8 +1717,8 @@ def submmitedAssesment(request):
     questions = SubmitedQuestion.objects.filter(gmail = request.data['assesment']['email'])
     
     ques_id = []
-    for question in questions.all():
-        ques_id.append(question['id'])
+    for question in questions:
+        ques_id.append(question.id)
     new_assesment = {
         "assesment" :  request.data['assesment']['assesment_name'],
         "question" : ques_id,
