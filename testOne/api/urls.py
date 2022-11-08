@@ -67,9 +67,6 @@ urlpatterns = [
     path('update-meetlink-by-coach/<str:_id>/', views.updateMeetLinkByCoach),
     path('delete-request/<str:req_id>/', views.deleteRequest),
     # path('file-import/', ExportImportExcel.as_view()),
-
-
-
     path('password_reset/', include('django_rest_passwordreset.urls',
          namespace='password_reset')),
     path('add-event/', views.addEvent),
@@ -114,4 +111,7 @@ urlpatterns = [
     path('leader/<str:leader_id>/', views.getLeader),
     path('leader/', views.getAllLeader),
     path('submit-assesment/', views.submmitedAssesment),
+    path('management-token/', views.getManagementToken),
+    path('current-booked-slot/', views.getCurrentBookedSlot),
+
 ]
