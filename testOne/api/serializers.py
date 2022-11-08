@@ -10,7 +10,7 @@ from base.models import AdminRequest
 from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
 from base.models import Learner
-from base.models import Batch
+from base.models import Batch,PeopleByleaderforAssesment
 from base.models import Competency, CourseAssesment, Question, SubCompetency,SubmitedQuestion,SubmittedAssesment
 from base.models import Assesment
 from base.models import Leader
@@ -144,4 +144,10 @@ class SubmitedQuestionserializer(serializers.ModelSerializer):
 class SubmittedAssesmentserializer(serializers.ModelSerializer):
     class Meta:
         model = SubmittedAssesment
+        fields = '__all__'
+
+
+class AddpeopleByLeaderserializer(serializers.ModelSerializer):
+    class Meta:
+        model = PeopleByleaderforAssesment
         fields = '__all__'

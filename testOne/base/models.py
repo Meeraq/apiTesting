@@ -237,3 +237,9 @@ class SubmittedAssesment(models.Model):
     name = models.CharField(max_length=200,default=" ")
     email = models.CharField(max_length=200,default=" ")
     score = models.CharField(max_length=200,default=" ")
+
+class PeopleByleaderforAssesment(models.Model):
+    assesment =  models.ForeignKey(Assesment,null=True, on_delete=models.SET_NULL)
+    name = models.CharField(max_length=200,default=" ")
+    email = models.CharField(max_length=200,default=" ")
+    leader = models.CharField(max_length=200,default=" ")

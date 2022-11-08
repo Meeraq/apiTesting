@@ -26,7 +26,7 @@ from base.models import Competency, CourseAssesment, Question, SubCompetency
 from base.models import Assesment
 from base.models import Leader
 from .serializers import (
-    SubmitedQuestionserializer,SubmittedAssesmentserializer,
+    SubmitedQuestionserializer,SubmittedAssesmentserializer,AddpeopleByLeaderserializer,
     AdminReqSerializer,
     AssesmentLinkserializer,
     BatchSerializer,
@@ -1626,7 +1626,7 @@ def addCourseAssesmentLink(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getCourseAssesmentLinkById(request, _id):
-    assesment = Assesment.objects.filter(id=_id)
+    assesment = Assesment.objects.filter(_id=_id)
     serilizer = AssesmentLinkserializer(assesment, many=True)
     return Response({"status": "success", "data": serilizer.data}, status=200)
 
@@ -1638,6 +1638,13 @@ def getCourseAssesmentLinkByType(request, type):
     serilizer = AssesmentLinkserializer(assesment, many=True)
     return Response({"status": "success", "data": serilizer.data}, status=200)
 
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getCourseAssesmentLinkByLeader(request, leader_id):
+    assesment = Assesment.objects.filter(id=leader_id)
+    serilizer = AssesmentLinkserializer(assesment, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -1720,6 +1727,19 @@ def submmitedAssesment(request):
     sub_serilizer = SubmittedAssesmentserializer(data=new_assesment)
     if sub_serilizer.is_valid():
         sub_serilizer.save()
+    else:
+        return Response({"status": "bad request"}, status=400)
+    return Response({"status": "success"}, status=200)
+
+
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def addPeopleByLeader(request):
+    serilizer = AddpeopleByLeaderserializer(data = request.data)
+    if serilizer.is_valid():
+        serilizer.save()
     else:
         return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
