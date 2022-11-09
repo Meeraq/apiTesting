@@ -1112,12 +1112,6 @@ def confirmSlotsByLearner(request, slot_id):
                                     event_serializer.save()
                                 else:
                                     print(event_serializer.errors)
-                else:
-                    serializer.save()
-                    if event_serializer.is_valid():
-                        event_serializer.save()
-                    else:
-                        print(event_serializer.errors)
             else:
                 print(serializer.errors)
                 return Response({"status": "400 Bad request", "reason": "wrong data sent"}, status=400)
@@ -1180,7 +1174,6 @@ def confirmSlotsByLearner(request, slot_id):
             return Response({"status": "success", "data": serializer.data}, status=200)
         else:
             return Response({"status": "Error", "reason": "Slot is already Booked"}, status=408)
-
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -1379,7 +1372,7 @@ def getCurrentBookedSlot(request):
         try:
             booked_slot = LeanerConfirmedSlots.objects.get(
                 slot__coach_id=coach.id, email=learner_email, slot__date=today_date)
-            if booked_slot:
+            if booked_slot and (current_time > (int(booked_slot.slot.start_time) - 300000)) and (current_time < int(booked_slot.slot.end_time)):
                 booked_slot_serializer = ConfirmedLearnerSerializer(
                     booked_slot)
                 return Response({"message": "Success", "data": booked_slot_serializer.data}, status=200)
