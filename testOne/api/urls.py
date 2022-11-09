@@ -102,7 +102,7 @@ urlpatterns = [
     path('get-questions/<str:ques_id>/', views.getQuestionbyId),
     path('questions/', views.getQuestion),
     path('get-question-by-subcompetency/<str:sub_competency>/',views.getQuestionbySubCompetency),
-    path('scheduled-sessions/',views.getScheduledSession),
+    path('scheduled-sessions/',views.getCurrentBookedSlot),
     path('create-course-assesment-link/',views.addCourseAssesmentLink),
     path('assesment/<str:_id>/',views.getCourseAssesmentLinkById),
     path('get-assessments-by-leader/<str:leader_id>/',views.getCourseAssesmentLinkByLeader),

@@ -238,223 +238,7 @@ def updateCoach(request, _id):
     return Response(serializer.data)
 
 
-# faculty api
 
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getfaculty(request):
-#     coaches = Faculty.objects.all()
-#     serializer = FacultySerializer(coaches, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# def addfaculty(request):
-#     serializer = FacultySerializer(data=request.data)
-#     if serializer.is_valid():
-#         newUser = User.objects.create_user(
-#             username=request.data['email'], password='Meeraq@123')
-#         newUser.save()
-#         userToSave = User.objects.get(username=request.data['email'])
-#         newProfile = Profile(user=userToSave, type="faculty",
-#                              email=request.data['email'])
-#         newProfile.save()
-#         serializer.save(user_id=newProfile.id)
-#     else:
-#         print(serializer.errors)
-#         return Response(status='403')
-#     for user in User.objects.all():
-#         token = Token.objects.get_or_create(user=user)
-#     return Response({'status': 200, 'payload': serializer.data, 'token': str(token[0])})
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def updateFaculty(request, _id):
-#     faculty = Faculty.objects.get(id=_id)
-#     serializer = FacultySerializer(instance=faculty, data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#     return Response(serializer.data)
-
-# slot api
-
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getslot(request):
-#     slots = Slot.objects.all()
-#     serializer = SlotSerializer(slots, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def addslot(request):
-#     serializer = SlotSerializer(data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#     return Response(serializer.data)
-
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getDayTimeslot(request):
-#     slots = DayTimeSlot.objects.all()
-#     serializer = SlotTimeDaySerializer(slots, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def addDayTimeslot(request):
-#     for eachDay in request.data:
-#         coachToSave = Coach.objects.get(id=eachDay['coach'])
-#         newdayTimeSlot = DayTimeSlot(
-#             coach=coachToSave,
-#             day=eachDay['day'],
-#             start_time_id=eachDay['start_time_id'],
-#             end_time_id=eachDay['end_time_id'],
-#             week_id=eachDay['week_id']
-#         )
-#         newdayTimeSlot.save()
-
-#     # only return the slots for the specific coach
-#     slots = DayTimeSlot.objects.filter(coach=coachToSave)
-#     serializer = SlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-# confirm day time slot
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def confirmDayTimeSlot(request):
-#     for eachDay in request.data:
-#         coachToSave = Coach.objects.get(id=eachDay['coach'])
-#         newdayTimeSlot = DayTimeSlot(
-#             coach=coachToSave,
-#             day=eachDay['day'],
-#             start_time_id=eachDay['start_time_id'],
-#             end_time_id=eachDay['end_time_id'],
-#             week_id=eachDay['week_id'],
-#             isConfirmed=True
-#         )
-#         newdayTimeSlot.save()
-#         currTime = int(eachDay['start_time_id'])
-#         endTime = int(eachDay['end_time_id'])
-#         while currTime + 1800000 <= endTime:
-#             learnerSlot = DayTimeSlot(
-#                 coach=coachToSave,
-#                 day=eachDay['day'],
-#                 start_time_id=str(currTime),
-#                 end_time_id=str(currTime + 1800000),
-#                 week_id=eachDay['week_id'],
-#                 isConfirmed=True,
-#                 for_learners=True
-#             )
-#             currTime += 2700000
-#             learnerSlot.save()
-#     # only return the confirmed slots for the specific coach
-#     slots = DayTimeSlot.objects.filter(
-#         coach=coachToSave, isConfirmed=True, for_learners=False)
-#     serializer = SlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def updateDayTimeslot(request, _id):
-#     slot = DayTimeSlot.objects.get(id=_id)
-#     serializer = SlotTimeDaySerializer(instance=slot, data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-
-#     slots = DayTimeSlot.objects.all()
-#     serializer = SlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# @api_view(['DELETE'])
-# @permission_classes([IsAuthenticated])
-# def deleteDayTimeslot(request, _id):
-#     slot = DayTimeSlot.objects.get(id=_id)
-#     slot.delete()
-
-#     slots = DayTimeSlot.objects.all()
-#     serializer = SlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-# # learner slot book
-
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def learnergetDayTimeslot(request):
-#     slots = LearnerdayTimeSlot.objects.all()
-#     serializer = LearnerSlotTimeDaySerializer(slots, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def addLearnerDayTimeslot(request):
-#     for day in request.data:
-#         newdayTimeSlot = LearnerdayTimeSlot(
-#             learner=day['learner'], start_time_id=day['start_time_id'], end_time_id=day['end_time_id'])
-#         newdayTimeSlot.save()
-#     slots = LearnerdayTimeSlot.objects.all()
-#     serializer = LearnerSlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def updateLearnerDayTimeslot(request, _id):
-#     slot = LearnerdayTimeSlot.objects.get(id=_id)
-#     serializer = LearnerSlotTimeDaySerializer(instance=slot, data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-
-#     slots = LearnerdayTimeSlot.objects.all()
-#     serializer = LearnerSlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# @api_view(['DELETE'])
-# @permission_classes([IsAuthenticated])
-# def LearnerdeleteDayTimeslot(request, _id):
-#     slot = LearnerdayTimeSlot.objects.get(id=_id)
-#     slot.delete()
-#     slots = LearnerdayTimeSlot.objects.all()
-#     serializer = LearnerSlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# sessions
-
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def getSessions(request):
-#     session = Sessions.objects.all()
-#     serializer = SessionSerializer(session, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def addSession(request):
-#     for session in request.data:
-#         print(session)
-#         courseToSave = Courses.objects.get(id=session['course'])
-#         batchToSave = Batch.objects.get(id=session['batch'])
-#         newSession = Sessions(course=courseToSave, batch=batchToSave,
-#                               sessionNumber=session['sessionNumber'], start_day=session['start_day'], end_day=session['end_day'])
-#         newSession.save()
-#     sessions = Sessions.objects.all()
-#     serializer = SessionSerializer(sessions, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
 
 
 @api_view(["POST"])
@@ -565,99 +349,6 @@ def getProfile(request):
     return Response(serializer.data)
 
 
-# getAvailableSlots
-# [
-#      { learnerId, batchId , weekId }
-# ]
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def getAvailableSlots(request):
-#     bookedSlot = request.data
-#     print(bookedSlot)
-#     learner = Learners.objects.get(id=bookedSlot['learnerId'])
-#     batch = Batch.objects.get(id=bookedSlot['batchId'])
-#     week_id = bookedSlot['weekId']
-#     getReleventSlotsForThisBatch = DayTimeSlot.objects.filter(
-#         week_id=week_id,
-#         isConfirmed=True,
-#         coachcoachysession__isnull=True,
-#         for_learners=True
-#     )
-#     serializer = SlotTimeDaySerializer(getReleventSlotsForThisBatch, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-#! Sample Input
-# [
-#    { slotId: 123, learnerId: 123, batchId: 2, !!(day: 'Monday', start_time_id: 121212121, end_time_id: 4185454554) },
-# ]
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def pickLearnerSlot(request):
-#     bookedSlot = request.data
-#     learner = Learners.objects.get(id=bookedSlot['learnerId'])
-#     batch = Batch.objects.get(id=bookedSlot['batchId'])
-#     slot = DayTimeSlot.objects.get(id=bookedSlot['slotId'])
-#     print(bookedSlot)
-#     newCoachCoachySession = CoachCoachySession(
-#         learner=learner, batch=batch, slot=slot)
-#     newCoachCoachySession.save()
-#     allSessionsForThisLearner = DayTimeSlot.objects.filter(
-#         coachcoachysession__learner=learner, isConfirmed=True)
-#     serializer = SlotTimeDaySerializer(allSessionsForThisLearner, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-#! Sample Input
-# [
-#    { id: learner's id },
-# ]
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getLearnerSlot(request):
-#     allSessionsForLearner = DayTimeSlot.objects.filter(
-#         ~Q(coachcoachysession=None),
-#         isConfirmed=True,
-#     )
-#     serializer = SlotTimeDaySerializer(allSessionsForLearner, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def getCoachCoacheeSessions(request):
-#     print("hello")
-#     coachCoacheeSessions = CoachCoachySession.objects.all()
-#     serializer = CoachCoachySessionSerializer(coachCoacheeSessions, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-# def loginLearner(request):  # request.data = body
-#     email = request.data['email']
-#     user = User.objects.get(email=email)
-#     print(user.email)
-#     # link = reverse("trial")
-#     # link = request.build_absolute_uri(link)
-#     link = 'http://127.0.0.1:8000/trial/'
-#     link += get_query_string(user)
-#     print(link)
-#     return Response({"login": email})
-
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def trialLogin(request):
-#     sesame_id = request.GET.get('sesame', None)
-#     user = get_user(sesame_id)
-#     serializer = UserSerializer(user)
-#     print(serializer.data)
-#     return Response({"message": "hello"})
-
-# from django.template.loader import get_template
 
 
 @api_view(["POST"])
@@ -1141,12 +832,6 @@ def confirmSlotsByLearner(request, slot_id):
                                     event_serializer.save()
                                 else:
                                     print(event_serializer.errors)
-                else:
-                    serializer.save()
-                    if event_serializer.is_valid():
-                        event_serializer.save()
-                    else:
-                        print(event_serializer.errors)
             else:
                 print(serializer.errors)
                 return Response({"status": "400 Bad request", "reason": "wrong data sent"}, status=400)
@@ -1409,7 +1094,7 @@ def getCurrentBookedSlot(request):
         try:
             booked_slot = LeanerConfirmedSlots.objects.get(
                 slot__coach_id=coach.id, email=learner_email, slot__date=today_date)
-            if booked_slot:
+            if booked_slot & current_time > ( booked_slot.slot__start_time - 300000) &  current_time < booked_slot.slot__end_time:
                 booked_slot_serializer = ConfirmedLearnerSerializer(
                     booked_slot)
                 return Response({"message": "Success", "data": booked_slot_serializer.data}, status=200)
@@ -1432,42 +1117,7 @@ def addQuestions(request):
             return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
 
-    # new_question = Question(
-    #     ques = question['question'],
-    #     scale = question['scale'],
-    #     type = question['type'],
-    #     sub_competency = question['sub_competency']
-    # )
-    # new_question.save()
-    # if question['type'] == 'meeraqsingle':
-    #     new_question = Question(
-    #         ques = question['question'],
-    #         option_one = question['option_one'],
-    #         option_two = question['option_two'],
-    #         option_three = question['option_three'],
-    #         option_four = question['option_four'],
-    #         correct= question['correct'],
-    #         score_one = question['score_one'],
-    #         type = question['type'],
-    #         sub_competency = question['sub_competency']
-    #     )
-    #     new_question.save()
-    # elif question['type'] == 'meeraqmulti':
-    #     new_question = Question(
-    #         ques = question['question'],
-    #         option_one = question['option_one'],
-    #         option_two = question['option_two'],
-    #         option_three = question['option_three'],
-    #         option_four = question['option_four'],
-    #         score_two = question['score_two '],
-    #         score_one = question['score_one'],
-    #         score_three = question['score_three'],
-    #         score_four = question['score_four'],
-    #         type = question['type'],
-    #         sub_competency = question['sub_competency']
-    #     )
-    #     new_question.save()
-    # elif question['type'] == '360':
+
 
 
 @api_view(["POST"])
@@ -1748,3 +1398,5 @@ def addPeopleByLeader(request):
     else:
         return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
+
+
