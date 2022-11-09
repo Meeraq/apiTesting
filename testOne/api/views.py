@@ -1104,14 +1104,13 @@ def confirmSlotsByLearner(request, slot_id):
                         serializer.save()
                     else:
                         for slot in booked_slots:
-                            if (slot.email == request.data["email"]) & (event.id == slot.event.id):
+                            if (slot.email.lower() == request.data["email"].lower()) and (event.id == slot.event.id):
                                 return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
-                            else:
-                                serializer.save()
-                                if event_serializer.is_valid():
-                                    event_serializer.save()
-                                else:
-                                    print(event_serializer.errors)
+                        if event_serializer.is_valid():
+                            event_serializer.save()
+                            serializer.save()
+                        else:
+                            return Response({"status": "400 bad request", "reason": "Failed to book the slot"}, status=400)
             else:
                 print(serializer.errors)
                 return Response({"status": "400 Bad request", "reason": "wrong data sent"}, status=400)
@@ -1174,6 +1173,7 @@ def confirmSlotsByLearner(request, slot_id):
             return Response({"status": "success", "data": serializer.data}, status=200)
         else:
             return Response({"status": "Error", "reason": "Slot is already Booked"}, status=408)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
