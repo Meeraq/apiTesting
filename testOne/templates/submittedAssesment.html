@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assesment submitted</title>
+</head>
+<body >
+    <div><b>You requested for a password reset, here you go!</b></div>
+    <br />
+    <div>
+      Please click on the link below to reset your password.<br />
+    <!-- {{len.sc1}} -->
+      <!-- {{contex.length}} -->
+      <br />
+      <!-- <span>{{len}}</span> -->
+
+      {% for item in len %}
+      <ul>
+        <li onload="run('{{item.score}}')">{{item.compitency}}</li>
+      </ul>
+      
+      {% endfor %}
+      <a href="{{url}}">{{url}}</a><br />
+      <br /><br />
+      If clicking the link doesn't work, copy and paste the above URL in your
+      browser.
+      <br /><br />
+      If you still face issues or have any doubts, please reach out at
+      <a href="mailto:pmo@meeraq.com">pmo@meeraq.com</a>.
+      <input type="hidden" value="{{my_list}}" id="myVar">
+      <br />
+      <br />
+      Regards, <br />
+      <img src="https://www.meeraq.com/logo.png?v=4" alt="Meeraq" />
+    </div>
+
+    
+    <script>
+        
+        function run(len){
+            console.log("hijkkj")
+            for(let i=0;i<Number(len);i++){
+                console.log(i,"hi")
+            }
+        }
+    </script>
+</body>
+</html>

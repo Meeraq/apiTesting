@@ -113,5 +113,6 @@ urlpatterns = [
     path('submit-assesment/', views.submmitedAssesment),
     path('management-token/', views.getManagementToken),
     path('current-booked-slot/', views.getCurrentBookedSlot),
+    path('view/', views.view,name='population-chart'),
 
 ]

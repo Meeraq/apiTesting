@@ -64,7 +64,7 @@ ROOT_URLCONF = 'testOne.urls'
 
 
 EMAIL_USE_TLS = True
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_PORT = 587
 EMAIL_HOST = 'email-smtp.ap-south-1.amazonaws.com'
 EMAIL_HOST_USER = 'ses-smtp-user.20220908-111729' 

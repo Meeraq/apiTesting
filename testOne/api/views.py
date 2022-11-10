@@ -824,7 +824,7 @@ def confirmSlotsByLearner(request, slot_id):
                         serializer.save()
                     else:
                         for slot in booked_slots:
-                            if (slot.email == request.data["email"]) & (event.id == slot.event.id):
+                            if (slot.email == request.data["email"]) and (event.id == slot.event.id):
                                 return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
                             else:
                                 serializer.save()
@@ -1087,8 +1087,6 @@ def getCurrentBookedSlot(request):
         request.data['room_id']
     current_time = request.data['time']
     today_date = datetime.date(datetime.today())
-    print("today's date", today_date)
-    print('current time', current_time)
     try:
         coach = Coach.objects.get(meet_link=meet_link)
         try:
@@ -1399,4 +1397,45 @@ def addPeopleByLeader(request):
         return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
 
+from django.shortcuts import render
+
+def view(request):
+    lists = {
+        "sc1":'hello',
+        "sc2":5
+    }
+
+    # print(lists.keys())
+    # content = "<div>"
+    # for item in lists.keys():
+    #     content = content + '<section>'
+    #     content = content + "hello"
+    #     content = content + '</section>'
+    # content = content + '</div>'
+    users = [{"compitency":'EI',"score":12},{"compitency":"ART","score":5}]    
+    # print(content)
+    my_context = {
+        "my_list":lists,
+        "len": users
+    }
+
+    # email_message = render_to_string(
+    #     "submittedAssesment.html",
+    #     my_context
+    # )
+
+    # send_mail(
+    #         # title:
+    #         "You are added as a Leader on {title}".format(title="Meeraq"),
+    #         # message:
+    #         email_message,
+    #         # from:0
+    #         "info@meeraq.com",
+    #         # to:
+    #         ['pankaj@meeraq.com'],
+    #         html_message=email_message,
+    #     )
+
+
+    return render(request,"submittedAssesment.html",my_context)
 
