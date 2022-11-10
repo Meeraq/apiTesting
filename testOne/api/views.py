@@ -1294,11 +1294,6 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
 @permission_classes([AllowAny])
 def learnerDataUpload(request):
     batches = set()
-    arr_set = Batch.objects.all()
-    batch_serilizer = BatchSerializer(arr_set, many=True)
-    for batch in batch_serilizer.data:
-        batches.add(batch['batch'])
-    arr_set.delete()
     for learner in request.data['participent']:
         is_exist = Learner.objects.filter(
             unique_check=learner['batch']+"|"+learner['email'])
@@ -1308,12 +1303,13 @@ def learnerDataUpload(request):
             if 'phone' in learner.keys():
                 learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
                                        batch=learner['batch'], phone=learner['phone'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
-                batches.add(learner['batch'])
             else:
                 learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
                                        batch=learner['batch'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
-                batches.add(learner['batch'])
             learner_data.save()
+            is_batch_exist = Batch.objects.filter(batch=learner['batch'])
+            if not is_batch_exist:
+                batches.add(learner['batch'])
     for batch in batches:
         batch_data = Batch(batch=batch)
         batch_data.save()
