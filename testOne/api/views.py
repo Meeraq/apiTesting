@@ -824,14 +824,13 @@ def confirmSlotsByLearner(request, slot_id):
                         serializer.save()
                     else:
                         for slot in booked_slots:
-                            if (slot.email == request.data["email"]) and (event.id == slot.event.id):
+                            if (slot.email.lower() == request.data["email"].lower()) and (event.id == slot.event.id):
                                 return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
-                            else:
-                                serializer.save()
-                                if event_serializer.is_valid():
-                                    event_serializer.save()
-                                else:
-                                    print(event_serializer.errors)
+                        if event_serializer.is_valid():
+                            event_serializer.save()
+                            serializer.save()
+                        else:
+                            return Response({"status": "400 bad request", "reason": "Failed to book the slot"}, status=400)
             else:
                 print(serializer.errors)
                 return Response({"status": "400 Bad request", "reason": "wrong data sent"}, status=400)
@@ -1015,11 +1014,6 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
 @permission_classes([AllowAny])
 def learnerDataUpload(request):
     batches = set()
-    arr_set = Batch.objects.all()
-    batch_serilizer = BatchSerializer(arr_set, many=True)
-    for batch in batch_serilizer.data:
-        batches.add(batch['batch'])
-    arr_set.delete()
     for learner in request.data['participent']:
         is_exist = Learner.objects.filter(
             unique_check=learner['batch']+"|"+learner['email'])
@@ -1029,12 +1023,13 @@ def learnerDataUpload(request):
             if 'phone' in learner.keys():
                 learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
                                        batch=learner['batch'], phone=learner['phone'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
-                batches.add(learner['batch'])
             else:
                 learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
                                        batch=learner['batch'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
-                batches.add(learner['batch'])
             learner_data.save()
+            is_batch_exist = Batch.objects.filter(batch=learner['batch'])
+            if not is_batch_exist:
+                batches.add(learner['batch'])
     for batch in batches:
         batch_data = Batch(batch=batch)
         batch_data.save()
@@ -1092,7 +1087,7 @@ def getCurrentBookedSlot(request):
         try:
             booked_slot = LeanerConfirmedSlots.objects.get(
                 slot__coach_id=coach.id, email=learner_email, slot__date=today_date)
-            if booked_slot & current_time > ( booked_slot.slot__start_time - 300000) &  current_time < booked_slot.slot__end_time:
+            if booked_slot and (current_time > (int(booked_slot.slot.start_time) - 300000)) and (current_time < int(booked_slot.slot.end_time)):
                 booked_slot_serializer = ConfirmedLearnerSerializer(
                     booked_slot)
                 return Response({"message": "Success", "data": booked_slot_serializer.data}, status=200)
