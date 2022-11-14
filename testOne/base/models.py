@@ -119,6 +119,7 @@ class Events(models.Model):
     link = models.CharField(max_length=200,default=" ",blank=True)
     _id = models.CharField(max_length=1000)
     coach = models.ManyToManyField(Coach)
+    batch = models.CharField(max_length=200,blank=True,default=" ")
     is_expired = models.BooleanField(default=False,blank=True)
     is_delete = models.BooleanField(default=False,blank=True)
 
@@ -133,7 +134,7 @@ class LeanerConfirmedSlots(models.Model):
     organisation = models.CharField(max_length=200,blank=True,default=" ")
     slot = models.ForeignKey(ConfirmedSlotsbyCoach,null=True, on_delete=models.SET_NULL)
     event = models.ForeignKey(Events,null=True, on_delete=models.SET_NULL)
-
+    status = models.CharField(max_length=200,blank=True,default='null')
     def __str__(self):
         return self.name
 
@@ -143,3 +144,23 @@ class DeleteConfirmedSlotsbyAdmin(models.Model):
     reason = models.CharField(max_length=200,default=" ")
     slot_id = models.CharField(max_length=200,default=" ")
     admin_name = models.CharField(max_length=200,default=" ")
+
+
+class DeleteConfirmedSlotsbyAdmin(models.Model):
+    requested_person = models.CharField(max_length=200,default=" ")
+    reason = models.CharField(max_length=200,default=" ")
+    slot_id = models.CharField(max_length=200,default=" ")
+    admin_name = models.CharField(max_length=200,default=" ")
+
+
+class Learner(models.Model):
+    first_name = models.CharField(max_length=200,default=" ")
+    last_name = models.CharField(max_length=200,default=" ",blank=True)
+    email = models.EmailField()
+    batch = models.CharField(max_length=200,default=" ")
+    phone = models.CharField(max_length=200,default=" ",blank=True)
+    unique_check = models.CharField(max_length=200,default="null")
+    course = models.CharField(max_length=200,default=" ",blank=True)
+
+class Batch(models.Model):
+    batch = models.CharField(max_length=200,default=" ", primary_key = True)
