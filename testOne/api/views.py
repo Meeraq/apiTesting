@@ -1745,3 +1745,25 @@ def addPeopleByLeader(request):
     else:
         return Response({"status": "bad request"}, status=400)
     return Response({"status": "success"}, status=200)
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def generateTemplate(request):
+    print(request.data)
+    email_message = render_to_string(
+        "assesmentReport.html",
+        {"results": request.data,"arr":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]},
+		)
+
+    send_mail(
+        # title:
+        "Report",
+        # message:
+        email_message,
+        # from:0
+        "info@meeraq.com",
+        # to:
+        ["pankaj@meeraq.com"],
+        html_message=email_message,
+    )
+
+    return Response({"message": "success"}, status=200)
