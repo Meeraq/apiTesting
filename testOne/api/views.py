@@ -1050,7 +1050,8 @@ def createIcs(start_time, end_time, meet_link):
 @permission_classes([AllowAny])
 def confirmSlotsByLearner(request, slot_id):
     event = Events.objects.get(_id=request.data["event"])
-    learners = Learner.objects.filter(batch = event.batch,email=request.data["email"])
+    learners = Learner.objects.filter(
+        batch=event.batch, email=request.data["email"])
     if len(learners) == 0:
         return Response({"status": "Error", "reason": "user may have entered different email"}, status=405)
     else:
@@ -1087,7 +1088,8 @@ def confirmSlotsByLearner(request, slot_id):
                 "_id": event._id,
                 "coach": coach_ids,
             }
-            event_serializer = EventSerializer(instance=event, data=new_event_data)
+            event_serializer = EventSerializer(
+                instance=event, data=new_event_data)
 
             serializer = ConfirmedSlotsbyLearnerSerializer(data=Booked_slot)
             if serializer.is_valid():
@@ -1097,20 +1099,13 @@ def confirmSlotsByLearner(request, slot_id):
                         serializer.save()
                     else:
                         for slot in booked_slots:
-                            if (slot.email == request.data["email"]) & (event.id == slot.event.id):
+                            if (slot.email.lower() == request.data["email"].lower()) and (event.id == slot.event.id):
                                 return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
-                            else:
-                                serializer.save()
-                                if event_serializer.is_valid():
-                                    event_serializer.save()
-                                else:
-                                    print(event_serializer.errors)
-                else:
-                    serializer.save()
-                    if event_serializer.is_valid():
-                        event_serializer.save()
-                    else:
-                        print(event_serializer.errors)
+                        if event_serializer.is_valid():
+                            event_serializer.save()
+                            serializer.save()
+                        else:
+                            return Response({"status": "400 bad request", "reason": "Failed to book the slot"}, status=400)
             else:
                 print(serializer.errors)
                 return Response({"status": "400 Bad request", "reason": "wrong data sent"}, status=400)
@@ -1132,7 +1127,8 @@ def confirmSlotsByLearner(request, slot_id):
                 .replace(":", "")
                 .replace("-", "")
             )
-            end_time = datetime.fromtimestamp((int(coach_slot.end_time) / 1000))
+            end_time = datetime.fromtimestamp(
+                (int(coach_slot.end_time) / 1000))
             end = (
                 (end_time.replace(microsecond=0).astimezone(
                     utc).replace(tzinfo=None).isoformat() + "Z")
@@ -1151,8 +1147,7 @@ def confirmSlotsByLearner(request, slot_id):
                 {"name": request.data["name"], "time": start_time_for_mail,
                     "duration": "30 Min", "date": date, "link": coach_data.meet_link},
             )
-
-            meet_link = coach_slot.MEETING_LINK
+            meet_link = coach_data.meet_link
             createIcs(start, end, meet_link)
             email = EmailMessage(
                 "Meeraq | Coaching Session",
@@ -1288,31 +1283,34 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
 
 
 
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def learnerDataUpload(request):
     batches = set()
-    arr_set = Batch.objects.all()
-    batch_serilizer = BatchSerializer(arr_set,many=True)
-    for batch in batch_serilizer.data:
-        batches.add(batch['batch'])
-    arr_set.delete()
     for learner in request.data['participent']:
-        is_exist = Learner.objects.filter(unique_check= learner['batch']+"|"+learner['email'] )
+        is_exist = Learner.objects.filter(
+            unique_check=learner['batch']+"|"+learner['email'])
         if len(is_exist) > 0:
             continue
         else:
             if 'phone' in learner.keys():
-                learner_data = Learner(first_name=learner['first_name'],last_name=learner['last_name'], email = learner['email'], batch = learner['batch'],phone = learner['phone'],unique_check = learner['batch']+"|"+ learner['email'],course = learner['course'])
-                batches.add(learner['batch'])
+                learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
+                                       batch=learner['batch'], phone=learner['phone'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
             else:
-                learner_data = Learner(first_name=learner['first_name'],last_name=learner['last_name'], email = learner['email'], batch = learner['batch'],unique_check = learner['batch']+"|"+ learner['email'],course = learner['course'])
-                batches.add(learner['batch'])
+                learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
+                                       batch=learner['batch'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
             learner_data.save()
+            is_batch_exist = Batch.objects.filter(batch=learner['batch'])
+            if not is_batch_exist:
+                batches.add(learner['batch'])
     for batch in batches:
-        batch_data = Batch(batch = batch)
+        batch_data = Batch(batch=batch)
         batch_data.save()
     return Response({"status": "success"}, status=200)
+
+
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])

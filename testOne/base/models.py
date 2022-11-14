@@ -138,7 +138,7 @@ class LeanerConfirmedSlots(models.Model):
     def __str__(self):
         return self.name
 
-
+ 
 class DeleteConfirmedSlotsbyAdmin(models.Model):
     requested_person = models.CharField(max_length=200,default=" ")
     reason = models.CharField(max_length=200,default=" ")
