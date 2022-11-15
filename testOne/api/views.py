@@ -1185,7 +1185,7 @@ def getConfirmSlotsByLearnerByEventId(request, event_id):
     serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
-@api_view(["GET"])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def editConfirmSlotsByLearnerBySlotId(request, slot_id):
     booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
@@ -1202,9 +1202,10 @@ def editConfirmSlotsByLearnerBySlotId(request, slot_id):
 
     if serializer.is_valid():
         serializer.save()
+        return Response({"status": "success", "data": serializer.data}, status=200)
     else:
-        print(serializer.errors)
-    return Response({"status": "success", "data": serializer.data}, status=200)
+        return Response({"status": "Invalid Data"}, status=400)
+    
 
 
 def createCancledIcs(start_time, end_time):
