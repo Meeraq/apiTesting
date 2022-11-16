@@ -4,8 +4,8 @@ from . import views
 
 urlpatterns = [
     path('', views.getcoach, name='get_course'),
-#     path('add-courses/', views.addCourses, name='add_course'),
-#     path('get-courses/', views.getCourses, name='add_course'),
+    #     path('add-courses/', views.addCourses, name='add_course'),
+    #     path('get-courses/', views.getCourses, name='add_course'),
     #     path('update-courses/<str:_id>/', views.updateCourses, name='update_course'),
     #     path('course-category/', views.getCourseCategory),
     #     path('learners/', views.getLearners, name='get_learner'),
@@ -90,4 +90,7 @@ urlpatterns = [
     path('learner-upload/', views.learnerDataUpload),
     path('get-batches/', views.getBatches),
     path('get-learner-by-batch/<str:batch_id>/', views.getLearnerBatchwise),
+    path('management-token/', views.getManagementToken),
+    path('current-booked-slot/', views.getCurrentBookedSlot),
+
 ]

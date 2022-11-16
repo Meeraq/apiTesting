@@ -1,4 +1,7 @@
-from datetime import datetime, time
+import uuid
+from django.template.loader import render_to_string
+import jwt
+from datetime import datetime, time, timedelta
 from django.core.mail import EmailMessage
 import os
 from django.core.mail import send_mail
@@ -34,7 +37,9 @@ from .serializers import (
     ProfileSerializer,
 )
 
-from django.template.loader import render_to_string
+import environ
+env = environ.Env()
+environ.Env.read_env()
 
 # sesame
 # from sesame.utils import get_query_string, get_user
@@ -42,7 +47,6 @@ from django.template.loader import render_to_string
 # from sesame.utils import get_query_string, get_user
 
 # flattening array
-import uuid
 
 
 # courses api functions
@@ -464,6 +468,7 @@ def login_user(request):
                         "email": userProfile.email,
                         "usertype": user.profile.type,
                         "id": userProfile.id,
+                        "meet_link": userProfile.meet_link
                     }
                 )
             else:
@@ -1324,3 +1329,51 @@ def getBatches(request):
     batches = Batch.objects.all()
     serilizer = BatchSerializer(batches, many=True)
     return Response({"status": "success", "data": serilizer.data}, status=200)
+
+
+def generateManagementToken():
+    print('app access key', env('100MS_APP_ACCESS_KEY'))
+    expires = 24 * 3600
+    now = datetime.utcnow()
+    exp = now + timedelta(seconds=expires)
+    return jwt.encode(payload={
+        'access_key': env('100MS_APP_ACCESS_KEY'),
+        'type': 'management',
+        'version': 2,
+        'jti': str(uuid.uuid4()),
+        'iat': now,
+        'exp': exp,
+        'nbf': now
+    }, key=env('100MS_APP_SECRET'))
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getManagementToken(request):
+    management_token = generateManagementToken()
+    return Response({"message": "Success", "management_token": management_token}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def getCurrentBookedSlot(request):
+    learner_email = request.data['learner_email']
+    meet_link = "https://coach.meeraq.com/join-session/" + \
+        request.data['room_id']
+    current_time = request.data['time']
+    today_date = datetime.date(datetime.today())
+    try:
+        coach = Coach.objects.get(meet_link=meet_link)
+        try:
+            booked_slot = LeanerConfirmedSlots.objects.get(
+                slot__coach_id=coach.id, email=learner_email, slot__date=today_date)
+            if booked_slot and (current_time > (int(booked_slot.slot.start_time) - 300000)) and (current_time < int(booked_slot.slot.end_time)):
+                booked_slot_serializer = ConfirmedLearnerSerializer(
+                    booked_slot)
+                return Response({"message": "Success", "data": booked_slot_serializer.data}, status=200)
+            else:
+                return Response({"No session found"}, status=401)
+        except:
+            return Response({"message": "No session found"}, status=401)
+    except:
+        return Response({"message": "Invalid Link"}, status=400)
