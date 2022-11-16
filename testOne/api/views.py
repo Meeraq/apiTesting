@@ -1185,27 +1185,28 @@ def getConfirmSlotsByLearnerByEventId(request, event_id):
     serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def editConfirmSlotsByLearnerBySlotId(request, slot_id):
     booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
     newSlot = {
-        "name":booked_slots.name,
-        "status":request.data['status'],
-        "email":booked_slots.email,
-        "phone_no":booked_slots.phone_no,
-        "organisation":booked_slots.organisation,
-        "event":booked_slots.event,
-        "slot":booked_slots.slot
+        "name": booked_slots.name,
+        "status": request.data['status'],
+        "email": booked_slots.email,
+        "phone_no": booked_slots.phone_no,
+        "organisation": booked_slots.organisation,
+        "event": booked_slots.event.id,
+        "slot": booked_slots.slot.id
     }
-    serializer = ConfirmedLearnerSerializer(instance = booked_slots, data = newSlot)
+    serializer = ConfirmedSlotsbyLearnerSerializer(
+        instance=booked_slots, data=newSlot)
 
     if serializer.is_valid():
         serializer.save()
         return Response({"status": "success", "data": serializer.data}, status=200)
     else:
-        return Response({"status": "Invalid Data"}, status=400)
-    
+        return Response({"messgae": "Invalid data"}, status=400)
 
 
 def createCancledIcs(start_time, end_time):
@@ -1283,8 +1284,6 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
-
-
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def learnerDataUpload(request):
@@ -1311,18 +1310,17 @@ def learnerDataUpload(request):
     return Response({"status": "success"}, status=200)
 
 
-
-
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getLearnerBatchwise(request,batch_id):
-    learners = Learner.objects.filter(batch = batch_id)
-    serilizer = LearnerDataUploadSerializer(learners,many=True)
+def getLearnerBatchwise(request, batch_id):
+    learners = Learner.objects.filter(batch=batch_id)
+    serilizer = LearnerDataUploadSerializer(learners, many=True)
     return Response({"status": "success", "data": serilizer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getBatches(request):
     batches = Batch.objects.all()
-    serilizer = BatchSerializer(batches,many=True)
+    serilizer = BatchSerializer(batches, many=True)
     return Response({"status": "success", "data": serilizer.data}, status=200)
