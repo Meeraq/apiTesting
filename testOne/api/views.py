@@ -17,8 +17,10 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
+from base.models import Batch, Learner
 from .serializers import (
     AdminReqSerializer,
+    BatchSerializer,
     ConfirmedLearnerSerializer,
     ConfirmedSlotsbyCoachSerializer,
     ConfirmedSlotsbyLearnerSerializer,
@@ -26,10 +28,10 @@ from .serializers import (
     EventSerializer,
     GetAdminReqSerializer,
     CoachSerializer,
+    LearnerDataUploadSerializer,
     SlotForCoachSerializer,
     UserSerializer,
     ProfileSerializer,
-    dltSlotSerializer,
 )
 
 from django.template.loader import render_to_string
@@ -922,6 +924,7 @@ def addEvent(request):
         "link": "https://learner.meeraq.com/book-slot/" + str(event_id) + "/",
         "_id": str(event_id),
         "coach": request.data["coach"],
+        "batch": request.data["batch"]
     }
     serializer = EventSerializer(data=event_data)
     if serializer.is_valid():
@@ -967,6 +970,7 @@ def editEvents(request, event_id):
         "expire_date": request.data["expire_date"],
         "count": request.data["count"],
         "min_count": request.data["count"],
+        "batch": request.data["batch"],
         "link": event.link,
         "_id": event._id,
         "coach": request.data["coach"],
@@ -990,6 +994,7 @@ def deleteEvents(request, event_id):
     new_event = {
         "name": event.name,
         "start_date": event.start_date,
+        "batch": event.batch,
         "end_date": event.end_date,
         "expire_date": event.expire_date,
         "count": event.count,
@@ -1044,138 +1049,125 @@ def createIcs(start_time, end_time, meet_link):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def confirmSlotsByLearner(request, slot_id):
-    coach_slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
-    coach_slot_serializer = ConfirmedSlotsbyCoachSerializer(coach_slot)
-    if coach_slot.is_confirmed == False:
-        coach_data = Coach.objects.get(id=coach_slot.coach_id)
-        booked_slot_coach = {
-            **coach_slot_serializer.data, "is_confirmed": True}
-        coach_serilizer = ConfirmedSlotsbyCoachSerializer(
-            instance=coach_slot, data=booked_slot_coach)
-        event = Events.objects.get(_id=request.data["event"])
-        Booked_slot = {
-            "name": request.data["name"],
-            "email": request.data["email"],
-            "organisation": request.data["organisation"],
-            "phone_no": request.data["phone_no"],
-            "slot": coach_slot.id,
-            "event": event.id,
-        }
-        count = int(event.count)
-        coach_ids = []
-        for coach in event.coach.all():
-            coach_ids.append(coach.id)
-        new_count = count - 1
-        new_event_data = {
-            "name": event.name,
-            "start_date": event.start_date,
-            "end_date": event.end_date,
-            "expire_date": event.expire_date,
-            "count": str(new_count),
-            "min_count": event.min_count,
-            "link": event.link,
-            "_id": event._id,
-            "coach": coach_ids,
-        }
-        event_serializer = EventSerializer(instance=event, data=new_event_data)
-        
-
-        serializer = ConfirmedSlotsbyLearnerSerializer(data=Booked_slot)
-        if serializer.is_valid():
-            booked_slots = LeanerConfirmedSlots.objects.all()
-            if request.data["warning"] == True:
-                if not bool(booked_slots):
-                    serializer.save()
-                else:
-                    for slot in booked_slots:
-                        if (slot.email == request.data["email"]) & (event.id == slot.event.id):
-                            return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
-                        else:
-                            serializer.save()
-                            if event_serializer.is_valid():
-                                event_serializer.save()
-                            else:
-                                print(event_serializer.errors)
-            else:
-                serializer.save()
-                if event_serializer.is_valid():
-                    event_serializer.save()
-                else:
-                    print(event_serializer.errors)
-        else:
-            print(serializer.errors)
-            return Response({"status": "400 Bad request", "reason": "wrong data sent"}, status=400)
-
-        if event_serializer.is_valid():
-            event_serializer.save()
-        else:
-            print(event_serializer.errors)
-        if coach_serilizer.is_valid():
-            coach_serilizer.save()
-        else:
-            return Response({"status": "400 Bad request", "reason": "coach data is wrong"}, status=400)
-
-        start_time = datetime.fromtimestamp(
-            (int(coach_slot.start_time) / 1000))  # converting timestamp to date
-        start = (
-            (start_time.replace(microsecond=0).astimezone(
-                utc).replace(tzinfo=None).isoformat() + "Z")
-            .replace(":", "")
-            .replace("-", "")
-        )
-        end_time = datetime.fromtimestamp((int(coach_slot.end_time) / 1000))
-        end = (
-            (end_time.replace(microsecond=0).astimezone(
-                utc).replace(tzinfo=None).isoformat() + "Z")
-            .replace(":", "")
-            .replace("-", "")
-        )
-
-        date = datetime.fromtimestamp(
-            (int(coach_slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
-
-        start_time_for_mail = datetime.fromtimestamp(
-            (int(coach_slot.start_time) / 1000) + 19800)
-
-        email_message_learner = render_to_string(
-            "addevent.html",
-            {"name": request.data["name"], "time": start_time_for_mail,
-                "duration": "30 Min", "date": date, "link": coach_data.meet_link},
-        )
-        # email_message_coach = render_to_string(
-        #     "addevent.html", {"name": coach_data.first_name,
-        #                       "time": start_time, "duration": "30 Min", "date": date}
-        # )
-        meet_link = coach_slot.MEETING_LINK
-        createIcs(start, end, meet_link)
-        email = EmailMessage(
-            "Meeraq | Coaching Session",
-            email_message_learner,
-            "info@meeraq.com",  # from email address
-            [request.data["email"]],  # to email address
-            [coach_data.email],  # bcc email address
-            # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
-        )
-        email.content_subtype = "html"
-        email.attach_file("event.ics", "text/calendar")
-        email.send()
-
-        # email_coach = EmailMessage(
-        #     "Meeraq | Coaching Session",
-        #     email_message_coach,
-        #     "info@meeraq.com",
-        #     [coach_data.email],
-        # )
-        # email_coach.content_subtype = "html"
-        # email_coach.attach_file("event.ics", "text/calendar")
-        # email_coach.send()
-        if os.path.exists("event.ics"):
-            os.remove("event.ics")
-        else:
-            print("file not found")
-        return Response({"status": "success", "data": serializer.data}, status=200)
+    event = Events.objects.get(_id=request.data["event"])
+    learners = Learner.objects.filter(
+        batch=event.batch, email=request.data["email"])
+    if len(learners) == 0:
+        return Response({"status": "Error", "reason": "user may have entered different email"}, status=405)
     else:
-        return Response({"status": "Error", "reason": "Slot is already Booked"}, status=408)
+        coach_slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
+        coach_slot_serializer = ConfirmedSlotsbyCoachSerializer(coach_slot)
+        if coach_slot.is_confirmed == False:
+            coach_data = Coach.objects.get(id=coach_slot.coach_id)
+            booked_slot_coach = {
+                **coach_slot_serializer.data, "is_confirmed": True}
+            coach_serilizer = ConfirmedSlotsbyCoachSerializer(
+                instance=coach_slot, data=booked_slot_coach)
+            event = Events.objects.get(_id=request.data["event"])
+            Booked_slot = {
+                "name": request.data["name"],
+                "email": request.data["email"],
+                "organisation": request.data["organisation"],
+                "phone_no": request.data["phone_no"],
+                "slot": coach_slot.id,
+                "event": event.id,
+            }
+            count = int(event.count)
+            coach_ids = []
+            for coach in event.coach.all():
+                coach_ids.append(coach.id)
+            new_count = count - 1
+            new_event_data = {
+                "name": event.name,
+                "start_date": event.start_date,
+                "end_date": event.end_date,
+                "expire_date": event.expire_date,
+                "count": str(new_count),
+                "min_count": event.min_count,
+                "link": event.link,
+                "_id": event._id,
+                "coach": coach_ids,
+            }
+            event_serializer = EventSerializer(
+                instance=event, data=new_event_data)
+
+            serializer = ConfirmedSlotsbyLearnerSerializer(data=Booked_slot)
+            if serializer.is_valid():
+                booked_slots = LeanerConfirmedSlots.objects.all()
+                if request.data["warning"] == True:
+                    if not bool(booked_slots):
+                        serializer.save()
+                    else:
+                        for slot in booked_slots:
+                            if (slot.email.lower() == request.data["email"].lower()) and (event.id == slot.event.id):
+                                return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
+                        if event_serializer.is_valid():
+                            event_serializer.save()
+                            serializer.save()
+                        else:
+                            return Response({"status": "400 bad request", "reason": "Failed to book the slot"}, status=400)
+            else:
+                print(serializer.errors)
+                return Response({"status": "400 Bad request", "reason": "wrong data sent"}, status=400)
+
+            if event_serializer.is_valid():
+                event_serializer.save()
+            else:
+                print(event_serializer.errors)
+            if coach_serilizer.is_valid():
+                coach_serilizer.save()
+            else:
+                return Response({"status": "400 Bad request", "reason": "coach data is wrong"}, status=400)
+
+            start_time = datetime.fromtimestamp(
+                (int(coach_slot.start_time) / 1000))  # converting timestamp to date
+            start = (
+                (start_time.replace(microsecond=0).astimezone(
+                    utc).replace(tzinfo=None).isoformat() + "Z")
+                .replace(":", "")
+                .replace("-", "")
+            )
+            end_time = datetime.fromtimestamp(
+                (int(coach_slot.end_time) / 1000))
+            end = (
+                (end_time.replace(microsecond=0).astimezone(
+                    utc).replace(tzinfo=None).isoformat() + "Z")
+                .replace(":", "")
+                .replace("-", "")
+            )
+
+            date = datetime.fromtimestamp(
+                (int(coach_slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
+
+            start_time_for_mail = datetime.fromtimestamp(
+                (int(coach_slot.start_time) / 1000) + 19800)
+
+            email_message_learner = render_to_string(
+                "addevent.html",
+                {"name": request.data["name"], "time": start_time_for_mail,
+                    "duration": "30 Min", "date": date, "link": coach_data.meet_link},
+            )
+            meet_link = coach_data.meet_link
+            createIcs(start, end, meet_link)
+            email = EmailMessage(
+                "Meeraq | Coaching Session",
+                email_message_learner,
+                "info@meeraq.com",  # from email address
+                [request.data["email"]],  # to email address
+                [coach_data.email],  # bcc email address
+                # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
+            )
+            email.content_subtype = "html"
+            email.attach_file("event.ics", "text/calendar")
+            email.send()
+
+            if os.path.exists("event.ics"):
+                os.remove("event.ics")
+            else:
+                print("file not found")
+            return Response({"status": "success", "data": serializer.data}, status=200)
+        else:
+            return Response({"status": "Error", "reason": "Slot is already Booked"}, status=408)
 
 
 @api_view(["GET"])
@@ -1192,6 +1184,29 @@ def getConfirmSlotsByLearnerByEventId(request, event_id):
     booked_slots = LeanerConfirmedSlots.objects.filter(event=event_id)
     serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def editConfirmSlotsByLearnerBySlotId(request, slot_id):
+    booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
+    newSlot = {
+        "name": booked_slots.name,
+        "status": request.data['status'],
+        "email": booked_slots.email,
+        "phone_no": booked_slots.phone_no,
+        "organisation": booked_slots.organisation,
+        "event": booked_slots.event.id,
+        "slot": booked_slots.slot.id
+    }
+    serializer = ConfirmedSlotsbyLearnerSerializer(
+        instance=booked_slots, data=newSlot)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"status": "success", "data": serializer.data}, status=200)
+    else:
+        return Response({"messgae": "Invalid data"}, status=400)
 
 
 def createCancledIcs(start_time, end_time):
@@ -1254,12 +1269,6 @@ def deleteConfirmSlotsAdmin(request, slot_id):
     else:
         print("file not found")
 
-    dlt_data_serializer = dltSlotSerializer(data=request.data)
-    if dlt_data_serializer.is_valid():
-        dlt_data_serializer.save()
-    else:
-        print(dlt_data_serializer.errors)
-
     booked_slots.delete()
 
     new_booked_slots = LeanerConfirmedSlots.objects.all()
@@ -1273,3 +1282,45 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
     booked_slots = LeanerConfirmedSlots.objects.filter(slot__coach_id=coach_id)
     serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def learnerDataUpload(request):
+    batches = set()
+    for learner in request.data['participent']:
+        is_exist = Learner.objects.filter(
+            unique_check=learner['batch']+"|"+learner['email'])
+        if len(is_exist) > 0:
+            continue
+        else:
+            if 'phone' in learner.keys():
+                learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
+                                       batch=learner['batch'], phone=learner['phone'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
+            else:
+                learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
+                                       batch=learner['batch'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
+            learner_data.save()
+            is_batch_exist = Batch.objects.filter(batch=learner['batch'])
+            if not is_batch_exist:
+                batches.add(learner['batch'])
+    for batch in batches:
+        batch_data = Batch(batch=batch)
+        batch_data.save()
+    return Response({"status": "success"}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getLearnerBatchwise(request, batch_id):
+    learners = Learner.objects.filter(batch=batch_id)
+    serilizer = LearnerDataUploadSerializer(learners, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getBatches(request):
+    batches = Batch.objects.all()
+    serilizer = BatchSerializer(batches, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
