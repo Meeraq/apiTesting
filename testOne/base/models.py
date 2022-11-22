@@ -144,13 +144,6 @@ class DeleteConfirmedSlotsbyAdmin(models.Model):
     admin_name = models.CharField(max_length=200, default=" ")
 
 
-class DeleteConfirmedSlotsbyAdmin(models.Model):
-    requested_person = models.CharField(max_length=200, default=" ")
-    reason = models.CharField(max_length=200, default=" ")
-    slot_id = models.CharField(max_length=200, default=" ")
-    admin_name = models.CharField(max_length=200, default=" ")
-
-
 class Learner(models.Model):
     first_name = models.CharField(max_length=200, default=" ")
     last_name = models.CharField(max_length=200, default=" ", blank=True)
