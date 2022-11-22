@@ -5,7 +5,7 @@ from datetime import datetime, time, timedelta
 from django.core.mail import EmailMessage
 import os
 from django.core.mail import send_mail
-from base.resources import ConfirmedSlotResource
+from base.resources import ConfirmedSlotResource, LearnerConfirmedSlotsResource
 from django.http import HttpResponse
 from rest_framework.response import Response
 from datetime import date
@@ -1377,3 +1377,16 @@ def getCurrentBookedSlot(request):
             return Response({"message": "No session found"}, status=401)
     except:
         return Response({"message": "Invalid Link"}, status=400)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def exportLearnerConfirmedSlotsByEventId(request, event_id):
+    confirmed_slot_file = LearnerConfirmedSlotsResource()
+    dataset = confirmed_slot_file.export(
+        LeanerConfirmedSlots.objects.filter(event=event_id))
+    response = HttpResponse(
+        dataset.xls, content_type="application/vnd.ms-excel")
+    response["Content-Disposition"] = 'attachment; filename="confirmed slots.xls"'
+    return response
+

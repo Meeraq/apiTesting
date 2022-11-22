@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 import environ
 
@@ -44,7 +45,7 @@ INSTALLED_APPS = [
     'base',
     'corsheaders',
     'rest_framework.authtoken',
-	'django_extensions',
+    'django_extensions',
     'import_export',
     'django_rest_passwordreset',
 ]
@@ -64,10 +65,10 @@ ROOT_URLCONF = 'testOne.urls'
 
 
 EMAIL_USE_TLS = True
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_PORT = 587
 EMAIL_HOST = 'email-smtp.ap-south-1.amazonaws.com'
-EMAIL_HOST_USER = 'ses-smtp-user.20220908-111729' 
+EMAIL_HOST_USER = 'ses-smtp-user.20220908-111729'
 # AWS_ACCESS_KEY_ID = 'AKIAVKI2ZWHZQ7VR545S'
 # AWS_SECRET_ACCESS_KEY = '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'
 EMAIL_HOST_USER = 'AKIAVKI2ZWHZXXSQWPXB'
@@ -78,11 +79,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    'DEFAULT_PERMISSION_CLASSES': [ 
+    'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
-import os
 
 SETTINGS_PATH = os.path.dirname(os.path.dirname(__file__))
 
@@ -104,21 +104,21 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'testOne.wsgi.application'
- 
+
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
- 
+
 DATABASES = {
-   'default': {
+    'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': env('DATABASE_NAME'),
         'USER': env('DATABASE_USER'),
-        # 'PASSWORD': env('DATABASE_PASS'),
+        'PASSWORD': env('DATABASE_PASS'),
         'HOST': env('DATABASE_HOST'),
-        'PORT': '',
-        'OPTIONS':{
-            'init_command':"SET sql_mode='STRICT_TRANS_TABLES'"
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
         }
     }
 
@@ -149,6 +149,8 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
+
+TZ = 'UTC'
 
 USE_I18N = True
 

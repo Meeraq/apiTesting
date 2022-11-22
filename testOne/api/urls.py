@@ -92,5 +92,6 @@ urlpatterns = [
     path('get-learner-by-batch/<str:batch_id>/', views.getLearnerBatchwise),
     path('management-token/', views.getManagementToken),
     path('current-booked-slot/', views.getCurrentBookedSlot),
-
+    path('export-confirmed-slot/<str:event_id>',
+         views.exportLearnerConfirmedSlotsByEventId)
 ]
