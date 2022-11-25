@@ -92,5 +92,9 @@ urlpatterns = [
     path('get-learner-by-batch/<str:batch_id>/', views.getLearnerBatchwise),
     path('management-token/', views.getManagementToken),
     path('current-booked-slot/', views.getCurrentBookedSlot),
+    path('service-approval/', views.getServiceApprovalData), 
+    path('service-approval/<str:ref_id>', views.getServiceApprovalDatabyrefId),
+    path('service-approval-coach/<str:coach_id>', views.getServiceApprovalDatabyCoachID),
+    path('/approve-by-finance',views.approveByFinance)
 
 ]

@@ -20,9 +20,10 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
-from base.models import Batch, Learner
+from base.models import Batch, Learner,ServiceApprovalData
 from .serializers import (
     AdminReqSerializer,
+    ServiceApprovalSerializer,
     BatchSerializer,
     ConfirmedLearnerSerializer,
     ConfirmedSlotsbyCoachSerializer,
@@ -1377,3 +1378,95 @@ def getCurrentBookedSlot(request):
             return Response({"message": "No session found"}, status=401)
     except:
         return Response({"message": "Invalid Link"}, status=400)
+
+
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getServiceApprovalData(request):
+    data = ServiceApprovalData.objects.all()
+    serializer = ServiceApprovalSerializer(data, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getServiceApprovalDatabyrefId(request, ref_id):
+    data = ServiceApprovalData.objects.get(ref_id=ref_id)
+    serializer = ServiceApprovalSerializer(data)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getServiceApprovalDatabyCoachID(request, coach_id):
+    data = ServiceApprovalData.objects.filter(coach_id=coach_id)
+    serializer = ServiceApprovalSerializer(data, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def addServiceApprovalData(request):
+    today = date.today()
+    service_data = {
+        "ref_id": "nzxfh",
+        "fees": request.body['fees'],
+        "total_no_of_sessions": request.body['total_no_of_sessions'],
+        "generated_date": today,
+        "generate_for_month": request.body['generate_for_month'],
+        "generate_for_year": request.body['generate_for_year'],
+        "coach_id": request.body['coach_id']
+    }
+    serializer = ServiceApprovalSerializer(data = service_data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"status": "success"}, status=201)
+    else:
+        return Response({"status": "Bad Request"}, status=400)
+
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def approveByFinance(request,ref_id):
+    today = date.today()
+    service_request = ServiceApprovalData.objects.get(ref_id = ref_id)
+    if request.data['is_approved'] == True:
+        service_data = {
+        "ref_id": ref_id,
+        "fees": service_request.fees,
+        "total_no_of_sessions": service_request.total_no_of_sessions,
+        "generated_date": service_request.generated_date,
+        "generate_for_month": service_request.generate_for_month,
+        "generate_for_year": service_request.generate_for_year,
+        "coach_id": service_request.coach_id,
+        "is_approved":True,
+        "invoice_no":request.data['invoice_no'],
+        "response_by_finance_date":today
+    }
+    else:
+        service_data = {
+        "ref_id": ref_id,
+        "fees": service_request.fees,
+        "total_no_of_sessions": service_request.total_no_of_sessions,
+        "generated_date": service_request.generated_date,
+        "generate_for_month": service_request.generate_for_month,
+        "generate_for_year": service_request.generate_for_year,
+        "coach_id": service_request.coach_id,
+        "is_approved":False,
+        "invoice_no":request.data['invoice_no'],
+        "response_by_finance_date":today,
+        "rejection_reason":request.data['rejection_reason']
+    }
+
+    serializer = ServiceApprovalSerializer(instance=service_request,data = service_data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"status": "success"}, status=201)
+    else:
+        return Response({"status": "Bad Request"}, status=400)
+
+
+

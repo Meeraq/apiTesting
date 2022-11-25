@@ -158,3 +158,17 @@ class Learner(models.Model):
 
 class Batch(models.Model):
     batch = models.CharField(max_length=200,default=" ", primary_key = True)
+
+
+class ServiceApprovalData(models.Model):
+    ref_id = models.IntegerField()
+    fees = models.IntegerField(default="500")
+    total_no_of_sessions = models.IntegerField(default=0)
+    generated_date = models.DateField()
+    generate_for_month = models.CharField(max_length=200, default=" ",  blank=True)
+    generate_for_year = models.CharField(max_length=200, default=" ",  blank=True)
+    is_approved = models.BooleanField(default="null", blank=True)
+    invoice_no = models.CharField(max_length=200, default=" ",  blank=True)
+    coach_id = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
+    rejection_reason = models.CharField( max_length=200, default=" ",  blank=True)
+    response_by_finance_date = models.DateField(default="2022-09-09", blank=True)
