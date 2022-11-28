@@ -22,7 +22,6 @@ class Profile(models.Model):
         return self.user.username
 
 
-
 # coach Modal
 
 class Coach(models.Model):
@@ -42,8 +41,6 @@ class Coach(models.Model):
 
     def __str__(self):
         return self.first_name
-
-
 
 
 # New coach model
@@ -108,53 +105,54 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
     )
 
 
-
 class Events(models.Model):
-    name = models.CharField(max_length=200,default="Event")
+    name = models.CharField(max_length=200, default="Event")
     start_date = models.DateField(default="2022-09-09")
     end_date = models.DateField(default="2022-09-09")
     expire_date = models.DateField(default="2022-09-09")
     count = models.IntegerField(default=0)
-    min_count = models.IntegerField(default=0,blank=True)
-    link = models.CharField(max_length=200,default=" ",blank=True)
+    min_count = models.IntegerField(default=0, blank=True)
+    link = models.CharField(max_length=200, default=" ", blank=True)
     _id = models.CharField(max_length=1000)
     coach = models.ManyToManyField(Coach)
-    batch = models.CharField(max_length=200,blank=True,default=" ")
-    is_expired = models.BooleanField(default=False,blank=True)
-    is_delete = models.BooleanField(default=False,blank=True)
+    batch = models.CharField(max_length=200, blank=True, default=" ")
+    is_expired = models.BooleanField(default=False, blank=True)
+    is_delete = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.name
 
 
 class LeanerConfirmedSlots(models.Model):
-    name = models.CharField(max_length=200,default=" ")
+    name = models.CharField(max_length=200, default=" ")
     email = models.EmailField()
     phone_no = models.CharField(max_length=200)
-    organisation = models.CharField(max_length=200,blank=True,default=" ")
-    slot = models.ForeignKey(ConfirmedSlotsbyCoach,null=True, on_delete=models.SET_NULL)
-    event = models.ForeignKey(Events,null=True, on_delete=models.SET_NULL)
-    status = models.CharField(max_length=200,blank=True,default='null')
+    organisation = models.CharField(max_length=200, blank=True, default=" ")
+    slot = models.ForeignKey(ConfirmedSlotsbyCoach,
+                             null=True, on_delete=models.SET_NULL)
+    event = models.ForeignKey(Events, null=True, on_delete=models.SET_NULL)
+    status = models.CharField(max_length=200, blank=True, default='null')
+
     def __str__(self):
         return self.name
 
- 
-class DeleteConfirmedSlotsbyAdmin(models.Model):
-    requested_person = models.CharField(max_length=200,default=" ")
-    reason = models.CharField(max_length=200,default=" ")
-    slot_id = models.CharField(max_length=200,default=" ")
-    admin_name = models.CharField(max_length=200,default=" ")
 
+class DeleteConfirmedSlotsbyAdmin(models.Model):
+    requested_person = models.CharField(max_length=200, default=" ")
+    reason = models.CharField(max_length=200, default=" ")
+    slot_id = models.CharField(max_length=200, default=" ")
+    admin_name = models.CharField(max_length=200, default=" ")
 
 
 class Learner(models.Model):
-    first_name = models.CharField(max_length=200,default=" ")
-    last_name = models.CharField(max_length=200,default=" ",blank=True)
+    first_name = models.CharField(max_length=200, default=" ")
+    last_name = models.CharField(max_length=200, default=" ", blank=True)
     email = models.EmailField()
-    batch = models.CharField(max_length=200,default=" ")
-    phone = models.CharField(max_length=200,default=" ",blank=True)
-    unique_check = models.CharField(max_length=200,default="null")
-    course = models.CharField(max_length=200,default=" ",blank=True)
+    batch = models.CharField(max_length=200, default=" ")
+    phone = models.CharField(max_length=200, default=" ", blank=True)
+    unique_check = models.CharField(max_length=200, default="null")
+    course = models.CharField(max_length=200, default=" ", blank=True)
+
 
 class Batch(models.Model):
     batch = models.CharField(max_length=200,default=" ", primary_key = True)
