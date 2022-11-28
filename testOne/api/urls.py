@@ -38,6 +38,7 @@ urlpatterns = [
     #     path('add-session/', views.addSession),
     path('login/', views.login_user),
     path('register/', views.registerUser),
+    path('register-finance/', views.registerFinanceUser),
     #     path('add-user-type/', views.addProfileType),
     #     path('user-type/', views.getProfile),
 
@@ -95,6 +96,6 @@ urlpatterns = [
     path('service-approval/', views.getServiceApprovalData), 
     path('service-approval/<str:ref_id>', views.getServiceApprovalDatabyrefId),
     path('service-approval-coach/<str:coach_id>', views.getServiceApprovalDatabyCoachID),
-    path('/approve-by-finance',views.approveByFinance)
+    path('approve-by-finance/',views.approveByFinance)
 
 ]

@@ -11,7 +11,7 @@ class Profile(models.Model):
         ('coach', 'coach'),
         ('admin', 'admin'),
         ('learner', 'learner'),
-        ('faculty', 'faculty')
+        ('finance', 'finance')
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     type = models.CharField(

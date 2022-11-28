@@ -488,6 +488,20 @@ def login_user(request):
                         "id": userProfile.id,
                     }
                 )
+        elif user.profile.type == "finance":
+            if request.data['type'] == 'finance':
+                userProfile = User.objects.get(email=username)
+                token = Token.objects.get_or_create(user=user)
+                return Response(
+                    {
+                        "status": "200",
+                        "username": user.username,
+                        "token": str(token[0]),
+                        "email": userProfile.email,
+                        "usertype": user.profile.type,
+                        "id": userProfile.id,
+                    }
+                )
             else:
                 return Response({"reason": "No user found"}, status=404)
     else:
@@ -1470,3 +1484,22 @@ def approveByFinance(request,ref_id):
 
 
 
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def registerFinanceUser(request):
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        newUser = User.objects.create_user(
+            username=request.data["email"], email=request.data["email"], password=request.data["password"]
+        )
+        newUser.save()
+    else:
+        return Response(status="403")
+    user = User.objects.get(username=serializer.data["email"])
+    userToSave = User.objects.get(username=serializer.data["email"])
+    newProfile = Profile(user=userToSave, type="finance",
+                         email=serializer.data["email"])
+    newProfile.save()
+    token, _ = Token.objects.get_or_create(user=user)
+    return Response({"status": 200, "payload": serializer.data, "token": str(token)})
