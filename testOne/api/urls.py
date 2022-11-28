@@ -54,5 +54,7 @@ urlpatterns = [
     path('service-approval-coach/<str:coach_id>', views.getServiceApprovalDatabyCoachID),
     path('approve-by-finance/',views.approveByFinance),
     path('export-confirmed-slot/<str:event_id>',
-         views.exportLearnerConfirmedSlotsByEventId)
+         views.exportLearnerConfirmedSlotsByEventId),
+    path('confirm-coach-joined/',views.confirmCoachJoined),
+    path('get-coaching-sessions-of-coach-by-month/',views.getSlotByMonth),
 ]

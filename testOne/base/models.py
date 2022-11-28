@@ -132,6 +132,8 @@ class LeanerConfirmedSlots(models.Model):
                              null=True, on_delete=models.SET_NULL)
     event = models.ForeignKey(Events, null=True, on_delete=models.SET_NULL)
     status = models.CharField(max_length=200, blank=True, default='null')
+    is_coach_joined = models.CharField(max_length=100,blank=True,default='null')
+    is_learner_joined = models.CharField(max_length=100,blank=True,default='null')
 
     def __str__(self):
         return self.name
@@ -159,13 +161,13 @@ class Batch(models.Model):
 
 
 class ServiceApprovalData(models.Model):
-    ref_id = models.IntegerField()
+    ref_id = models.CharField(max_length=100)
     fees = models.IntegerField(default="500")
     total_no_of_sessions = models.IntegerField(default=0)
     generated_date = models.DateField()
     generate_for_month = models.CharField(max_length=200, default=" ",  blank=True)
     generate_for_year = models.CharField(max_length=200, default=" ",  blank=True)
-    is_approved = models.BooleanField(default="null", blank=True)
+    is_approved = models.CharField(default="null",max_length=200, blank=True)
     invoice_no = models.CharField(max_length=200, default=" ",  blank=True)
     coach_id = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
     rejection_reason = models.CharField( max_length=200, default=" ",  blank=True)

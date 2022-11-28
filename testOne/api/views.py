@@ -20,7 +20,7 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
-from base.models import Batch, Learner,ServiceApprovalData
+from base.models import Batch, Learner, ServiceApprovalData
 from .serializers import (
     AdminReqSerializer,
     ServiceApprovalSerializer,
@@ -1383,17 +1383,32 @@ def getCurrentBookedSlot(request):
             booked_slot = LeanerConfirmedSlots.objects.get(
                 slot__coach_id=coach.id, email=learner_email, slot__date=today_date)
             if booked_slot and (current_time > (int(booked_slot.slot.start_time) - 300000)) and (current_time < int(booked_slot.slot.end_time)):
+                newSlot = {
+                    "name": booked_slot.name,
+                    "status": booked_slot.status,
+                    "email": booked_slot.email,
+                    "phone_no": booked_slot.phone_no,
+                    "organisation": booked_slot.organisation,
+                    "event": booked_slot.event.id,
+                    "slot": booked_slot.slot.id,
+                    "is_learner_joined":"true"
+                }
                 booked_slot_serializer = ConfirmedLearnerSerializer(
-                    booked_slot)
-                return Response({"message": "Success", "data": booked_slot_serializer.data}, status=200)
+                    instance = booked_slot,data = newSlot)
+                if booked_slot_serializer.is_valid():
+                    booked_slot_serializer.save()
+                else:
+                    print(booked_slot_serializer.errors)
+                new_booked_slot = LeanerConfirmedSlots.objects.get(
+                slot__coach_id=coach.id, email=learner_email, slot__date=today_date)
+                new_booked_slot_serializer = ConfirmedLearnerSerializer(new_booked_slot)
+                return Response({"message": "Success", "data": new_booked_slot_serializer.data}, status=200)
             else:
                 return Response({"No session found"}, status=401)
         except:
             return Response({"message": "No session found"}, status=401)
     except:
         return Response({"message": "Invalid Link"}, status=400)
-
-
 
 
 @api_view(["GET"])
@@ -1426,63 +1441,61 @@ def addServiceApprovalData(request):
     today = date.today()
     service_data = {
         "ref_id": "nzxfh",
-        "fees": request.body['fees'],
-        "total_no_of_sessions": request.body['total_no_of_sessions'],
+        "fees": request.data['fees'],
+        "total_no_of_sessions": request.data['total_no_of_sessions'],
         "generated_date": today,
-        "generate_for_month": request.body['generate_for_month'],
-        "generate_for_year": request.body['generate_for_year'],
-        "coach_id": request.body['coach_id']
+        "generate_for_month": request.data['generate_for_month'],
+        "generate_for_year": request.data['generate_for_year'],
+        "coach_id": request.data['coach_id']
     }
-    serializer = ServiceApprovalSerializer(data = service_data)
+    serializer = ServiceApprovalSerializer(data=service_data)
     if serializer.is_valid():
         serializer.save()
         return Response({"status": "success"}, status=201)
     else:
         return Response({"status": "Bad Request"}, status=400)
-
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def approveByFinance(request,ref_id):
+def approveByFinance(request, ref_id):
     today = date.today()
-    service_request = ServiceApprovalData.objects.get(ref_id = ref_id)
+    service_request = ServiceApprovalData.objects.get(ref_id=ref_id)
     if request.data['is_approved'] == True:
         service_data = {
-        "ref_id": ref_id,
-        "fees": service_request.fees,
-        "total_no_of_sessions": service_request.total_no_of_sessions,
-        "generated_date": service_request.generated_date,
-        "generate_for_month": service_request.generate_for_month,
-        "generate_for_year": service_request.generate_for_year,
-        "coach_id": service_request.coach_id,
-        "is_approved":True,
-        "invoice_no":request.data['invoice_no'],
-        "response_by_finance_date":today
-    }
+            "ref_id": ref_id,
+            "fees": service_request.fees,
+            "total_no_of_sessions": service_request.total_no_of_sessions,
+            "generated_date": service_request.generated_date,
+            "generate_for_month": service_request.generate_for_month,
+            "generate_for_year": service_request.generate_for_year,
+            "coach_id": service_request.coach_id,
+            "is_approved": "true",
+            "invoice_no": request.data['invoice_no'],
+            "response_by_finance_date": today
+        }
     else:
         service_data = {
-        "ref_id": ref_id,
-        "fees": service_request.fees,
-        "total_no_of_sessions": service_request.total_no_of_sessions,
-        "generated_date": service_request.generated_date,
-        "generate_for_month": service_request.generate_for_month,
-        "generate_for_year": service_request.generate_for_year,
-        "coach_id": service_request.coach_id,
-        "is_approved":False,
-        "invoice_no":request.data['invoice_no'],
-        "response_by_finance_date":today,
-        "rejection_reason":request.data['rejection_reason']
-    }
+            "ref_id": ref_id,
+            "fees": service_request.fees,
+            "total_no_of_sessions": service_request.total_no_of_sessions,
+            "generated_date": service_request.generated_date,
+            "generate_for_month": service_request.generate_for_month,
+            "generate_for_year": service_request.generate_for_year,
+            "coach_id": service_request.coach_id,
+            "is_approved": "false",
+            "invoice_no": request.data['invoice_no'],
+            "response_by_finance_date": today,
+            "rejection_reason": request.data['rejection_reason']
+        }
 
-    serializer = ServiceApprovalSerializer(instance=service_request,data = service_data)
+    serializer = ServiceApprovalSerializer(
+        instance=service_request, data=service_data)
     if serializer.is_valid():
         serializer.save()
         return Response({"status": "success"}, status=201)
     else:
         return Response({"status": "Bad Request"}, status=400)
-
-
 
 
 @api_view(["POST"])
@@ -1503,6 +1516,8 @@ def registerFinanceUser(request):
     newProfile.save()
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"status": 200, "payload": serializer.data, "token": str(token)})
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def exportLearnerConfirmedSlotsByEventId(request, event_id):
@@ -1514,3 +1529,39 @@ def exportLearnerConfirmedSlotsByEventId(request, event_id):
     response["Content-Disposition"] = 'attachment; filename="confirmed slots.xls"'
     return response
 
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def confirmCoachJoined(request, slot_id):
+    booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
+    newSlot = {
+        "name": booked_slots.name,
+        "status": booked_slots.status,
+        "email": booked_slots.email,
+        "phone_no": booked_slots.phone_no,
+        "organisation": booked_slots.organisation,
+        "event": booked_slots.event.id,
+        "slot": booked_slots.slot.id,
+        "is_learner_joined":"true"
+    }
+    serializer = ConfirmedSlotsbyLearnerSerializer(
+        instance=booked_slots, data=newSlot)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"status": "success", "data": serializer.data}, status=200)
+    else:
+        return Response({"messgae": "Invalid data"}, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def getSlotByMonth(request):
+    slots = LeanerConfirmedSlots.filter(is_coach_joined="true",slot__coach_id=request.data['coach'])
+    month_slot = []
+    for slot in slots.all():
+        if slot.slot__date.strftime("%m-%Y") == request.data['date']:
+                serializer = ConfirmedSlotsbyLearnerSerializer(slot)
+                month_slot.append(serializer.data)
+    return Response({"message": "success","data":month_slot}, status=200)
