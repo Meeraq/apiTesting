@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Batch, Learner, SlotForCoach,AdminRequest,Coach,Profile,ConfirmedSlotsbyCoach,Events,LeanerConfirmedSlots
+from .models import Batch, Learner, SlotForCoach, AdminRequest, Coach, Profile, ConfirmedSlotsbyCoach, Events, LeanerConfirmedSlots, ServiceApprovalData
 from import_export.admin import ImportExportMixin
 
 admin.site.register(Profile)
@@ -12,7 +12,7 @@ admin.site.register(Batch)
 admin.site.register(Learner)
 admin.site.register(Coach)
 admin.site.register(AdminRequest)
-# admin.site.register(Faculty)
+admin.site.register(ServiceApprovalData)
 # admin.site.register(Slot)
 # admin.site.register(DayTimeSlot)
 # admin.site.register(LearnerdayTimeSlot)

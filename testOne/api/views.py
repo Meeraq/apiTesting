@@ -1391,17 +1391,18 @@ def getCurrentBookedSlot(request):
                     "organisation": booked_slot.organisation,
                     "event": booked_slot.event.id,
                     "slot": booked_slot.slot.id,
-                    "is_learner_joined":"true"
+                    "is_learner_joined": "true"
                 }
                 booked_slot_serializer = ConfirmedLearnerSerializer(
-                    instance = booked_slot,data = newSlot)
+                    instance=booked_slot, data=newSlot)
                 if booked_slot_serializer.is_valid():
                     booked_slot_serializer.save()
                 else:
                     print(booked_slot_serializer.errors)
                 new_booked_slot = LeanerConfirmedSlots.objects.get(
-                slot__coach_id=coach.id, email=learner_email, slot__date=today_date)
-                new_booked_slot_serializer = ConfirmedLearnerSerializer(new_booked_slot)
+                    slot__coach_id=coach.id, email=learner_email, slot__date=today_date)
+                new_booked_slot_serializer = ConfirmedLearnerSerializer(
+                    new_booked_slot)
                 return Response({"message": "Success", "data": new_booked_slot_serializer.data}, status=200)
             else:
                 return Response({"No session found"}, status=401)
@@ -1461,7 +1462,9 @@ def addServiceApprovalData(request):
 def approveByFinance(request, ref_id):
     today = date.today()
     service_request = ServiceApprovalData.objects.get(ref_id=ref_id)
-    if request.data['is_approved'] == True:
+    print(service_request.coach_id)
+    print(type(request.data['is_approved']))
+    if request.data['is_approved'] == "true":
         service_data = {
             "ref_id": ref_id,
             "fees": service_request.fees,
@@ -1469,7 +1472,7 @@ def approveByFinance(request, ref_id):
             "generated_date": service_request.generated_date,
             "generate_for_month": service_request.generate_for_month,
             "generate_for_year": service_request.generate_for_year,
-            "coach_id": service_request.coach_id,
+            "coach_id": service_request.coach_id.id,
             "is_approved": "true",
             "invoice_no": request.data['invoice_no'],
             "response_by_finance_date": today
@@ -1495,6 +1498,7 @@ def approveByFinance(request, ref_id):
         serializer.save()
         return Response({"status": "success"}, status=201)
     else:
+        print(serializer.errors)
         return Response({"status": "Bad Request"}, status=400)
 
 
@@ -1530,7 +1534,6 @@ def exportLearnerConfirmedSlotsByEventId(request, event_id):
     return response
 
 
-
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def confirmCoachJoined(request, slot_id):
@@ -1543,7 +1546,7 @@ def confirmCoachJoined(request, slot_id):
         "organisation": booked_slots.organisation,
         "event": booked_slots.event.id,
         "slot": booked_slots.slot.id,
-        "is_learner_joined":"true"
+        "is_coach_joined": "true"
     }
     serializer = ConfirmedSlotsbyLearnerSerializer(
         instance=booked_slots, data=newSlot)
@@ -1558,10 +1561,11 @@ def confirmCoachJoined(request, slot_id):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def getSlotByMonth(request):
-    slots = LeanerConfirmedSlots.filter(is_coach_joined="true",slot__coach_id=request.data['coach'])
+    slots = LeanerConfirmedSlots.objects.filter(
+        is_coach_joined="true", slot__coach_id=request.data['coach'])
     month_slot = []
     for slot in slots.all():
-        if slot.slot__date.strftime("%m-%Y") == request.data['date']:
-                serializer = ConfirmedSlotsbyLearnerSerializer(slot)
-                month_slot.append(serializer.data)
-    return Response({"message": "success","data":month_slot}, status=200)
+        if slot.slot.date.strftime("%m-%Y") == request.data['date']:
+            serializer = ConfirmedLearnerSerializer(slot)
+            month_slot.append(serializer.data)
+    return Response({"message": "success", "data": month_slot}, status=200)
