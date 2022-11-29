@@ -1485,7 +1485,7 @@ def approveByFinance(request, ref_id):
             "generated_date": service_request.generated_date,
             "generate_for_month": service_request.generate_for_month,
             "generate_for_year": service_request.generate_for_year,
-            "coach_id": service_request.coach_id,
+            "coach_id": service_request.coach_id.id,
             "is_approved": "false",
             "invoice_no": request.data['invoice_no'],
             "response_by_finance_date": today,
