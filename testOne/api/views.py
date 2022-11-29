@@ -1454,7 +1454,7 @@ def addServiceApprovalData(request):
         "november",
         "december",
     ]
-    reference = request.data['coach_id'] + '-' + today+"-"+(month.index(request.data['generate_for_month'])+1)*10
+    reference = str(request.data['coach_id']) + '-' + str(today)+"-"+ str((month.index(request.data['generate_for_month'])+1)*10)
     service_data = {
         "ref_id": reference,
         "fees": request.data['fees'],
