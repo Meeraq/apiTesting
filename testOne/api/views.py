@@ -1440,8 +1440,23 @@ def getServiceApprovalDatabyCoachID(request, coach_id):
 @permission_classes([AllowAny])
 def addServiceApprovalData(request):
     today = date.today()
+    month = [
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+    ]
+    reference = request.data['coach_id'] + '-' + today+"-"+(month.index(request.data['generate_for_month'])+1)*10
     service_data = {
-        "ref_id": "nzxfh",
+        "ref_id": reference,
         "fees": request.data['fees'],
         "total_no_of_sessions": request.data['total_no_of_sessions'],
         "generated_date": today,
