@@ -7,6 +7,9 @@
 # Icon must end with two \r
 Icon
 
+Dockerfile2
+start.sh
+
 
 # Thumbnails
 ._*
