@@ -36,6 +36,7 @@ from .serializers import (
     SlotForCoachSerializer,
     UserSerializer,
     ProfileSerializer,
+    LoginUserSerializer
 )
 
 import environ
@@ -181,10 +182,9 @@ def addcoach(request):
             "password": request.data["password"],
         },
     )
-    today = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data["email"], email=request.data["email"],last_login=today, password=request.data["password"]
+            username=request.data["email"], email=request.data["email"], password=request.data["password"]
         )
         newUser.save()
         userToSave = User.objects.get(username=request.data["email"])
@@ -227,6 +227,8 @@ def updateCoach(request, _id):
     if serializer.is_valid():
         serializer.save()
     return Response(serializer.data)
+
+
 
 
 # faculty api
@@ -447,6 +449,16 @@ def updateCoach(request, _id):
 #     serializer = SessionSerializer(sessions, many=True)
 #     return Response({'status': 200, 'data': serializer.data})
 
+def updateLastLogin(email):
+    today = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    user = User.objects.get(username=email)
+    changedUser = {
+        "email": user.email,
+        'last_login':today
+    }
+    editSerilizer = LoginUserSerializer(instance=user, data=changedUser)
+    if editSerilizer.is_valid():
+        editSerilizer.save()
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -454,9 +466,7 @@ def login_user(request):
     username = request.data["username"]
     password = request.data["password"]
     user = authenticate(username=username, password=password)
-    today = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     if user is not None:
-        new_login = user(last_login=today)
         if user.profile.type == "coach":
             if request.data['type'] == 'coach':
                 userProfile = Coach.objects.get(email=username)
@@ -510,7 +520,7 @@ def login_user(request):
                 )
             else:
                 return Response({"reason": "No user found"}, status=404)
-        new_login.save()
+        updateLastLogin(user.email)
     else:
         userFound = User.objects.filter(email=username)
         if userFound.exists():
@@ -523,10 +533,9 @@ def login_user(request):
 @permission_classes([AllowAny])
 def registerUser(request):
     serializer = UserSerializer(data=request.data)
-    today = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data["email"], email=request.data["email"],last_login=today, password=request.data["password"]
+            username=request.data["email"], email=request.data["email"], password=request.data["password"]
         )
         newUser.save()
     else:
@@ -1529,10 +1538,9 @@ def approveByFinance(request, ref_id):
 @permission_classes([AllowAny])
 def registerFinanceUser(request):
     serializer = UserSerializer(data=request.data)
-    today = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data["email"], email=request.data["email"],last_login=today, password=request.data["password"]
+            username=request.data["email"], email=request.data["email"],password=request.data["password"]
         )
         newUser.save()
     else:

@@ -16,12 +16,17 @@ from base.models import Batch,ServiceApprovalData
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email', 'password', 'is_staff','last_login']
+        fields = ['email', 'password', 'is_staff']
 
 class EditUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['email', 'username']
+
+class LoginUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'last_login']
 
 class ProfileSerializer(serializers.ModelSerializer):
     userDetails = UserSerializer(required=False)
