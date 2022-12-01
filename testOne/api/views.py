@@ -469,7 +469,8 @@ def login_user(request):
                         "email": userProfile.email,
                         "usertype": user.profile.type,
                         "id": userProfile.id,
-                        "meet_link": userProfile.meet_link
+                        "meet_link": userProfile.meet_link,
+                        "last_login":user.last_login
                     }
                 )
             else:
@@ -486,6 +487,7 @@ def login_user(request):
                         "email": userProfile.email,
                         "usertype": user.profile.type,
                         "id": userProfile.id,
+                        "last_login":user.last_login
                     }
                 )
         elif user.profile.type == "finance":
@@ -500,6 +502,7 @@ def login_user(request):
                         "email": userProfile.email,
                         "usertype": user.profile.type,
                         "id": userProfile.id,
+                        "last_login":user.last_login
                     }
                 )
             else:
