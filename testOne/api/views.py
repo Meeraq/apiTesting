@@ -470,7 +470,7 @@ def login_user(request):
                         "usertype": user.profile.type,
                         "id": userProfile.id,
                         "meet_link": userProfile.meet_link,
-                        "last_login":user.last_login
+                        "last_login": user.last_login
                     }
                 )
             else:
@@ -487,7 +487,7 @@ def login_user(request):
                         "email": userProfile.email,
                         "usertype": user.profile.type,
                         "id": userProfile.id,
-                        "last_login":user.last_login
+                        "last_login": user.last_login
                     }
                 )
         elif user.profile.type == "finance":
@@ -502,7 +502,7 @@ def login_user(request):
                         "email": userProfile.email,
                         "usertype": user.profile.type,
                         "id": userProfile.id,
-                        "last_login":user.last_login
+                        "last_login": user.last_login
                     }
                 )
             else:
@@ -653,7 +653,7 @@ def getProfile(request):
 @permission_classes([AllowAny])
 def makeSlotRequest(request):
     adminRequest = AdminRequest(
-        name=request.data["request_name"], expire_date=request.data["expiry_date"])
+        name=request.data["request_name"], expire_date=request.data["expiry_date"], end_date=request.data['end_date'])
     adminRequest.save()
     for coach in request.data["coach_id"]:
         single_coach = Coach.objects.get(id=coach)
@@ -1457,7 +1457,8 @@ def addServiceApprovalData(request):
         "november",
         "december",
     ]
-    reference = str(request.data['coach_id']) + '-' + str(today)+"-"+ str((month.index(request.data['generate_for_month'])+1)*10)
+    reference = str(request.data['coach_id']) + '-' + str(today) + \
+        "-" + str((month.index(request.data['generate_for_month'])+1)*10)
     service_data = {
         "ref_id": reference,
         "fees": request.data['fees'],
