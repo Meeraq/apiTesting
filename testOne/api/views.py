@@ -181,9 +181,10 @@ def addcoach(request):
             "password": request.data["password"],
         },
     )
+    today = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data["email"], email=request.data["email"], password=request.data["password"]
+            username=request.data["email"], email=request.data["email"],last_login=today, password=request.data["password"]
         )
         newUser.save()
         userToSave = User.objects.get(username=request.data["email"])
@@ -453,7 +454,9 @@ def login_user(request):
     username = request.data["username"]
     password = request.data["password"]
     user = authenticate(username=username, password=password)
+    today = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     if user is not None:
+        new_login = user(last_login=today)
         if user.profile.type == "coach":
             if request.data['type'] == 'coach':
                 userProfile = Coach.objects.get(email=username)
@@ -507,6 +510,7 @@ def login_user(request):
                 )
             else:
                 return Response({"reason": "No user found"}, status=404)
+        new_login.save()
     else:
         userFound = User.objects.filter(email=username)
         if userFound.exists():
@@ -519,9 +523,10 @@ def login_user(request):
 @permission_classes([AllowAny])
 def registerUser(request):
     serializer = UserSerializer(data=request.data)
+    today = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data["email"], email=request.data["email"], password=request.data["password"]
+            username=request.data["email"], email=request.data["email"],last_login=today, password=request.data["password"]
         )
         newUser.save()
     else:
@@ -1524,9 +1529,10 @@ def approveByFinance(request, ref_id):
 @permission_classes([AllowAny])
 def registerFinanceUser(request):
     serializer = UserSerializer(data=request.data)
+    today = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data["email"], email=request.data["email"], password=request.data["password"]
+            username=request.data["email"], email=request.data["email"],last_login=today, password=request.data["password"]
         )
         newUser.save()
     else:
