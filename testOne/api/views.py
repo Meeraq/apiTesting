@@ -450,7 +450,7 @@ def updateCoach(request, _id):
 #     return Response({'status': 200, 'data': serializer.data})
 
 def updateLastLogin(email):
-    today = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     user = User.objects.get(username=email)
     changedUser = {
         "email": user.email,
@@ -459,6 +459,7 @@ def updateLastLogin(email):
     editSerilizer = LoginUserSerializer(instance=user, data=changedUser)
     if editSerilizer.is_valid():
         editSerilizer.save()
+    
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -471,6 +472,7 @@ def login_user(request):
             if request.data['type'] == 'coach':
                 userProfile = Coach.objects.get(email=username)
                 token = Token.objects.get_or_create(user=user)
+                updateLastLogin(user.email)
                 return Response(
                     {
                         "status": "200",
@@ -492,6 +494,7 @@ def login_user(request):
             if request.data['type'] == 'admin':
                 userProfile = User.objects.get(email=username)
                 token = Token.objects.get_or_create(user=user)
+                updateLastLogin(user.email)
                 return Response(
                     {
                         "status": "200",
@@ -507,6 +510,7 @@ def login_user(request):
             if request.data['type'] == 'finance':
                 userProfile = User.objects.get(email=username)
                 token = Token.objects.get_or_create(user=user)
+                updateLastLogin(user.email)
                 return Response(
                     {
                         "status": "200",
@@ -520,7 +524,7 @@ def login_user(request):
                 )
             else:
                 return Response({"reason": "No user found"}, status=404)
-        updateLastLogin(user.email)
+        
     else:
         userFound = User.objects.filter(email=username)
         if userFound.exists():
