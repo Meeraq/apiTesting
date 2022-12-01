@@ -36,6 +36,7 @@ from .serializers import (
     SlotForCoachSerializer,
     UserSerializer,
     ProfileSerializer,
+    LoginUserSerializer
 )
 
 import environ
@@ -226,6 +227,8 @@ def updateCoach(request, _id):
     if serializer.is_valid():
         serializer.save()
     return Response(serializer.data)
+
+
 
 
 # faculty api
@@ -446,6 +449,17 @@ def updateCoach(request, _id):
 #     serializer = SessionSerializer(sessions, many=True)
 #     return Response({'status': 200, 'data': serializer.data})
 
+def updateLastLogin(email):
+    today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    user = User.objects.get(username=email)
+    changedUser = {
+        "email": user.email,
+        'last_login':today
+    }
+    editSerilizer = LoginUserSerializer(instance=user, data=changedUser)
+    if editSerilizer.is_valid():
+        editSerilizer.save()
+    
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -458,6 +472,7 @@ def login_user(request):
             if request.data['type'] == 'coach':
                 userProfile = Coach.objects.get(email=username)
                 token = Token.objects.get_or_create(user=user)
+                updateLastLogin(user.email)
                 return Response(
                     {
                         "status": "200",
@@ -479,6 +494,7 @@ def login_user(request):
             if request.data['type'] == 'admin':
                 userProfile = User.objects.get(email=username)
                 token = Token.objects.get_or_create(user=user)
+                updateLastLogin(user.email)
                 return Response(
                     {
                         "status": "200",
@@ -494,6 +510,7 @@ def login_user(request):
             if request.data['type'] == 'finance':
                 userProfile = User.objects.get(email=username)
                 token = Token.objects.get_or_create(user=user)
+                updateLastLogin(user.email)
                 return Response(
                     {
                         "status": "200",
@@ -507,6 +524,7 @@ def login_user(request):
                 )
             else:
                 return Response({"reason": "No user found"}, status=404)
+        
     else:
         userFound = User.objects.filter(email=username)
         if userFound.exists():
@@ -1527,7 +1545,7 @@ def registerFinanceUser(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data["email"], email=request.data["email"], password=request.data["password"]
+            username=request.data["email"], email=request.data["email"],password=request.data["password"]
         )
         newUser.save()
     else:
