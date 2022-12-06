@@ -1,5 +1,6 @@
 from import_export import resources, fields
 from .models import ConfirmedSlotsbyCoach, LeanerConfirmedSlots
+from datetime import datetime
 
 
 class ConfirmedSlotResource(resources.ModelResource):
@@ -17,10 +18,13 @@ class LearnerConfirmedSlotsResource(resources.ModelResource):
                             column_name="Learner's Phone")
     slot__SESSION_START_TIME = fields.Field(
         attribute="slot__SESSION_START_TIME", column_name="Session Time")
-    slot__date = fields.Field(
-        attribute="slot__date", column_name="Session Date")
+    date = fields.Field(column_name="Session Date")
 
     class Meta:
         model = LeanerConfirmedSlots
         fields = ('slot__COACH_NAME', 'name', 'email', 'phone_no',
-                  'organization', 'slot__date', 'slot__SESSION_START_TIME')
+                  'organization', 'slot__SESSION_START_TIME')
+
+    def dehydrate_date(self, LeanerConfirmedSlots):
+        date = getattr(LeanerConfirmedSlots.slot, "date")
+        return date.strftime("%d-%B-%y")
