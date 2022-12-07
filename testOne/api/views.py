@@ -229,8 +229,6 @@ def updateCoach(request, _id):
     return Response(serializer.data)
 
 
-
-
 # faculty api
 
 # @api_view(['GET'])
@@ -454,12 +452,12 @@ def updateLastLogin(email):
     user = User.objects.get(username=email)
     changedUser = {
         "email": user.email,
-        'last_login':today
+        'last_login': today
     }
     editSerilizer = LoginUserSerializer(instance=user, data=changedUser)
     if editSerilizer.is_valid():
         editSerilizer.save()
-    
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -524,7 +522,7 @@ def login_user(request):
                 )
             else:
                 return Response({"reason": "No user found"}, status=404)
-        
+
     else:
         userFound = User.objects.filter(email=username)
         if userFound.exists():
@@ -722,9 +720,14 @@ def getAdminRequestData(request):
                 adminSerializer.save()
             else:
                 print(adminSerializer.errors)
+    countOfSlotsPerRequest = {}
     req = AdminRequest.objects.all()
+    for reqItem in req:
+        slotsPerReq = ConfirmedSlotsbyCoach.objects.filter(
+            request_ID=reqItem.id)
+        countOfSlotsPerRequest[reqItem.id] = len(slotsPerReq)
     serilizedData = GetAdminReqSerializer(req, many=True)
-    return Response({"details": "success", "Data": serilizedData.data}, status=200)
+    return Response({"details": "success", "Data": serilizedData.data, "countOfSlotsPerRequest": countOfSlotsPerRequest}, status=200)
 
 
 @api_view(["DELETE"])
@@ -1545,7 +1548,7 @@ def registerFinanceUser(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data["email"], email=request.data["email"],password=request.data["password"]
+            username=request.data["email"], email=request.data["email"], password=request.data["password"]
         )
         newUser.save()
     else:
