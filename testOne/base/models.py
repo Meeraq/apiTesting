@@ -128,6 +128,7 @@ class LeanerConfirmedSlots(models.Model):
     name = models.CharField(max_length=200, default=" ")
     email = models.EmailField()
     phone_no = models.CharField(max_length=200)
+    about = models.CharField(max_length=300,default=" ")
     organisation = models.CharField(max_length=200, blank=True, default=" ")
     slot = models.ForeignKey(ConfirmedSlotsbyCoach,
                              null=True, on_delete=models.SET_NULL)

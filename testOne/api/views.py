@@ -995,8 +995,12 @@ def getEvents(request):
                 print(event_serilizer.errors)
                 return Response({"status": "error", "reason": "error in expire event"}, status=401)
     updated_events = Events.objects.filter(is_delete=False)
+    countOfConfirmedSessionsPerEvent = {}
+    for event in updated_events:
+        slotsPerEvent = LeanerConfirmedSlots.objects.filter(event__id = event.id )
+        countOfConfirmedSessionsPerEvent[event.id] = len(slotsPerEvent)
     serializer = EventSerializer(updated_events, many=True)
-    return Response({"status": "success", "data": serializer.data}, status=200)
+    return Response({"status": "success", "data": serializer.data, "countOfConfirmedSessionsPerEvent": countOfConfirmedSessionsPerEvent}, status=200)
 
 
 @api_view(["POST"])
@@ -1112,6 +1116,7 @@ def confirmSlotsByLearner(request, slot_id):
                 "name": request.data["name"],
                 "email": request.data["email"],
                 "organisation": request.data["organisation"],
+                "about": request.data['about'],
                 "phone_no": request.data["phone_no"],
                 "slot": coach_slot.id,
                 "event": event.id,
