@@ -59,4 +59,7 @@ urlpatterns = [
     path('add-service-approval/', views.addServiceApprovalData),
     path('confirm-coach-joined/<str:slot_id>', views.confirmCoachJoined),
     path('get-coaching-sessions-of-coach-by-month/', views.getSlotByMonth),
+
+
+    path('delete-learner-confirmed-slot/<str:slot_id>/',views.DeletedConfirmedSlots)
 ]

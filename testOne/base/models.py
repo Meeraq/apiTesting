@@ -138,16 +138,24 @@ class LeanerConfirmedSlots(models.Model):
         max_length=100, blank=True, default='null')
     is_learner_joined = models.CharField(
         max_length=100, blank=True, default='null')
+    is_reschedule = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.name
 
 
 class DeleteConfirmedSlotsbyAdmin(models.Model):
+    batch_name = models.CharField(max_length=200, default=" ")
     requested_person = models.CharField(max_length=200, default=" ")
     reason = models.CharField(max_length=200, default=" ")
-    slot_id = models.CharField(max_length=200, default=" ")
     admin_name = models.CharField(max_length=200, default=" ")
+    name = models.CharField(max_length=200, default=" ")
+    email = models.EmailField()
+    phone_no = models.CharField(max_length=200)
+    organisation = models.CharField(max_length=200, blank=True, default=" ")
+    slot_id = models.ForeignKey(ConfirmedSlotsbyCoach,
+                             null=True, on_delete=models.SET_NULL)
+    event = models.ForeignKey(Events, null=True, on_delete=models.SET_NULL)
 
 
 class Learner(models.Model):
