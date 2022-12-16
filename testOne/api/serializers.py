@@ -177,3 +177,4 @@ class DeletedConfirmedSlotsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeleteConfirmedSlotsbyAdmin
         fields = '__all__'
+        depth=1

@@ -1384,6 +1384,16 @@ def DeletedConfirmedSlots(request, slot_id):
         return Response({"status": "Bad Request"}, status=400)
      #...........
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def DeletedSession(request):
+    deleted_session = DeleteConfirmedSlotsbyAdmin.objects.all()
+    serializer = DeletedConfirmedSlotsSerializer(deleted_session, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+    
+
+
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
