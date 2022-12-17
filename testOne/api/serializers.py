@@ -10,7 +10,7 @@ from base.models import AdminRequest
 from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
 from base.models import Learner
-from base.models import Batch,ServiceApprovalData,DeleteConfirmedSlotsbyAdmin
+from base.models import Batch, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -18,15 +18,18 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['email', 'password', 'is_staff']
 
+
 class EditUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['email', 'username']
 
+
 class LoginUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['email', 'last_login']
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     userDetails = UserSerializer(required=False)
@@ -133,10 +136,12 @@ class GetAdminReqSerializer(serializers.ModelSerializer):
         model = AdminRequest
         fields = '__all__'
 
+
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Events
         fields = '__all__'
+
 
 class ConfirmedSlotsbyLearnerSerializer(serializers.ModelSerializer):
     # event = EventSerializer()
@@ -145,11 +150,14 @@ class ConfirmedSlotsbyLearnerSerializer(serializers.ModelSerializer):
         model = LeanerConfirmedSlots
         fields = '__all__'
 
+
 class ConfirmedLearnerSerializer(serializers.ModelSerializer):
     slot = ConfirmedSlotsbyCoachSerializer()
+
     class Meta:
         model = LeanerConfirmedSlots
         fields = '__all__'
+
 
 class dltSlotSerializer(serializers.ModelSerializer):
     class Meta:
@@ -162,10 +170,12 @@ class LearnerDataUploadSerializer(serializers.ModelSerializer):
         model = Learner
         fields = '__all__'
 
+
 class BatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Batch
         fields = '__all__'
+
 
 class ServiceApprovalSerializer(serializers.ModelSerializer):
     class Meta:
@@ -177,4 +187,10 @@ class DeletedConfirmedSlotsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeleteConfirmedSlotsbyAdmin
         fields = '__all__'
-        depth=1
+				
+
+class GetNestedDeletedConfirmedSlotsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeleteConfirmedSlotsbyAdmin
+        fields = '__all__'
+        depth = 1

@@ -54,6 +54,7 @@ class AdminRequest(models.Model):
     isActive = models.BooleanField(default=True)
     expire_date = models.DateField(default="2022-09-10")
     end_date = models.DateField(default="2022-12-01")
+    start_date = models.DateField(default="2022-12-01")
 
 
 class SlotForCoach(models.Model):
@@ -128,7 +129,7 @@ class LeanerConfirmedSlots(models.Model):
     name = models.CharField(max_length=200, default=" ")
     email = models.EmailField()
     phone_no = models.CharField(max_length=200)
-    about = models.CharField(max_length=300,default=" ")
+    about = models.CharField(max_length=300, default=" ", blank=True)
     organisation = models.CharField(max_length=200, blank=True, default=" ")
     slot = models.ForeignKey(ConfirmedSlotsbyCoach,
                              null=True, on_delete=models.SET_NULL)
@@ -154,7 +155,7 @@ class DeleteConfirmedSlotsbyAdmin(models.Model):
     phone_no = models.CharField(max_length=200)
     organisation = models.CharField(max_length=200, blank=True, default=" ")
     slot_id = models.ForeignKey(ConfirmedSlotsbyCoach,
-                             null=True, on_delete=models.SET_NULL)
+                                null=True, on_delete=models.SET_NULL)
     event = models.ForeignKey(Events, null=True, on_delete=models.SET_NULL)
 
 
