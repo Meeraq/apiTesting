@@ -1538,9 +1538,9 @@ def getManagementToken(request):
 @permission_classes([AllowAny])
 def getCurrentBookedSlot(request):
     learner_email = request.data['learner_email']
-    meet_link = env("coach_url")+"join-session/" + \
-        request.data['room_id']
+    meet_link = env("coach_url")+"join-session/" + request.data['room_id']
     current_time = request.data['time']
+    print(meet_link, current_time)
     today_date = datetime.date(datetime.today())
     try:
         coach = Coach.objects.get(meet_link=meet_link)
@@ -1574,6 +1574,7 @@ def getCurrentBookedSlot(request):
         except:
             return Response({"message": "No session found"}, status=401)
     except:
+        print("Error")
         return Response({"message": "Invalid Link"}, status=400)
 
 
