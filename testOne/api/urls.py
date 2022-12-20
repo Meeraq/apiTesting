@@ -61,6 +61,9 @@ urlpatterns = [
     path('get-coaching-sessions-of-coach-by-month/', views.getSlotByMonth),
 
 
-    path('delete-learner-confirmed-slot/<str:slot_id>/',views.DeletedConfirmedSlots),
-    path('deleted-session/',views.DeletedSession)
+    path('delete-learner-confirmed-slot/<str:slot_id>/',
+         views.DeletedConfirmedSlots),
+    path('deleted-session/', views.DeletedSession),
+    path('deleted-slots-per-confirmed-slot/<str:confirmed_slot_id>/',
+         views.DeletedConfirmSlots)
 ]

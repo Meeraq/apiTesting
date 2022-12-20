@@ -181,6 +181,7 @@ def addcoach(request):
             "coach_name": request.data["first_name"],
             "username": request.data["email"],
             "password": request.data["password"],
+            "coach_url": env("coach_url")
         },
     )
     if serializer.is_valid():
@@ -676,7 +677,7 @@ def makeSlotRequest(request):
         single_coach = Coach.objects.get(id=coach)
         email_message = render_to_string(
             "makerequest.html", {
-                "expire_date": request.data["expiry_date"], "coach_name": single_coach.first_name}
+                "expire_date": request.data["expiry_date"], "coach_name": single_coach.first_name, "coach_url": env("coach_url")}
         )
 
         send_mail(
@@ -966,7 +967,7 @@ def addEvent(request):
         "expire_date": request.data["expire_date"],
         "count": request.data["count"],
         "min_count": request.data["count"],
-        "link": "https://learner.meeraq.com/book-slot/" + str(event_id) + "/",
+        "link": env("learner_url") + "book-slot/" + str(event_id) + "/",
         "_id": str(event_id),
         "coach": request.data["coach"],
         "batch": request.data["batch"]
@@ -1144,17 +1145,15 @@ def confirmSlotsByLearner(request, slot_id):
             serializer = ConfirmedSlotsbyLearnerSerializer(data=Booked_slot)
             if serializer.is_valid():
                 booked_slots = LeanerConfirmedSlots.objects.all()
+                deletedSlots = DeleteConfirmedSlotsbyAdmin.objects.filter(
+                    event=event, email=request.data['email'])
                 if request.data["warning"] == True:  # always true from frontend
-                    if not bool(booked_slots):
+                    if not bool(booked_slots) and not bool(deletedSlots):
                         serializer.save()
                     else:
                         for slot in booked_slots:
                             if (slot.email.lower() == request.data["email"].lower()) and (event.id == slot.event.id):
                                 return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
-
-                        deletedSlots = DeleteConfirmedSlotsbyAdmin.objects.filter(
-                            event=event, email=request.data['email'])
-                        print("deleted slots", deletedSlots)
                         slotToSave = {}
                         if len(deletedSlots) == 0:
                             slotToSave = {**serializer.data,
@@ -1162,12 +1161,22 @@ def confirmSlotsByLearner(request, slot_id):
                         else:
                             slotToSave = {**serializer.data,
                                           "is_reschedule": True}
-                        print("slot to save", slotToSave)
+
                         learner_confirmed_slot_serializer = ConfirmedSlotsbyLearnerSerializer(
                             data=slotToSave)
                         if event_serializer.is_valid() and learner_confirmed_slot_serializer.is_valid():
                             event_serializer.save()
-                            learner_confirmed_slot_serializer.save()
+                            learner_confirmed_slot_instance = learner_confirmed_slot_serializer.save()
+                            # updating rescehduled slot in deleted slots
+                            for slot in deletedSlots:
+                                slot_serializer = DeletedConfirmedSlotsSerializer(
+                                    slot)
+                                new_slot_details = {
+                                    **slot_serializer.data, "rescheduled_slot": learner_confirmed_slot_instance.id}
+                                new_slot_serializer = DeletedConfirmedSlotsSerializer(
+                                    instance=slot, data=new_slot_details)
+                                if new_slot_serializer.is_valid():
+                                    new_slot_serializer.save()
                         else:
                             print("----", learner_confirmed_slot_serializer.data)
                             print(learner_confirmed_slot_serializer.errors)
@@ -1221,12 +1230,36 @@ def confirmSlotsByLearner(request, slot_id):
                 email_message_learner,
                 "info@meeraq.com",  # from email address
                 [request.data["email"]],  # to email address
-                [coach_data.email],  # bcc email address
+                # [coach_data.email],  # bcc email address
                 # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
             )
             email.content_subtype = "html"
             email.attach_file("event.ics", "text/calendar")
             email.send()
+
+            if os.path.exists("event.ics"):
+                os.remove("event.ics")
+            else:
+                print("file not found")
+
+            # Mail_to_Coach
+            coach_module_link = env("coach_url")
+            email_message_coach = render_to_string(
+                "coachmail.html",
+                {"name": coach_data.first_name, "time": start_time_for_mail,
+                    "duration": "30 Min", "date": date, "link": coach_module_link, "participant_name": request.data['name']},)
+            createIcs(start, end, coach_module_link)
+            email_for_coach = EmailMessage(
+                "Meeraq | Coaching Session",
+                email_message_coach,
+                "info@meeraq.com",  # from email address
+                [coach_data.email],  # to email address
+                # [coach_data.email],  # bcc email address
+                # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
+            )
+            email_for_coach.content_subtype = "html"
+            email_for_coach.attach_file("event.ics", "text/calendar")
+            email_for_coach.send()
 
             if os.path.exists("event.ics"):
                 os.remove("event.ics")
@@ -1349,7 +1382,8 @@ def deleteConfirmSlotsAdmin(request, slot_id):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def DeletedConfirmedSlots(request, slot_id):
-    deleted_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
+    deleted_slots = LeanerConfirmedSlots.objects.get(
+        id=slot_id)  # slot which needs to be deleted
     delSlot = {
         "batch_name": deleted_slots.event.batch,
         "requested_person": request.data['requested_person'],
@@ -1365,6 +1399,17 @@ def DeletedConfirmedSlots(request, slot_id):
     serializer = DeletedConfirmedSlotsSerializer(data=delSlot)
     if serializer.is_valid():
         serializer.save()
+        if request.data['requested_person'] == "participant":
+            coach_slot_serializer = ConfirmedSlotsbyCoachSerializer(
+                deleted_slots.slot)
+            coach_slot_update_details = {
+                **coach_slot_serializer.data, "is_confirmed": False}
+            coach_updated_slot_serializer = ConfirmedSlotsbyCoachSerializer(
+                instance=deleted_slots.slot, data=coach_slot_update_details)
+            if coach_updated_slot_serializer.is_valid():
+                coach_updated_slot_serializer.save()
+            else:
+                print("Error making slot available")
         start_time = datetime.fromtimestamp(
             (int(deleted_slots.slot.start_time) / 1000))  # converting timestamp to date
         start = ((start_time.replace(microsecond=0).astimezone(utc).replace(
@@ -1396,6 +1441,16 @@ def DeletedConfirmedSlots(request, slot_id):
         print(serializer.errors)
         return Response({"status": "Bad Request"}, status=400)
      # ...........
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def DeletedConfirmSlots(request, confirmed_slot_id):
+    deleted_slots = DeleteConfirmedSlotsbyAdmin.objects.filter(
+        rescheduled_slot=confirmed_slot_id)
+    serializer = GetNestedDeletedConfirmedSlotsSerializer(
+        deleted_slots, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
 
 
 @api_view(["GET"])
@@ -1483,7 +1538,7 @@ def getManagementToken(request):
 @permission_classes([AllowAny])
 def getCurrentBookedSlot(request):
     learner_email = request.data['learner_email']
-    meet_link = "https://coach.meeraq.com/join-session/" + \
+    meet_link = env("coach_url")+"join-session/" + \
         request.data['room_id']
     current_time = request.data['time']
     today_date = datetime.date(datetime.today())

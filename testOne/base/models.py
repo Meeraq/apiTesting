@@ -6,6 +6,11 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
 
+import environ
+env = environ.Env()
+environ.Env.read_env()
+
+
 class Profile(models.Model):
     user_choice = [
         ('coach', 'coach'),
@@ -89,7 +94,7 @@ class ConfirmedSlotsbyCoach(models.Model):
 @receiver(reset_password_token_created)
 def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
 
-    email_plaintext_message = "https://coach.meeraq.com/reset-password/" + \
+    email_plaintext_message = env("coach_url") + "reset-password/" + \
         reset_password_token.key
     email_message = render_to_string("resetpasswordmail.html", {
                                      'url': email_plaintext_message})
@@ -151,6 +156,8 @@ class DeleteConfirmedSlotsbyAdmin(models.Model):
     reason = models.CharField(max_length=200, default=" ")
     admin_name = models.CharField(max_length=200, default=" ")
     name = models.CharField(max_length=200, default=" ")
+    rescheduled_slot = models.ForeignKey(
+        LeanerConfirmedSlots, null=True, on_delete=models.SET_NULL)
     email = models.EmailField()
     phone_no = models.CharField(max_length=200)
     organisation = models.CharField(max_length=200, blank=True, default=" ")
