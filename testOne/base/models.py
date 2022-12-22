@@ -112,7 +112,7 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
     )
 
 
-class CoachPrice(models.Modal):
+class CoachPrice(models.Model):
     coach = models.ForeignKey(Coach,null = True, on_delete=models.SET_NULL )
     price = models.IntegerField()
 
@@ -130,7 +130,7 @@ class Events(models.Model):
     batch = models.CharField(max_length=200, blank=True, default=" ")
     is_expired = models.BooleanField(default=False, blank=True)
     is_delete = models.BooleanField(default=False, blank=True)
-    coach_price = models.ManyToManyField(CoachPrice,blank=True,null=True)
+    coach_price = models.ManyToManyField(CoachPrice,blank=True)
 
     def __str__(self):
         return self.name
