@@ -112,6 +112,11 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
     )
 
 
+class CoachPrice(models.Modal):
+    coach = models.ForeignKey(Coach,null = True, on_delete=models.SET_NULL )
+    price = models.IntegerField()
+
+
 class Events(models.Model):
     name = models.CharField(max_length=200, default="Event")
     start_date = models.DateField(default="2022-09-09")
@@ -125,6 +130,7 @@ class Events(models.Model):
     batch = models.CharField(max_length=200, blank=True, default=" ")
     is_expired = models.BooleanField(default=False, blank=True)
     is_delete = models.BooleanField(default=False, blank=True)
+    coach_price = models.ManyToManyField(CoachPrice,blank=True,null=True)
 
     def __str__(self):
         return self.name
@@ -196,3 +202,4 @@ class ServiceApprovalData(models.Model):
         max_length=200, default=" ",  blank=True)
     response_by_finance_date = models.DateField(
         default="2022-09-09", blank=True)
+

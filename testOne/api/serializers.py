@@ -9,7 +9,7 @@ from base.models import ConfirmedSlotsbyCoach
 from base.models import AdminRequest
 from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
-from base.models import Learner
+from base.models import Learner,CoachPrice
 from base.models import Batch, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin
 
 
@@ -194,3 +194,9 @@ class GetNestedDeletedConfirmedSlotsSerializer(serializers.ModelSerializer):
         model = DeleteConfirmedSlotsbyAdmin
         fields = '__all__'
         depth = 1
+
+class CoachPriceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CoachPrice
+        fields = '__all__'
+				

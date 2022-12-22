@@ -956,10 +956,24 @@ def updateMeetLinkByCoach(request, _id):
     return Response(serializer.data)
 
 
+def addCoachPrice(arrOfPrice):
+    for arrData in arrOfPrice:
+        coach_price_id = []
+        try:
+            if_in_coachprice_table = CoachPrice.objects.get(coach = arrData.coach,price = arrData.price)
+            coach_price_id.append(if_in_coachprice_table.id)
+        except:
+            new_data = CoachPriceSerializer(data=arrData)
+            if new_data.is_valid():
+                instance = new_data.save()
+                coach_price_id.append(instance.id)
+        return coach_price_id
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addEvent(request):
     event_id = uuid.uuid1()
+    price_arr = addCoachPrice(request.data['coach_pricing'])
     event_data = {
         "name": request.data["name"],
         "start_date": request.data["start_date"],
@@ -970,7 +984,8 @@ def addEvent(request):
         "link": env("learner_url") + "book-slot/" + str(event_id) + "/",
         "_id": str(event_id),
         "coach": request.data["coach"],
-        "batch": request.data["batch"]
+        "batch": request.data["batch"],
+        "coach_price":price_arr
     }
     serializer = EventSerializer(data=event_data)
     if serializer.is_valid():
@@ -1009,6 +1024,7 @@ def getEvents(request):
 @permission_classes([AllowAny])
 def editEvents(request, event_id):
     today = date.today()
+    price_arr = addCoachPrice(request.data['coach_pricing'])
     event = Events.objects.get(id=event_id)
     expire_check = event.is_expired
     if datetime.strptime(request.data["expire_date"], "%Y-%m-%d") >= datetime.strptime(str(today), "%Y-%m-%d"):
@@ -1024,7 +1040,8 @@ def editEvents(request, event_id):
         "link": event.link,
         "_id": event._id,
         "coach": request.data["coach"],
-        "is_expired": expire_check
+        "is_expired": expire_check,
+        "coach_price":price_arr
     }
     serializer = EventSerializer(instance=event, data=event_data)
     if serializer.is_valid():
@@ -1751,3 +1768,6 @@ def getSlotByMonth(request):
             serializer = ConfirmedLearnerSerializer(slot)
             month_slot.append(serializer.data)
     return Response({"message": "success", "data": month_slot}, status=200)
+
+
+
