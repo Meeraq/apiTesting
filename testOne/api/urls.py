@@ -53,7 +53,7 @@ urlpatterns = [
     path('service-approval/<str:ref_id>', views.getServiceApprovalDatabyrefId),
     path('service-approval-coach/<str:coach_id>',
          views.getServiceApprovalDatabyCoachID),
-    path('approve-by-finance/<str:ref_id>', views.approveByFinance),
+    path('approve-by-finance/', views.approveByFinance),
     path('export-confirmed-slot/<str:event_id>',
          views.exportLearnerConfirmedSlotsByEventId),
     path('add-service-approval/', views.addServiceApprovalData),

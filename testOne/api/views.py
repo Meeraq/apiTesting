@@ -20,7 +20,7 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
-from base.models import Batch, Learner, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin
+from base.models import Batch, Learner, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin, CoachPrice
 from .serializers import (
     AdminReqSerializer,
     ServiceApprovalSerializer,
@@ -37,7 +37,7 @@ from .serializers import (
     UserSerializer,
     ProfileSerializer,
     LoginUserSerializer,
-    DeletedConfirmedSlotsSerializer, GetNestedDeletedConfirmedSlotsSerializer
+    DeletedConfirmedSlotsSerializer, GetNestedDeletedConfirmedSlotsSerializer, CoachPriceSerializer, EventDepthOneSerializer
 )
 
 import environ
@@ -957,17 +957,19 @@ def updateMeetLinkByCoach(request, _id):
 
 
 def addCoachPrice(arrOfPrice):
+    coach_price_id = []
     for arrData in arrOfPrice:
-        coach_price_id = []
         try:
-            if_in_coachprice_table = CoachPrice.objects.get(coach = arrData.coach,price = arrData.price)
+            if_in_coachprice_table = CoachPrice.objects.get(
+                coach=arrData['coach'], price=arrData['price'])
             coach_price_id.append(if_in_coachprice_table.id)
         except:
             new_data = CoachPriceSerializer(data=arrData)
             if new_data.is_valid():
                 instance = new_data.save()
                 coach_price_id.append(instance.id)
-        return coach_price_id
+    return coach_price_id
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -985,7 +987,7 @@ def addEvent(request):
         "_id": str(event_id),
         "coach": request.data["coach"],
         "batch": request.data["batch"],
-        "coach_price":price_arr
+        "coach_price": price_arr
     }
     serializer = EventSerializer(data=event_data)
     if serializer.is_valid():
@@ -1016,7 +1018,7 @@ def getEvents(request):
     for event in updated_events:
         slotsPerEvent = LeanerConfirmedSlots.objects.filter(event__id=event.id)
         countOfConfirmedSessionsPerEvent[event.id] = len(slotsPerEvent)
-    serializer = EventSerializer(updated_events, many=True)
+    serializer = EventDepthOneSerializer(updated_events, many=True)
     return Response({"status": "success", "data": serializer.data, "countOfConfirmedSessionsPerEvent": countOfConfirmedSessionsPerEvent}, status=200)
 
 
@@ -1041,7 +1043,7 @@ def editEvents(request, event_id):
         "_id": event._id,
         "coach": request.data["coach"],
         "is_expired": expire_check,
-        "coach_price":price_arr
+        "coach_price": price_arr
     }
     serializer = EventSerializer(instance=event, data=event_data)
     if serializer.is_valid():
@@ -1575,7 +1577,7 @@ def getCurrentBookedSlot(request):
                     "slot": booked_slot.slot.id,
                     "is_learner_joined": "true"
                 }
-                booked_slot_serializer = ConfirmedLearnerSerializer(
+                booked_slot_serializer = ConfirmedSlotsbyLearnerSerializer(
                     instance=booked_slot, data=newSlot)
                 if booked_slot_serializer.is_valid():
                     booked_slot_serializer.save()
@@ -1658,11 +1660,11 @@ def addServiceApprovalData(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def approveByFinance(request, ref_id):
+def approveByFinance(request):
     today = date.today()
-    service_request = ServiceApprovalData.objects.get(ref_id=ref_id)
-    print(service_request.coach_id)
-    print(type(request.data['is_approved']))
+    ref_id = request.data['ref_id']
+    service_request = ServiceApprovalData.objects.get(
+        ref_id=ref_id)
     if request.data['is_approved'] == "true":
         service_data = {
             "ref_id": ref_id,
@@ -1768,6 +1770,3 @@ def getSlotByMonth(request):
             serializer = ConfirmedLearnerSerializer(slot)
             month_slot.append(serializer.data)
     return Response({"message": "success", "data": month_slot}, status=200)
-
-
-
