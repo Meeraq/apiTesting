@@ -19,12 +19,14 @@ from pytz import utc
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
-from base.models import LeanerConfirmedSlots
-from base.models import Batch, Learner, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin, CoachPrice
+from base.models import LeanerConfirmedSlots, CoachPrice
+from base.models import Batch, Learner, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin
 from .serializers import (
     AdminReqSerializer,
     ServiceApprovalSerializer,
+    CoachPriceSerializer,
     BatchSerializer,
+    LearnerSerializerInDepth,
     ConfirmedLearnerSerializer,
     ConfirmedSlotsbyCoachSerializer,
     ConfirmedSlotsbyLearnerSerializer,
@@ -1770,3 +1772,19 @@ def getSlotByMonth(request):
             serializer = ConfirmedLearnerSerializer(slot)
             month_slot.append(serializer.data)
     return Response({"message": "success", "data": month_slot}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def getSlotByBatchID(request, batch_id):
+    batch = Batch.objects.get(batch=batch_id)
+    event = Events.objects.filter(batch=batch.name)
+    slotOne = LeanerConfirmedSlots.objects.filter(event=event[0].id)
+    slotTwo = LeanerConfirmedSlots.objects.filter(event=event[1].id)
+    slotSerOne = ConfirmedLearnerSerializer(slotOne)
+    slotSerTwo = ConfirmedLearnerSerializer(slotTwo)
+    slots = [
+        *slotSerOne.data, *slotSerTwo.data
+    ]
+    serializer = LearnerSerializerInDepth(slots, many=True)
+    return Response({"message": "success", "data": serializer.data}, status=200)

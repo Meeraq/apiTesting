@@ -65,5 +65,6 @@ urlpatterns = [
          views.DeletedConfirmedSlots),
     path('deleted-session/', views.DeletedSession),
     path('deleted-slots-per-confirmed-slot/<str:confirmed_slot_id>/',
-         views.DeletedConfirmSlots)
+         views.DeletedConfirmSlots),
+     path('get-slots-batch/<str:batch_id>/', views.getSlotByBatchID),
 ]

@@ -207,3 +207,12 @@ class CoachPriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = CoachPrice
         fields = '__all__'
+
+
+class LearnerSerializerInDepth(serializers.ModelSerializer):
+    slot = ConfirmedSlotsbyCoachSerializer()
+
+    class Meta:
+        model = LeanerConfirmedSlots
+        fields = '__all__'
+        depth = 2
