@@ -188,6 +188,7 @@ class Batch(models.Model):
 
 class ServiceApprovalData(models.Model):
     ref_id = models.CharField(max_length=100)
+    po_id = models.CharField(max_length=100)
     fees = models.IntegerField(default="500")
     total_no_of_sessions = models.IntegerField(default=0)
     generated_date = models.DateField()

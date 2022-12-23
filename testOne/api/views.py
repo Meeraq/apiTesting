@@ -969,7 +969,7 @@ def addCoachPrice(arrOfPrice):
             if new_data.is_valid():
                 instance = new_data.save()
                 coach_price_id.append(instance.id)
-        return coach_price_id
+    return coach_price_id
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -1640,16 +1640,16 @@ def addServiceApprovalData(request):
         "december",
     ]
     reference = str(request.data['coach_id']) + '-' + str(today) + \
-        "-" + str((month.index(request.data['generate_for_month'])+1)*10)
+            "-" + str((month.index(request.data['generate_for_month'])+1)*10)
     service_data = {
-        "ref_id": reference,
+            "ref_id": reference,
         "fees": request.data['fees'],
         "total_no_of_sessions": request.data['total_no_of_sessions'],
-        "generated_date": today,
-        "generate_for_month": request.data['generate_for_month'],
-        "generate_for_year": request.data['generate_for_year'],
+            "generated_date": today,
+            "generate_for_month": request.data['generate_for_month'],
+            "generate_for_year": request.data['generate_for_year'],
         "coach_id": request.data['coach_id']
-    }
+        }
     serializer = ServiceApprovalSerializer(data=service_data)
     if serializer.is_valid():
         serializer.save()
@@ -1771,19 +1771,19 @@ def getSlotByMonth(request):
             month_slot.append(serializer.data)
     return Response({"message": "success", "data": month_slot}, status=200)
 
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def getSlotByBatchID(request,batch_id):
-    batch = Batch.objects.get(batch = batch_id)
+def getSlotByBatchID(request, batch_id):
+    batch = Batch.objects.get(batch=batch_id)
     event = Events.objects.filter(batch=batch.name)
-    slotOne = LeanerConfirmedSlots.objects.filter(event = event[0].id)
-    slotTwo = LeanerConfirmedSlots.objects.filter(event = event[1].id)
+    slotOne = LeanerConfirmedSlots.objects.filter(event=event[0].id)
+    slotTwo = LeanerConfirmedSlots.objects.filter(event=event[1].id)
     slotSerOne = ConfirmedLearnerSerializer(slotOne)
     slotSerTwo = ConfirmedLearnerSerializer(slotTwo)
-    slots =[
-        *slotSerOne.data,*slotSerTwo.data
+    slots = [
+        *slotSerOne.data, *slotSerTwo.data
     ]
-    serializer = LearnerSerializerInDepth(slots,many = True)
+    serializer = LearnerSerializerInDepth(slots, many=True)
     return Response({"message": "success", "data": serializer.data}, status=200)
-
-
+ 
