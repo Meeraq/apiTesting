@@ -20,13 +20,15 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots, CoachPrice
-from base.models import Batch, Learner, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin
+from base.models import Batch, Learner, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin, ServiceApprovalEntry, ServiceApproval
 from .serializers import (
     AdminReqSerializer,
     ServiceApprovalSerializer,
     CoachPriceSerializer,
     BatchSerializer,
-    LearnerSerializerInDepth,
+    LearnerSerializerInDepthSerializer,
+    ServiceApprovalEntrySerializer,
+    ServiceApprovalDepthOneSerializer,
     ConfirmedLearnerSerializer,
     ConfirmedSlotsbyCoachSerializer,
     ConfirmedSlotsbyLearnerSerializer,
@@ -1510,10 +1512,14 @@ def learnerDataUpload(request):
             learner_data.save()
             is_batch_exist = Batch.objects.filter(batch=learner['batch'])
             if not is_batch_exist:
-                batches.add(learner['batch'])
-    for batch in batches:
-        batch_data = Batch(batch=batch)
-        batch_data.save()
+                batch_data = Batch(
+                    batch=learner['batch'], start_date=learner['start_date'], end_date=learner['end_date'])
+                batch_data.save()
+    #             batches.add(
+    #                 {'name': learner['batch'], 'start_date': learner['start_date'], 'end_date': learner['end_date']})
+    # for batch in batches:
+    #     batch_data = Batch(batch=batch)
+    #     batch_data.save()
     return Response({"status": "success"}, status=200)
 
 
@@ -1602,8 +1608,8 @@ def getCurrentBookedSlot(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getServiceApprovalData(request):
-    data = ServiceApprovalData.objects.all()
-    serializer = ServiceApprovalSerializer(data, many=True)
+    data = ServiceApproval.objects.all()
+    serializer = ServiceApprovalDepthOneSerializer(data, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
@@ -1618,46 +1624,81 @@ def getServiceApprovalDatabyrefId(request, ref_id):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getServiceApprovalDatabyCoachID(request, coach_id):
-    data = ServiceApprovalData.objects.filter(coach_id=coach_id)
-    serializer = ServiceApprovalSerializer(data, many=True)
+    data = ServiceApproval.objects.filter(coach=coach_id)
+    serializer = ServiceApprovalDepthOneSerializer(data, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+def addServiceApprovalEntries(entries):
+    serivce_approval_entries_ids = []
+    for item in entries:
+        try:
+            service_approval_entry = ServiceApprovalEntry.objects.get(
+                no_of_sessions=item['no_of_sessions'], price=item['price'])
+            serivce_approval_entries_ids.append(service_approval_entry.id)
+        except:
+            new_data = ServiceApprovalEntrySerializer(data=item)
+            if new_data.is_valid():
+                instance = new_data.save()
+                serivce_approval_entries_ids.append(instance.id)
+    print(serivce_approval_entries_ids)
+    return serivce_approval_entries_ids
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def addServiceApprovalData(request):
     today = date.today()
-    month = [
-        "january",
-        "february",
-        "march",
-        "april",
-        "may",
-        "june",
-        "july",
-        "august",
-        "september",
-        "october",
-        "november",
-        "december",
-    ]
-    reference = str(request.data['coach_id']) + '-' + str(today) + \
-        "-" + str((month.index(request.data['generate_for_month'])+1)*10)
-    service_data = {
-        "ref_id": reference,
-        "fees": request.data['fees'],
-        "total_no_of_sessions": request.data['total_no_of_sessions'],
-        "generated_date": today,
-        "generate_for_month": request.data['generate_for_month'],
-        "generate_for_year": request.data['generate_for_year'],
-        "coach_id": request.data['coach_id']
+    service_approval_entries = addServiceApprovalEntries(
+        request.data['entries'])
+    service_approval_data = {
+        'po_id': request.data['po_id'],
+        'batch': request.data['batch'],
+        'entries': service_approval_entries,
+        'coach': request.data['coach'],
+        'generated_on': today,
+        'ref_id': "2",
+        'responded_on': None
     }
-    serializer = ServiceApprovalSerializer(data=service_data)
+    serializer = ServiceApprovalSerializer(data=service_approval_data)
     if serializer.is_valid():
         serializer.save()
         return Response({"status": "success"}, status=201)
     else:
+        print(serializer.errors)
         return Response({"status": "Bad Request"}, status=400)
+    # month = [
+    #     "january",
+    #     "february",
+    #     "march",
+    #     "april",
+    #     "may",
+    #     "june",
+    #     "july",
+    #     "august",
+    #     "september",
+    #     "october",
+    #     "november",
+    #     "december",
+    # ]
+    # reference = str(request.data['coach_id']) + '-' + str(today) + \
+    #     "-" + str((month.index(request.data['generate_for_month'])+1)*10)
+    # service_data = {
+    #     "ref_id": reference,
+    #     "fees": request.data['fees'],
+    #     "total_no_of_sessions": request.data['total_no_of_sessions'],
+    #     "generated_date": today,
+    #     "generate_for_month": request.data['generate_for_month'],
+    #     "generate_for_year": request.data['generate_for_year'],
+    #     "batch": request.data['batch'],
+    #     "coach_id": request.data['coach_id']
+    # }
+    # serializer = ServiceApprovalSerializer(data=service_data)
+    # if serializer.is_valid():
+    #     serializer.save()
+    #     return Response({"status": "success"}, status=201)
+    # else:
+    #     return Response({"status": "Bad Request"}, status=400)
 
 
 @api_view(["POST"])
@@ -1703,6 +1744,20 @@ def approveByFinance(request):
     else:
         print(serializer.errors)
         return Response({"status": "Bad Request"}, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def updateServiceApprovalStatus(request, service_approval_id):
+    today = date.today()
+    service_approval = ServiceApproval.objects.get(id=service_approval_id)
+    if request.data['status'] == True:
+        service_approval.is_approved = True
+    else:
+        service_approval.is_approved = False
+    service_approval.responded_on = today
+    service_approval.save()
+    return Response(status=200)
 
 
 @api_view(["POST"])
@@ -1774,17 +1829,33 @@ def getSlotByMonth(request):
     return Response({"message": "success", "data": month_slot}, status=200)
 
 
-@api_view(["POST"])
+@api_view(["GET"])
 @permission_classes([AllowAny])
-def getSlotByBatchID(request, batch_id):
-    batch = Batch.objects.get(batch=batch_id)
-    event = Events.objects.filter(batch=batch.name)
-    slotOne = LeanerConfirmedSlots.objects.filter(event=event[0].id)
-    slotTwo = LeanerConfirmedSlots.objects.filter(event=event[1].id)
-    slotSerOne = ConfirmedLearnerSerializer(slotOne)
-    slotSerTwo = ConfirmedLearnerSerializer(slotTwo)
-    slots = [
-        *slotSerOne.data, *slotSerTwo.data
-    ]
-    serializer = LearnerSerializerInDepth(slots, many=True)
-    return Response({"message": "success", "data": serializer.data}, status=200)
+def getSlotByBatchAndCoach(request, batch, coach_id):
+    batch = Batch.objects.get(batch=batch)
+    events = Events.objects.filter(batch=batch.batch)
+    all_slots = []
+    for event in events:
+        confirmed_slots = LeanerConfirmedSlots.objects.filter(
+            event=event.id, is_coach_joined="true", slot__coach_id=coach_id)
+        confirmed_slots_serializer = LearnerSerializerInDepthSerializer(
+            confirmed_slots, many=True)
+        all_slots = all_slots + [*confirmed_slots_serializer.data]
+    return Response({"message": "success", "confirmed_slots": all_slots}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getBatchesOfCoach(request, coach_id):  # for
+    today = date.today()
+    batchesNames = set()
+    events = Events.objects.filter(coach__id=coach_id)
+    for event in events:
+        batchesNames.add(event.batch)
+    batches_completed = []
+    for batch in batchesNames:
+        batch_queryset = Batch.objects.get(batch=batch)
+        if batch_queryset.end_date and batch_queryset.end_date < today:
+            batches_completed.append(batch_queryset.batch)
+    print(batches_completed)
+    return Response({"batches": batches_completed}, status=200)

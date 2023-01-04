@@ -54,6 +54,8 @@ urlpatterns = [
     path('service-approval-coach/<str:coach_id>',
          views.getServiceApprovalDatabyCoachID),
     path('approve-by-finance/', views.approveByFinance),
+    path('update-service-approval-status/<str:service_approval_id>/',
+         views.updateServiceApprovalStatus),
     path('export-confirmed-slot/<str:event_id>',
          views.exportLearnerConfirmedSlotsByEventId),
     path('add-service-approval/', views.addServiceApprovalData),
@@ -66,5 +68,7 @@ urlpatterns = [
     path('deleted-session/', views.DeletedSession),
     path('deleted-slots-per-confirmed-slot/<str:confirmed_slot_id>/',
          views.DeletedConfirmSlots),
-     path('get-slots-batch/<str:batch_id>/', views.getSlotByBatchID),
+    path('get-slots-of-batch-and-coach/<str:batch>/<str:coach_id>/',
+         views.getSlotByBatchAndCoach),
+    path('get-batches-by-coach/<str:coach_id>', views.getBatchesOfCoach)
 ]

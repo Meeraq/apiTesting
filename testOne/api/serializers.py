@@ -9,8 +9,8 @@ from base.models import ConfirmedSlotsbyCoach
 from base.models import AdminRequest
 from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
-from base.models import Learner
-from base.models import Batch, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin, CoachPrice
+from base.models import Learner, ServiceApproval
+from base.models import Batch, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin, CoachPrice, ServiceApprovalEntry
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -186,7 +186,20 @@ class BatchSerializer(serializers.ModelSerializer):
 
 class ServiceApprovalSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ServiceApprovalData
+        model = ServiceApproval
+        fields = '__all__'
+
+
+class ServiceApprovalDepthOneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceApproval
+        fields = '__all__'
+        depth = 1
+
+
+class ServiceApprovalEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceApprovalEntry
         fields = '__all__'
 
 
@@ -209,8 +222,7 @@ class CoachPriceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class LearnerSerializerInDepth(serializers.ModelSerializer):
-    slot = ConfirmedSlotsbyCoachSerializer()
+class LearnerSerializerInDepthSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LeanerConfirmedSlots
