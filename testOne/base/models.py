@@ -188,37 +188,71 @@ class Batch(models.Model):
     end_date = models.DateField(blank=True, null=True)
 
 
-class ServiceApprovalData(models.Model):
-    ref_id = models.CharField(max_length=100)
-    po_id = models.CharField(max_length=100, default="")
-    batch = models.CharField(max_length=200, default="")
-    fees = models.IntegerField(default="500")
-    total_no_of_sessions = models.IntegerField(default=0)
-    generated_date = models.DateField()
-    generate_for_month = models.CharField(
-        max_length=200, default=" ",  blank=True)
-    generate_for_year = models.CharField(
-        max_length=200, default=" ",  blank=True)
-    is_approved = models.CharField(default="null", max_length=200, blank=True)
-    invoice_no = models.CharField(max_length=200, default=" ",  blank=True)
-    coach_id = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
-    rejection_reason = models.CharField(
-        max_length=200, default=" ",  blank=True)
-    response_by_finance_date = models.DateField(
-        default="2022-09-09", blank=True)
+# class ServiceApprovalData(models.Model):
+#     ref_id = models.CharField(max_length=100)
+#     po_id = models.CharField(max_length=100, default="")
+#     batch = models.CharField(max_length=200, default="")
+#     fees = models.IntegerField(default="500")
+#     total_no_of_sessions = models.IntegerField(default=0)
+#     generated_date = models.DateField()
+#     generate_for_month = models.CharField(
+#         max_length=200, default=" ",  blank=True)
+#     generate_for_year = models.CharField(
+#         max_length=200, default=" ",  blank=True)
+#     is_approved = models.CharField(default="null", max_length=200, blank=True)
+#     invoice_no = models.CharField(max_length=200, default=" ",  blank=True)
+#     coach_id = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
+#     rejection_reason = models.CharField(
+#         max_length=200, default=" ",  blank=True)
+#     response_by_finance_date = models.DateField(
+#         default="2022-09-09", blank=True)
 
 
-class ServiceApprovalEntry(models.Model):
-    no_of_sessions = models.IntegerField(blank=True, default=0)
-    price = models.IntegerField(blank=True, default=0)
+# class ServiceApprovalEntry(models.Model):
+#     no_of_sessions = models.IntegerField(blank=True, default=0)
+#     price = models.IntegerField(blank=True, default=0)
 
 
+# class ServiceApproval(models.Model):
+#     ref_id = models.CharField(max_length=100)
+#     po_id = models.CharField(max_length=100)
+#     batch = models.ForeignKey(Batch, null=True, on_delete=models.SET_NULL)
+#     entries = models.ManyToManyField(ServiceApprovalEntry, blank=True)
+#     is_approved = models.BooleanField(default=False, blank=True)
+#     coach = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
+#     generated_on = models.DateField(blank=True)
+#     responded_on = models.DateField(blank=True, null=True)
+
+
+# model of purchase order
+class PurchaseOrder(models.Model):
+    po_no = models.CharField(max_length=100, default=0)
+    rate = models.IntegerField(blank=False, default=0)
+    number_of_session = models.IntegerField(blank=False)
+    number_of_session_consumed = models.IntegerField(blank=False)
+    batch = models.CharField(max_length=100)
+    coach = models.ForeignKey(Coach,null=True ,on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+
+# model of rejected
+class Rejected(models.Model):
+    reason = models.CharField(max_length=100)
+    updated_at = models.DateTimeField(auto_now_add=True)
+    respond_date = models.DateTimeField(null=True, blank=True)
+
+# model of service approval
 class ServiceApproval(models.Model):
-    ref_id = models.CharField(max_length=100)
-    po_id = models.CharField(max_length=100)
-    batch = models.ForeignKey(Batch, null=True, on_delete=models.SET_NULL)
-    entries = models.ManyToManyField(ServiceApprovalEntry, blank=True)
+    invoice_number = models.CharField(max_length=100, default=0)
+    po_id = models.ForeignKey(PurchaseOrder,null=True ,on_delete=models.SET_NULL)
+    number_of_session = models.IntegerField(blank=False)
     is_approved = models.BooleanField(default=False, blank=True)
-    coach = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
-    generated_on = models.DateField(blank=True)
-    responded_on = models.DateField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+    payment_date = models.DateTimeField(null=True, blank=True)
+    rejected = models.ManyToManyField(
+        Rejected, related_name='confirmed_coach', blank=True)
+
+
+
+
+    

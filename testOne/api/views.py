@@ -20,14 +20,15 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots, CoachPrice
-from base.models import Batch, Learner, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin, ServiceApprovalEntry, ServiceApproval
+from base.models import Batch, Learner, DeleteConfirmedSlotsbyAdmin, ServiceApproval #ServiceApprovalData  # ServiceApprovalEntry
+from base.models import PurchaseOrder
 from .serializers import (
     AdminReqSerializer,
     ServiceApprovalSerializer,
     CoachPriceSerializer,
     BatchSerializer,
     LearnerSerializerInDepthSerializer,
-    ServiceApprovalEntrySerializer,
+    #ServiceApprovalEntrySerializer,
     ServiceApprovalDepthOneSerializer,
     ConfirmedLearnerSerializer,
     ConfirmedSlotsbyCoachSerializer,
@@ -41,7 +42,7 @@ from .serializers import (
     UserSerializer,
     ProfileSerializer,
     LoginUserSerializer,
-    DeletedConfirmedSlotsSerializer, GetNestedDeletedConfirmedSlotsSerializer, CoachPriceSerializer, EventDepthOneSerializer
+    DeletedConfirmedSlotsSerializer, GetNestedDeletedConfirmedSlotsSerializer, CoachPriceSerializer, EventDepthOneSerializer, PurchaseOrderSerializer
 )
 
 import environ
@@ -1125,6 +1126,8 @@ def confirmSlotsByLearner(request, slot_id):
     event = Events.objects.get(_id=request.data["event"])
     learners = Learner.objects.filter(
         batch=event.batch, email=request.data["email"])
+    learnerCourse = Learner.objects.get(
+        email= request.data["email"], batch= event.batch)
     # whether learner exist in a batch or not
     if len(learners) == 0:
         return Response({"status": "Error", "reason": "user may have entered different email"}, status=405)
@@ -1270,7 +1273,7 @@ def confirmSlotsByLearner(request, slot_id):
             email_message_coach = render_to_string(
                 "coachmail.html",
                 {"name": coach_data.first_name, "time": start_time_for_mail,
-                    "duration": "30 Min", "date": date, "link": coach_module_link, "participant_name": request.data['name']},)
+                    "duration": "30 Min", "date": date, "link": coach_module_link, "participant_name": request.data['name'], "course": learnerCourse.course})
             createIcs(start, end, coach_module_link)
             email_for_coach = EmailMessage(
                 "Meeraq | Coaching Session",
@@ -1330,7 +1333,7 @@ def editConfirmSlotsByLearnerBySlotId(request, slot_id):
         serializer.save()
         return Response({"status": "success", "data": serializer.data}, status=200)
     else:
-        return Response({"messgae": "Invalid data"}, status=400)
+        return Response({"message": "Invalid data"}, status=400)
 
 
 def createCancledIcs(start_time, end_time):
@@ -1629,20 +1632,20 @@ def getServiceApprovalDatabyCoachID(request, coach_id):
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
-def addServiceApprovalEntries(entries):
-    serivce_approval_entries_ids = []
-    for item in entries:
-        try:
-            service_approval_entry = ServiceApprovalEntry.objects.get(
-                no_of_sessions=item['no_of_sessions'], price=item['price'])
-            serivce_approval_entries_ids.append(service_approval_entry.id)
-        except:
-            new_data = ServiceApprovalEntrySerializer(data=item)
-            if new_data.is_valid():
-                instance = new_data.save()
-                serivce_approval_entries_ids.append(instance.id)
-    print(serivce_approval_entries_ids)
-    return serivce_approval_entries_ids
+# def addServiceApprovalEntries(entries):
+#     serivce_approval_entries_ids = []
+#     for item in entries:
+#         try:
+#             service_approval_entry = ServiceApprovalEntry.objects.get(
+#                 no_of_sessions=item['no_of_sessions'], price=item['price'])
+#             serivce_approval_entries_ids.append(service_approval_entry.id)
+#         except:
+#             new_data = ServiceApprovalEntrySerializer(data=item)
+#             if new_data.is_valid():
+#                 instance = new_data.save()
+#                 serivce_approval_entries_ids.append(instance.id)
+#     print(serivce_approval_entries_ids)
+#     return serivce_approval_entries_ids
 
 
 @api_view(["POST"])
@@ -1846,7 +1849,7 @@ def getSlotByBatchAndCoach(request, batch, coach_id):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getBatchesOfCoach(request, coach_id):  # for
+def getBatchesOfCoach(request, coach_id):
     today = date.today()
     batchesNames = set()
     events = Events.objects.filter(coach__id=coach_id)
@@ -1859,3 +1862,74 @@ def getBatchesOfCoach(request, coach_id):  # for
             batches_completed.append(batch_queryset.batch)
     print(batches_completed)
     return Response({"batches": batches_completed}, status=200)
+
+
+#post api for PO 
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def createPurchaseOrder(request):                                            
+    po = {
+            'po_id': request.data['po_id'],
+            'rate' : request.data['rate'],
+            'no._of_session' : request.data['no._of_session'],
+            'no._of_session_consumed' : request.data['no._of_session_consumed'],
+            'batch' : request.data['batch'],
+            'coach' : request.data['coach']
+    }                                                                        
+    serializer = PurchaseOrderSerializer(data= po)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"status": "success", "data": serializer.data}, status=200)
+    else:
+        print(serializer.errors)
+        return Response({"message": "Invalid data"}, status=400)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def readpurchaseOrder(request):
+    po = PurchaseOrder.objects.all()
+    serializer = PurchaseOrderSerializer(po, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def createServiceApproval(request,po_id):
+    po = PurchaseOrder.objects.get(id= po_id)
+    approval = {
+        'invoice_no.' : request.data['invoice no.'],
+        'po_id' :po_id,
+        'number_of_session' : request.data['number_of_session'],
+        'is_approved' : False,
+        'payment_date': None
+    }
+    serializer = ServiceApprovalSerializer(data= approval)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"status": "success", "data": serializer.data}, status=200)
+    else:
+        return Response({"message": "Invalid data"}, status=400)
+
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def readServiceApproval(request):
+    approvals = ServiceApproval.objects.all()
+    serializer = ServiceApprovalSerializer(approvals, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def reject(request, po_id):
+    serviceapproval = ServiceApproval.objects.get(id=po_id)
+    rejection= {
+        'update' :  serviceapproval.is_approved,
+        'reason' : request.data['reason'],
+        'reject_date': None
+    }
