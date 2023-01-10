@@ -10,7 +10,7 @@ from base.models import AdminRequest
 from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
 from base.models import Learner, ServiceApproval
-from base.models import Batch, ServiceApprovalData, DeleteConfirmedSlotsbyAdmin, CoachPrice, ServiceApprovalEntry
+from base.models import Batch, DeleteConfirmedSlotsbyAdmin, CoachPrice, PurchaseOrder  #ServiceApprovalData,ServiceApprovalEntry
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -184,10 +184,10 @@ class BatchSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ServiceApprovalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ServiceApproval
-        fields = '__all__'
+# class ServiceApprovalSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ServiceApproval
+#         fields = '__all__'
 
 
 class ServiceApprovalDepthOneSerializer(serializers.ModelSerializer):
@@ -197,10 +197,10 @@ class ServiceApprovalDepthOneSerializer(serializers.ModelSerializer):
         depth = 1
 
 
-class ServiceApprovalEntrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ServiceApprovalEntry
-        fields = '__all__'
+# class ServiceApprovalEntrySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ServiceApprovalEntry
+#         fields = '__all__'
 
 
 class DeletedConfirmedSlotsSerializer(serializers.ModelSerializer):
@@ -228,3 +228,15 @@ class LearnerSerializerInDepthSerializer(serializers.ModelSerializer):
         model = LeanerConfirmedSlots
         fields = '__all__'
         depth = 2
+
+class PurchaseOrderSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PurchaseOrder
+        fields = '__all__'
+
+
+class ServiceApprovalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceApproval
+        fields = '__all__'

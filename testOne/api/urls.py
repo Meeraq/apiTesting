@@ -70,5 +70,9 @@ urlpatterns = [
          views.DeletedConfirmSlots),
     path('get-slots-of-batch-and-coach/<str:batch>/<str:coach_id>/',
          views.getSlotByBatchAndCoach),
-    path('get-batches-by-coach/<str:coach_id>', views.getBatchesOfCoach)
+    path('get-batches-by-coach/<str:coach_id>', views.getBatchesOfCoach),
+    path('purchase-order/', views.createPurchaseOrder),
+    path('service-approval/', views.createServiceApproval),
+    path('reject-service-approval/', views.reject),
+    path('read-service-approval/', views.reject)
 ]

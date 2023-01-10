@@ -1,54 +1,67 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <title>ADD EVENT</title>
     <style>
-      .larger-text {
-        font-size: 32px;
-      }
-
-      .session-details span {
-        font-weight: 600;
-      }
-
-      .benifits {
-        font-weight: 600;
-      }
-      .name {
-        text-transform: capitalize;
-      }
+        .larger-text {
+            font-size: 32px;
+        }
+        
+        .session-details span {
+            font-weight: 600;
+        }
+        
+        .benifits {
+            font-weight: 600;
+        }
+        
+        .name {
+            text-transform: capitalize;
+        }
     </style>
-  </head>
+</head>
 
-  <body>
-    <div class="name">Hi {{name}},</div>
+<body>
+    <div class="name">Dear {{name}},</div>
     <br />
-    <span
-      >Your slot is been booked by the {{participant_name}}. Please join the
-      session!.</span
-    ><br />
+    <span>
+      A coaching session with you has been blocked by our Meeraq participant {{participant_name}}.
+    </span>
     <br />
-    <div class="session-details">
-      <div class="data">📅 <span>Date:</span> {{date}}</div>
-      <div class="data">⌚ <span>Time:</span> {{time}}</div>
-      <div class="data">⏱️ <span>Duration:</span> {{duration}}</div>
-      <div class="data">🔗 <span>Link:</span> {{link}}</div>
-    </div>
+    <span>
+      Please double click to manually add the attached calendar invite unto your personal calendar.
+    </span>
     <br />
     <br />
-    <div class="benifits">Benefits of Coaching:</div>
+    <span>
+      At Meeraq, the focus is not only on classroom learning but also on learning retention and implementation. Use your 30 min laser coaching conversation to help your coachee:
+    </span>
     <br />
-    The personal benefits of coaching are wide-ranging and will positively
-    impact your career and life if you engage with your coach on your personal
-    learning road-blocks or inhibitions.
-    <br />
-    <br />
-    Coaching is known to boost confidence, remove biases, improve work
-    performance, build effective communication skills and transform mindsets to
-    a growth powered shift.
-    <br /><br />
-    Happy Session!
-    <br />
-    <img src="https://www.meeraq.com/logo.png?v=4" alt="Meeraq" />
-  </body>
+    <ul>
+
+        <li>
+            Become aware of potential blocks in implementing the learning (belief, values, assumptions etc).
+        </li>
+        <li>
+            What is the plan to overcome the blocks?
+        </li>
+        <li>
+            What is the plan to implement the new learnings?
+        </li>
+        <br />
+        <div class="session-details">
+            <div class="data">📅 <span>Date:</span> {{date}}</div>
+            <div class="data">⌚ <span>Time:</span> {{time}}</div>
+            <div class="data">📒<span>Course Name:</span>{{course}}</div>
+            <div class="data">⏱️ <span>Duration:</span> {{duration}}</div>
+            <div class="data">🔗 <span>Joining Link:</span> {{link}}</div>
+        </div>
+        <br />
+        <br />
+        <div class="benifits">More power to you!</div>
+        <br />
+        <img src="https://www.meeraq.com/logo.png?v=4" alt="Meeraq" />
+</body>
+
 </html>
