@@ -10,7 +10,7 @@ from base.models import AdminRequest
 from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
 from base.models import Learner, ServiceApproval
-from base.models import Batch, DeleteConfirmedSlotsbyAdmin, CoachPrice, PurchaseOrder  #ServiceApprovalData,ServiceApprovalEntry
+from base.models import Batch, DeleteConfirmedSlotsbyAdmin, CoachPrice, PurchaseOrder, Rejected #ServiceApprovalData,ServiceApprovalEntry
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -239,4 +239,10 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 class ServiceApprovalSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceApproval
+        fields = '__all__'
+
+
+class RejectedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rejected
         fields = '__all__'

@@ -72,7 +72,9 @@ urlpatterns = [
          views.getSlotByBatchAndCoach),
     path('get-batches-by-coach/<str:coach_id>', views.getBatchesOfCoach),
     path('purchase-order/', views.createPurchaseOrder),
+    path('read-purchase-order/', views.readpurchaseOrder),
     path('service-approval/', views.createServiceApproval),
+    path('read-service-approval/', views.readServiceApproval),
     path('reject-service-approval/', views.reject),
-    path('read-service-approval/', views.reject)
+    path('read-reject/', views.readRejected)
 ]

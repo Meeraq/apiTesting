@@ -21,7 +21,7 @@ from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots, CoachPrice
 from base.models import Batch, Learner, DeleteConfirmedSlotsbyAdmin, ServiceApproval #ServiceApprovalData  # ServiceApprovalEntry
-from base.models import PurchaseOrder
+from base.models import PurchaseOrder, Rejected
 from .serializers import (
     AdminReqSerializer,
     ServiceApprovalSerializer,
@@ -42,7 +42,12 @@ from .serializers import (
     UserSerializer,
     ProfileSerializer,
     LoginUserSerializer,
-    DeletedConfirmedSlotsSerializer, GetNestedDeletedConfirmedSlotsSerializer, CoachPriceSerializer, EventDepthOneSerializer, PurchaseOrderSerializer
+    DeletedConfirmedSlotsSerializer, 
+    GetNestedDeletedConfirmedSlotsSerializer, 
+    CoachPriceSerializer, 
+    EventDepthOneSerializer, 
+    PurchaseOrderSerializer,
+    RejectedSerializer
 )
 
 import environ
@@ -1914,14 +1919,12 @@ def createServiceApproval(request,po_id):
         return Response({"message": "Invalid data"}, status=400)
 
 
-
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def readServiceApproval(request):
-    approvals = ServiceApproval.objects.all()
-    serializer = ServiceApprovalSerializer(approvals, many=True)
+    approval = ServiceApproval.objects.all()
+    serializer = ServiceApprovalSerializer(approval, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
-
 
 
 @api_view(["POST"])
@@ -1933,3 +1936,10 @@ def reject(request, po_id):
         'reason' : request.data['reason'],
         'reject_date': None
     }
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def readRejected(request):
+    rejects = Rejected.objects.all()
+    serializer = RejectedSerializer(rejects, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
