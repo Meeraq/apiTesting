@@ -72,9 +72,14 @@ urlpatterns = [
          views.getSlotByBatchAndCoach),
     path('get-batches-by-coach/<str:coach_id>', views.getBatchesOfCoach),
     path('purchase-order/', views.createPurchaseOrder),
-    path('read-purchase-order/', views.readpurchaseOrder),
-    path('service-approval/', views.createServiceApproval),
-    path('read-service-approval/', views.readServiceApproval),
+    path('read-purchase-order/', views.getpurchaseOrder),
+    path('service-approval/<str:po_id>/', views.createServiceApproval),
+    path('read-service-approval/', views.getServiceApproval),
     path('reject-service-approval/', views.reject),
-    path('read-reject/', views.readRejected)
+    path('read-reject/', views.getRejected),
+    path('edit-service-approval/', views.editServiceapproval),
+    path('get-purchased-order-by-coach', views.getPurchaseOrderByCoach),
+    path('get-service-approval-by-po/', views.getServiceApprovalByPO),
+    path('get-service-approval-by-coach/', views.getServiceApprovalBycoach),
+    path('get-service-approval-type/<str:type>/', views.getServiceApprovalbyType)
 ]

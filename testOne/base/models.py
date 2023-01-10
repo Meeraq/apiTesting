@@ -229,7 +229,7 @@ class PurchaseOrder(models.Model):
     po_no = models.CharField(max_length=100, default=0)
     rate = models.IntegerField(blank=False, default=0)
     number_of_session = models.IntegerField(blank=False)
-    number_of_session_consumed = models.IntegerField(blank=False)
+    number_of_session_consumed = models.IntegerField(blank=True,default=0)
     batch = models.CharField(max_length=100)
     coach = models.ForeignKey(Coach,null=True ,on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -244,11 +244,12 @@ class Rejected(models.Model):
 # model of service approval
 class ServiceApproval(models.Model):
     invoice_number = models.CharField(max_length=100, default=0)
-    po_id = models.ForeignKey(PurchaseOrder,null=True ,on_delete=models.SET_NULL)
+    po = models.ForeignKey(PurchaseOrder,null=True ,on_delete=models.SET_NULL)
     number_of_session = models.IntegerField(blank=False)
     is_approved = models.BooleanField(default=False, blank=True)
+    response_date =  models.DateField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now_add=True)
-    payment_date = models.DateTimeField(null=True, blank=True)
+    payment_date = models.DateField(null=True, blank=True)
     rejected = models.ManyToManyField(
         Rejected, related_name='confirmed_coach', blank=True)
 

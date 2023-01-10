@@ -1872,28 +1872,30 @@ def getBatchesOfCoach(request, coach_id):
 #post api for PO 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def createPurchaseOrder(request):                                            
-    po = {
-            'po_id': request.data['po_id'],
-            'rate' : request.data['rate'],
-            'no._of_session' : request.data['no._of_session'],
-            'no._of_session_consumed' : request.data['no._of_session_consumed'],
-            'batch' : request.data['batch'],
-            'coach' : request.data['coach']
-    }                                                                        
-    serializer = PurchaseOrderSerializer(data= po)
+def createPurchaseOrder(request):
+    for item in request.data: 
+        po = {
+            'po_no': item['po_no'],
+            'rate' : item['rate'],
+            'no._of_session': item['no._of_session'],
+            # 'no._of_session_consumed' : item['no._of_session_consumed'],
+            'batch' : item['batch'],
+            'coach' : item['coach']
+        }                                                                        
+        serializer = PurchaseOrderSerializer(data= po)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            print(serializer.errors)
+            return Response({"message": "Invalid data"}, status=400)
+    return Response({"status": "success", "data": serializer.data}, status=200)
 
-    if serializer.is_valid():
-        serializer.save()
-        return Response({"status": "success", "data": serializer.data}, status=200)
-    else:
-        print(serializer.errors)
-        return Response({"message": "Invalid data"}, status=400)
+    
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def readpurchaseOrder(request):
+def getpurchaseOrder(request):
     po = PurchaseOrder.objects.all()
     serializer = PurchaseOrderSerializer(po, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
@@ -1902,26 +1904,47 @@ def readpurchaseOrder(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def createServiceApproval(request,po_id):
-    po = PurchaseOrder.objects.get(id= po_id)
+    # po = PurchaseOrder.objects.get(id= po_id)
     approval = {
         'invoice_no.' : request.data['invoice no.'],
         'po_id' :po_id,
         'number_of_session' : request.data['number_of_session'],
         'is_approved' : False,
-        'payment_date': None
+        'payment_date': None,
+        'response_date': None
     }
     serializer = ServiceApprovalSerializer(data= approval)
-
     if serializer.is_valid():
         serializer.save()
         return Response({"status": "success", "data": serializer.data}, status=200)
     else:
-        return Response({"message": "Invalid data"}, status=400)
+        return Response({"message": str(serializer.errors)}, status=400)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def editServiceapproval(request,_id):
+    service = ServiceApproval.objects.get(id=_id)
+    serializer = ServiceApprovalSerializer(service)
+    approval = {
+        **serializer.data,
+        'invoice_no.' : request.data['invoice no.'],
+        'number_of_session' : request.data['number_of_session']
+    }
+    
+    serializerTwo = ServiceApprovalSerializer(instance=service,data= approval)
+
+    if serializerTwo.is_valid():
+        serializerTwo.save()
+        return Response({"status": "success", "data": serializerTwo.data}, status=200)
+    else:
+        return Response({"message": str(serializerTwo.errors)}, status=400)
+
+
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def readServiceApproval(request):
+def getServiceApproval(request):
     approval = ServiceApproval.objects.all()
     serializer = ServiceApprovalSerializer(approval, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
@@ -1936,10 +1959,54 @@ def reject(request, po_id):
         'reason' : request.data['reason'],
         'reject_date': None
     }
+    serializer = ServiceApprovalSerializer(data=rejection)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"status": "success", "data": serializer.data}, status=200)
+    else:
+        return Response({"message": str(serializer.errors)}, status=400)
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def readRejected(request):
+def getRejected(request):
     rejects = Rejected.objects.all()
     serializer = RejectedSerializer(rejects, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getPurchaseOrderByCoach(request,coach,batch):
+    po= PurchaseOrder.objects.filter(coach= coach, batch= batch)
+    
+    serializer = PurchaseOrderSerializer(po, many=True) #change serilizer
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getServiceApprovalByPO(request, po):
+    existing= ServiceApproval.objects.filter(po=po)
+    serializer = ServiceApprovalSerializer(existing, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getServiceApprovalBycoach(request, coach):
+    existing= ServiceApproval.objects.filter(po__coach=coach)
+    serializer = ServiceApprovalSerializer(existing, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getServiceApprovalbyType(request,type):
+    if type == "approved":
+        service_approvals = ServiceApproval.objects.filter(is_approved = True)     
+    if type == "pending":
+        service_approvals = ServiceApproval.objects.filter(is_approved = False,response_date = None)
+    if type == "rejected":
+        service_approvals = ServiceApproval.objects.filter(is_approved = False).exclude(response_date = None)
+
+    serializer = ServiceApprovalDepthOneSerializer(service_approvals,many=True)
+    return Response({"status": "success", "service_approvals": serializer.data},status = 200)
+    

@@ -246,3 +246,9 @@ class RejectedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rejected
         fields = '__all__'
+
+class EditServiceApprovalSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = ServiceApproval
+            fields = '__all__'
+
