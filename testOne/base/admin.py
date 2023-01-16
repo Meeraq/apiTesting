@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Batch, CoachPrice, Learner, SlotForCoach, AdminRequest, Coach, Profile, ConfirmedSlotsbyCoach, Events, LeanerConfirmedSlots, DeleteConfirmedSlotsbyAdmin,ServiceApproval #ServiceApprovalData #ServiceApprovalEntry
+from .models import Batch, CoachPrice, Learner, SlotForCoach, AdminRequest, Coach, Profile, ConfirmedSlotsbyCoach, Events, LeanerConfirmedSlots, DeleteConfirmedSlotsbyAdmin,ServiceApproval,PurchaseOrder #ServiceApprovalData #ServiceApprovalEntry
 from import_export.admin import ImportExportMixin
 
 admin.site.register(Profile)
@@ -16,7 +16,7 @@ admin.site.register(AdminRequest)
 admin.site.register(DeleteConfirmedSlotsbyAdmin)
 admin.site.register(CoachPrice)
 admin.site.register(ServiceApproval)
-# admin.site.register(ServiceApprovalEntry)
+admin.site.register(PurchaseOrder)
 
 
 class ExelExport(ImportExportMixin, admin.ModelAdmin):

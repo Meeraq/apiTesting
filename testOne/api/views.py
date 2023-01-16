@@ -20,16 +20,19 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots, CoachPrice
-from base.models import Batch, Learner, DeleteConfirmedSlotsbyAdmin, ServiceApproval #ServiceApprovalData  # ServiceApprovalEntry
+# ServiceApprovalData  # ServiceApprovalEntry
+from base.models import Batch, Learner, DeleteConfirmedSlotsbyAdmin, ServiceApproval
 from base.models import PurchaseOrder, Rejected
 from .serializers import (
     AdminReqSerializer,
+    PurchaseOrderDepthOneSerializer,
     ServiceApprovalSerializer,
     CoachPriceSerializer,
     BatchSerializer,
     LearnerSerializerInDepthSerializer,
-    #ServiceApprovalEntrySerializer,
+    # ServiceApprovalEntrySerializer,
     ServiceApprovalDepthOneSerializer,
+    ServiceApprovalDepthTwoSerializer,
     ConfirmedLearnerSerializer,
     ConfirmedSlotsbyCoachSerializer,
     ConfirmedSlotsbyLearnerSerializer,
@@ -42,10 +45,10 @@ from .serializers import (
     UserSerializer,
     ProfileSerializer,
     LoginUserSerializer,
-    DeletedConfirmedSlotsSerializer, 
-    GetNestedDeletedConfirmedSlotsSerializer, 
-    CoachPriceSerializer, 
-    EventDepthOneSerializer, 
+    DeletedConfirmedSlotsSerializer,
+    GetNestedDeletedConfirmedSlotsSerializer,
+    CoachPriceSerializer,
+    EventDepthOneSerializer,
     PurchaseOrderSerializer,
     RejectedSerializer
 )
@@ -1032,6 +1035,21 @@ def getEvents(request):
     return Response({"status": "success", "data": serializer.data, "countOfConfirmedSessionsPerEvent": countOfConfirmedSessionsPerEvent}, status=200)
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getEventsAndSlotsByBatch(request, batch):
+    events = Events.objects.filter(batch=batch)
+    confirmed_sessions = []
+    for event in events:
+        confirmed_sessions_per_event = LeanerConfirmedSlots.objects.filter(
+            event__id=event.id, is_coach_joined="true")
+        confirmed_sessions_per_event = LearnerSerializerInDepthSerializer(
+            confirmed_sessions_per_event, many=True)
+        confirmed_sessions += [*confirmed_sessions_per_event.data]
+    serializer = EventDepthOneSerializer(events, many=True)
+    return Response({'events': serializer.data, 'confirmedSessions': confirmed_sessions}, status=200)
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def editEvents(request, event_id):
@@ -1131,8 +1149,8 @@ def confirmSlotsByLearner(request, slot_id):
     event = Events.objects.get(_id=request.data["event"])
     learners = Learner.objects.filter(
         batch=event.batch, email=request.data["email"])
-    learnerCourse = Learner.objects.get(
-        email= request.data["email"], batch= event.batch)
+    # learnerCourse = Learner.objects.get(
+    #     email=request.data["email"], batch=event.batch)
     # whether learner exist in a batch or not
     if len(learners) == 0:
         return Response({"status": "Error", "reason": "user may have entered different email"}, status=405)
@@ -1278,7 +1296,7 @@ def confirmSlotsByLearner(request, slot_id):
             email_message_coach = render_to_string(
                 "coachmail.html",
                 {"name": coach_data.first_name, "time": start_time_for_mail,
-                    "duration": "30 Min", "date": date, "link": coach_module_link, "participant_name": request.data['name'], "course": learnerCourse.course})
+                    "duration": "30 Min", "date": date, "link": coach_module_link, "participant_name": request.data['name'], "course": "helllo"})
             createIcs(start, end, coach_module_link)
             email_for_coach = EmailMessage(
                 "Meeraq | Coaching Session",
@@ -1709,49 +1727,49 @@ def addServiceApprovalData(request):
     #     return Response({"status": "Bad Request"}, status=400)
 
 
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def approveByFinance(request):
-    today = date.today()
-    ref_id = request.data['ref_id']
-    service_request = ServiceApprovalData.objects.get(
-        ref_id=ref_id)
-    if request.data['is_approved'] == "true":
-        service_data = {
-            "ref_id": ref_id,
-            "fees": service_request.fees,
-            "total_no_of_sessions": service_request.total_no_of_sessions,
-            "generated_date": service_request.generated_date,
-            "generate_for_month": service_request.generate_for_month,
-            "generate_for_year": service_request.generate_for_year,
-            "coach_id": service_request.coach_id.id,
-            "is_approved": "true",
-            "invoice_no": request.data['invoice_no'],
-            "response_by_finance_date": today
-        }
-    else:
-        service_data = {
-            "ref_id": ref_id,
-            "fees": service_request.fees,
-            "total_no_of_sessions": service_request.total_no_of_sessions,
-            "generated_date": service_request.generated_date,
-            "generate_for_month": service_request.generate_for_month,
-            "generate_for_year": service_request.generate_for_year,
-            "coach_id": service_request.coach_id.id,
-            "is_approved": "false",
-            "invoice_no": request.data['invoice_no'],
-            "response_by_finance_date": today,
-            "rejection_reason": request.data['rejection_reason']
-        }
+# @api_view(["POST"])
+# @permission_classes([AllowAny])
+# def approveByFinance(request):
+#     today = date.today()
+#     ref_id = request.data['ref_id']
+#     service_request = ServiceApprovalData.objects.get(
+#         ref_id=ref_id)
+#     if request.data['is_approved'] == "true":
+#         service_data = {
+#             "ref_id": ref_id,
+#             "fees": service_request.fees,
+#             "total_no_of_sessions": service_request.total_no_of_sessions,
+#             "generated_date": service_request.generated_date,
+#             "generate_for_month": service_request.generate_for_month,
+#             "generate_for_year": service_request.generate_for_year,
+#             "coach_id": service_request.coach_id.id,
+#             "is_approved": "true",
+#             "invoice_no": request.data['invoice_no'],
+#             "response_by_finance_date": today
+#         }
+#     else:
+#         service_data = {
+#             "ref_id": ref_id,
+#             "fees": service_request.fees,
+#             "total_no_of_sessions": service_request.total_no_of_sessions,
+#             "generated_date": service_request.generated_date,
+#             "generate_for_month": service_request.generate_for_month,
+#             "generate_for_year": service_request.generate_for_year,
+#             "coach_id": service_request.coach_id.id,
+#             "is_approved": "false",
+#             "invoice_no": request.data['invoice_no'],
+#             "response_by_finance_date": today,
+#             "rejection_reason": request.data['rejection_reason']
+#         }
 
-    serializer = ServiceApprovalSerializer(
-        instance=service_request, data=service_data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response({"status": "success"}, status=201)
-    else:
-        print(serializer.errors)
-        return Response({"status": "Bad Request"}, status=400)
+#     serializer = ServiceApprovalSerializer(
+#         instance=service_request, data=service_data)
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response({"status": "success"}, status=201)
+#     else:
+#         print(serializer.errors)
+#         return Response({"status": "Bad Request"}, status=400)
 
 
 @api_view(["POST"])
@@ -1869,77 +1887,87 @@ def getBatchesOfCoach(request, coach_id):
     return Response({"batches": batches_completed}, status=200)
 
 
-#post api for PO 
+# post api for PO
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def createPurchaseOrder(request):
-    for item in request.data: 
+    for item in request.data:
         po = {
             'po_no': item['po_no'],
-            'rate' : item['rate'],
-            'no._of_session': item['no._of_session'],
+            'rate': item['rate'],
+            'number_of_session': item['number_of_session'],
             # 'no._of_session_consumed' : item['no._of_session_consumed'],
-            'batch' : item['batch'],
-            'coach' : item['coach']
-        }                                                                        
-        serializer = PurchaseOrderSerializer(data= po)
+            'batch': item['batch'],
+            'coach': item['coach']
+        }
+        serializer = PurchaseOrderSerializer(data=po)
         if serializer.is_valid():
             serializer.save()
         else:
             print(serializer.errors)
             return Response({"message": "Invalid data"}, status=400)
-    return Response({"status": "success", "data": serializer.data}, status=200)
-
-    
+    return Response({"status": "success"}, status=200)
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getpurchaseOrder(request):
     po = PurchaseOrder.objects.all()
-    serializer = PurchaseOrderSerializer(po, many=True)
+    serializer = PurchaseOrderDepthOneSerializer(po, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def createServiceApproval(request,po_id):
-    # po = PurchaseOrder.objects.get(id= po_id)
+def createServiceApproval(request, po_id):
     approval = {
-        'invoice_no.' : request.data['invoice no.'],
-        'po_id' :po_id,
-        'number_of_session' : request.data['number_of_session'],
-        'is_approved' : False,
+        'invoice_number': request.data['invoice_number'],
+        'po': po_id,
+        'number_of_session': request.data['number_of_session'],
+        'is_approved': False,
         'payment_date': None,
         'response_date': None
     }
-    serializer = ServiceApprovalSerializer(data= approval)
+    serializer = ServiceApprovalSerializer(data=approval)
     if serializer.is_valid():
         serializer.save()
+        po = PurchaseOrder.objects.get(id=po_id)
+        po.number_of_session_consumed = po.number_of_session_consumed + \
+            int(request.data['number_of_session'])
+        po.save()
         return Response({"status": "success", "data": serializer.data}, status=200)
     else:
         return Response({"message": str(serializer.errors)}, status=400)
 
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def editServiceapproval(request,_id):
-    service = ServiceApproval.objects.get(id=_id)
-    serializer = ServiceApprovalSerializer(service)
-    approval = {
-        **serializer.data,
-        'invoice_no.' : request.data['invoice no.'],
-        'number_of_session' : request.data['number_of_session']
-    }
-    
-    serializerTwo = ServiceApprovalSerializer(instance=service,data= approval)
-
-    if serializerTwo.is_valid():
-        serializerTwo.save()
-        return Response({"status": "success", "data": serializerTwo.data}, status=200)
-    else:
-        return Response({"message": str(serializerTwo.errors)}, status=400)
-
-
+def editServiceapproval(request, id):
+    service_approval = ServiceApproval.objects.get(id=id)
+    purchase_order = PurchaseOrder.objects.get(id=service_approval.po.id)
+    # updating number of consumed session in po
+    purchase_order.number_of_session_consumed = purchase_order.number_of_session_consumed - \
+        service_approval.number_of_session + request.data['number_of_session']
+    # ----------
+    service_approval.number_of_session = request.data['number_of_session']
+    service_approval.invoice_number = request.data['invoice_number']
+    service_approval.response_date = None
+    service_approval.is_approved = False
+    purchase_order.save()
+    service_approval.save()
+    return Response({}, status=200)
+    # serializer = ServiceApprovalSerializer(service)
+    # approval = {
+    #     **serializer.data,
+    #     'invoice_no.': request.data['invoice no.'],
+    #     'number_of_session': request.data['number_of_session']
+    # }
+    # serializerTwo = ServiceApprovalSerializer(instance=service, data=approval)
+    # if serializerTwo.is_valid():
+    #     serializerTwo.save()
+    #     return Response({"status": "success", "data": serializerTwo.data}, status=200)
+    # else:
+    #     return Response({"message": str(serializerTwo.errors)}, status=400)
 
 
 @api_view(["GET"])
@@ -1952,20 +1980,59 @@ def getServiceApproval(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def reject(request, po_id):
-    serviceapproval = ServiceApproval.objects.get(id=po_id)
-    rejection= {
-        'update' :  serviceapproval.is_approved,
-        'reason' : request.data['reason'],
-        'reject_date': None
+def rejectServiceApproval(request, id):
+    serviceApproval = ServiceApproval.objects.get(id=id)
+    today = datetime.now()
+    rejection = {
+        'reason': request.data['rejection_reason'],
+        'date': today
     }
-    serializer = ServiceApprovalSerializer(data=rejection)
-
+    serializer = RejectedSerializer(data=rejection)
     if serializer.is_valid():
-        serializer.save()
+        rejected = serializer.save()
+        serviceApproval.rejected.add(rejected.id)
+        if serviceApproval.is_approved == True:
+            print("hello,", serviceApproval.number_of_session)
+            po = PurchaseOrder.objects.get(id=serviceApproval.po.id)
+            po.number_of_session_approved = po.number_of_session_approved - \
+                serviceApproval.number_of_session
+            po.save()
+        serviceApproval.response_date = today
+        serviceApproval.is_approved = False
+        serviceApproval.save()
         return Response({"status": "success", "data": serializer.data}, status=200)
     else:
+        print(serializer.errors)
         return Response({"message": str(serializer.errors)}, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def approveServiceApproval(request, id):
+    service_approval = ServiceApproval.objects.get(id=id)
+    po = PurchaseOrder.objects.get(id=service_approval.po.id)
+    today = date.today()
+    if service_approval.is_approved == True:
+        # service approval is already approved
+        return Response({}, status=201)
+    service_approval.is_approved = True
+    service_approval.response_date = today
+    po.number_of_session_approved = po.number_of_session_approved + \
+        service_approval.number_of_session
+    po.save()
+    service_approval.save()
+    return Response({}, status=201)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def approveServiceApprovalByFinance(request, id):
+    service_approval = ServiceApproval.objects.get(id=id)
+    date = datetime.strptime(request.data['date'], "%Y-%m-%d").date()
+    service_approval.payment_date = date
+    service_approval.save()
+    return Response({}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -1977,36 +2044,45 @@ def getRejected(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getPurchaseOrderByCoach(request,coach,batch):
-    po= PurchaseOrder.objects.filter(coach= coach, batch= batch)
-    
-    serializer = PurchaseOrderSerializer(po, many=True) #change serilizer
+def getPurchaseOrderByCoach(request, coach_id):
+    po = PurchaseOrder.objects.filter(coach__id=coach_id)
+    serializer = PurchaseOrderDepthOneSerializer(
+        po, many=True)  # change serilizer
     return Response({"status": "success", "data": serializer.data}, status=200)
+
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getServiceApprovalByPO(request, po):
-    existing= ServiceApproval.objects.filter(po=po)
+    existing = ServiceApproval.objects.filter(po=po)
     serializer = ServiceApprovalSerializer(existing, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getServiceApprovalBycoach(request, coach):
-    existing= ServiceApproval.objects.filter(po__coach=coach)
-    serializer = ServiceApprovalSerializer(existing, many=True)
+def getServiceApprovalBycoach(request, coach_id):
+    existing = ServiceApproval.objects.filter(po__coach=coach_id)
+    serializer = ServiceApprovalDepthOneSerializer(existing, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def getServiceApprovalbyType(request,type):
-    if type == "approved":
-        service_approvals = ServiceApproval.objects.filter(is_approved = True)     
-    if type == "pending":
-        service_approvals = ServiceApproval.objects.filter(is_approved = False,response_date = None)
-    if type == "rejected":
-        service_approvals = ServiceApproval.objects.filter(is_approved = False).exclude(response_date = None)
-
-    serializer = ServiceApprovalDepthOneSerializer(service_approvals,many=True)
-    return Response({"status": "success", "service_approvals": serializer.data},status = 200)
-    
+def getServiceApprovalbyType(request, type):
+    if type == "APPROVED":
+        service_approvals = ServiceApproval.objects.filter(is_approved=True)
+    if type == "PENDING":
+        service_approvals = ServiceApproval.objects.filter(
+            is_approved=False, response_date=None)
+    if type == "REJECTED":
+        service_approvals = ServiceApproval.objects.filter(
+            is_approved=False).exclude(response_date=None)
+    if type == "PAID":
+        service_approvals = ServiceApproval.objects.all().exclude(payment_date=None)
+    if type == "PAYMENT_PENDING":
+        service_approvals = ServiceApproval.objects.filter(
+            is_approved=True, payment_date=None)
+    serializer = ServiceApprovalDepthTwoSerializer(
+        service_approvals, many=True)
+    return Response({"status": "success", "service_approvals": serializer.data}, status=200)
