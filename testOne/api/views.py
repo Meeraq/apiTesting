@@ -1891,6 +1891,12 @@ def getBatchesOfCoach(request, coach_id):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def createPurchaseOrder(request):
+    # checking whether po numbers are unique or not
+    existing_po_list = []
+    for item in request.data:
+        existing_po_list = PurchaseOrder.objects.filter(po_no=item['po_no'])
+        if len(existing_po_list) == 0:
+            return Response({"status": "Duplicate PO number"}, status=401)
     for item in request.data:
         po = {
             'po_no': item['po_no'],
