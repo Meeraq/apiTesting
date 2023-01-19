@@ -1895,7 +1895,7 @@ def createPurchaseOrder(request):
     existing_po_list = []
     for item in request.data:
         existing_po_list = PurchaseOrder.objects.filter(po_no=item['po_no'])
-        if len(existing_po_list) == 0:
+        if len(existing_po_list) > 0:
             return Response({"status": "Duplicate PO number"}, status=401)
     for item in request.data:
         po = {
