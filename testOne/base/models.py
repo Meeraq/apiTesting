@@ -136,6 +136,41 @@ class Events(models.Model):
         return self.name
 
 
+class PurchaseOrder(models.Model):
+    po_no = models.CharField(max_length=100, default=0)
+    rate = models.IntegerField(blank=False, default=0)
+    number_of_session = models.IntegerField(blank=False)
+    number_of_session_consumed = models.IntegerField(blank=True, default=0)
+    number_of_session_approved = models.BigIntegerField(blank=True, default=0)
+    # batch = models.ForeignKey(Batch, null=True, on_delete=models.SET_NULL)
+    coach = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
+    valid_till = models.DateField()
+    status = models.CharField(max_length=100, default="OPEN")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+
+# model of rejected
+
+
+class Rejected(models.Model):
+    reason = models.CharField(max_length=100)
+    date = models.DateTimeField(null=True, blank=True)
+
+# model of service approval
+
+
+class ServiceApproval(models.Model):
+    invoice_number = models.CharField(max_length=100, default=0)
+    po = models.ForeignKey(PurchaseOrder, null=True, on_delete=models.SET_NULL)
+    number_of_session = models.IntegerField(blank=False)
+    is_approved = models.BooleanField(default=False, blank=True)
+    response_date = models.DateField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+    payment_date = models.DateField(null=True, blank=True)
+    rejected = models.ManyToManyField(
+        Rejected, related_name='rejected', blank=True)
+
+
 class LeanerConfirmedSlots(models.Model):
     name = models.CharField(max_length=200, default=" ")
     email = models.EmailField()
@@ -146,6 +181,8 @@ class LeanerConfirmedSlots(models.Model):
                              null=True, on_delete=models.SET_NULL)
     event = models.ForeignKey(Events, null=True, on_delete=models.SET_NULL)
     status = models.CharField(max_length=200, blank=True, default='null')
+    service_approval = models.ForeignKey(
+        ServiceApproval, null=True,blank=True, on_delete=models.SET_NULL)
     is_coach_joined = models.CharField(
         max_length=100, blank=True, default='null')
     is_learner_joined = models.CharField(
@@ -225,34 +262,3 @@ class Batch(models.Model):
 
 
 # model of purchase order
-class PurchaseOrder(models.Model):
-    po_no = models.CharField(max_length=100, default=0)
-    rate = models.IntegerField(blank=False, default=0)
-    number_of_session = models.IntegerField(blank=False)
-    number_of_session_consumed = models.IntegerField(blank=True, default=0)
-    number_of_session_approved = models.BigIntegerField(blank=True, default=0)
-    batch = models.ForeignKey(Batch, null=True, on_delete=models.SET_NULL)
-    coach = models.ForeignKey(Coach, null=True, on_delete=models.SET_NULL)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
-
-# model of rejected
-
-
-class Rejected(models.Model):
-    reason = models.CharField(max_length=100)
-    date = models.DateTimeField(null=True, blank=True)
-
-# model of service approval
-
-
-class ServiceApproval(models.Model):
-    invoice_number = models.CharField(max_length=100, default=0)
-    po = models.ForeignKey(PurchaseOrder, null=True, on_delete=models.SET_NULL)
-    number_of_session = models.IntegerField(blank=False)
-    is_approved = models.BooleanField(default=False, blank=True)
-    response_date = models.DateField(null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
-    payment_date = models.DateField(null=True, blank=True)
-    rejected = models.ManyToManyField(
-        Rejected, related_name='rejected', blank=True)

@@ -213,7 +213,7 @@ def addcoach(request):
             # message:
             email_message,
             # from:0
-            "info@meeraq.com",
+            "info@mail.meeraq.com",
             # to:
             [request.data["email"]],
             html_message=email_message,
@@ -1892,26 +1892,56 @@ def getBatchesOfCoach(request, coach_id):
 @permission_classes([AllowAny])
 def createPurchaseOrder(request):
     # checking whether po numbers are unique or not
-    existing_po_list = []
-    for item in request.data:
-        existing_po_list = PurchaseOrder.objects.filter(po_no=item['po_no'])
-        if len(existing_po_list) > 0:
-            return Response({"status": "Duplicate PO number"}, status=401)
-    for item in request.data:
-        po = {
-            'po_no': item['po_no'],
-            'rate': item['rate'],
-            'number_of_session': item['number_of_session'],
-            # 'no._of_session_consumed' : item['no._of_session_consumed'],
-            'batch': item['batch'],
-            'coach': item['coach']
-        }
-        serializer = PurchaseOrderSerializer(data=po)
-        if serializer.is_valid():
-            serializer.save()
-        else:
-            print(serializer.errors)
-            return Response({"message": "Invalid data"}, status=400)
+    print(request.data)
+    existing_po_list = PurchaseOrder.objects.filter(
+        po_no=request.data['po_no'])
+    if len(existing_po_list) > 0:
+        return Response({"status": "Duplicate PO number"}, status=401)
+    po = {
+        'po_no': request.data['po_no'],
+        'rate': 500,
+        'number_of_session': request.data['number_of_session'],
+        'coach': request.data['coach'],
+        'valid_till': request.data['valid_till']
+    }
+    serializer = PurchaseOrderSerializer(data=po)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"status": "success"}, status=200)
+    else:
+        print(serializer.errors)
+        return Response({"message": "Invalid data"}, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def editPurchaseOrder(request, po_id):
+    # checking whether po numbers are unique or not
+    po = PurchaseOrder.objects.get(id=po_id)
+    coach = Coach.objects.get(id=request.data['coach'])
+    existing_po_list = PurchaseOrder.objects.filter(
+        po_no=request.data['po_no']).exclude(id=po_id)
+    if len(existing_po_list) > 0:
+        return Response({"status": "Duplicate PO number"}, status=401)
+    po.number_of_session = request.data['number_of_session']
+    po.coach = coach
+    po.valid_till = request.data['valid_till']
+    po.po_no = request.data['po_no']
+    po.save()
+    return Response({"status": "success"}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def updatePurchaseOrderStatus(request, po_id):
+    # checking whether po numbers are unique or not
+    po = PurchaseOrder.objects.get(id=po_id)
+    print(po)
+    if request.data['status'] == 'OPEN' or request.data['status'] == 'CLOSED':
+        po.status = request.data['status']
+        po.save()
+    else:
+        return Response({"status": "Duplicate PO number"}, status=401)
     return Response({"status": "success"}, status=200)
 
 
@@ -1919,16 +1949,59 @@ def createPurchaseOrder(request):
 @permission_classes([AllowAny])
 def getpurchaseOrder(request):
     po = PurchaseOrder.objects.all()
+    today = date.today()
+    for po_item in po:
+        if today > po_item.valid_till:
+            po_item.status = "CLOSED"
+            po_item.save()
+    updated_po = PurchaseOrder.objects.all()
+    serializer = PurchaseOrderDepthOneSerializer(updated_po, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getUninvoicedLearnerConfirmedSlotOfCoach(request, coach_id):
+    slots = LeanerConfirmedSlots.objects.filter(
+        slot__coach_id=coach_id, service_approval=None, is_coach_joined="true")
+    serializer = LearnerSerializerInDepthSerializer(slots, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getLearnerConfirmedSlotsByServiceApproval(request, id):
+    booked_slots = LeanerConfirmedSlots.objects.filter(
+        service_approval__id=id)
+    serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getPurchaseOrderofCoachByStatus(request, status, coach_id):
+    po = PurchaseOrder.objects.filter(coach=coach_id, status=status)
+    today = date.today()
+    if status == "OPEN":
+        for po_item in po:
+            if today > po_item.valid_till:
+                po_item.status = "CLOSED"
+                po_item.save()
+        open_po = PurchaseOrder.objects.filter(coach=coach_id, status="OPEN")
+        open_po_serializer = PurchaseOrderDepthOneSerializer(
+            open_po, many=True)
+        return Response({"status": "success", "data": open_po_serializer.data}, status=200)
     serializer = PurchaseOrderDepthOneSerializer(po, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def createServiceApproval(request, po_id):
+def createServiceApproval(request):
+    po = PurchaseOrder.objects.get(po_no=request.data['po_no'])
     approval = {
         'invoice_number': request.data['invoice_number'],
-        'po': po_id,
+        'po': po.id,
         'number_of_session': request.data['number_of_session'],
         'is_approved': False,
         'payment_date': None,
@@ -1936,11 +2009,17 @@ def createServiceApproval(request, po_id):
     }
     serializer = ServiceApprovalSerializer(data=approval)
     if serializer.is_valid():
-        serializer.save()
-        po = PurchaseOrder.objects.get(id=po_id)
+        service_approval = serializer.save()
+        # updating no. of sessions consumed
         po.number_of_session_consumed = po.number_of_session_consumed + \
             int(request.data['number_of_session'])
         po.save()
+        # adding service approval in learner confirmed slot
+        slot_ids = request.data['slot_ids']
+        for i in range(int(request.data['number_of_session'])):
+            slot = LeanerConfirmedSlots.objects.get(id=slot_ids[i])
+            slot.service_approval = service_approval
+            slot.save()
         return Response({"status": "success", "data": serializer.data}, status=200)
     else:
         return Response({"message": str(serializer.errors)}, status=400)
@@ -1951,9 +2030,25 @@ def createServiceApproval(request, po_id):
 def editServiceapproval(request, id):
     service_approval = ServiceApproval.objects.get(id=id)
     purchase_order = PurchaseOrder.objects.get(id=service_approval.po.id)
+
+    # updating servical approval in learner confirmed slot
+    if int(request.data['number_of_session']) > service_approval.number_of_session:
+        for i in range(int(request.data['number_of_session']) - service_approval.number_of_session):
+            slot = LeanerConfirmedSlots.objects.get(
+                id=request.data['slot_ids'][i])
+            slot.service_approval = service_approval
+            slot.save()
+    if int(request.data['number_of_session']) < service_approval.number_of_session:
+        for i in range(service_approval.number_of_session - int(request.data['number_of_session'])):
+            slot = LeanerConfirmedSlots.objects.get(
+                id=request.data['invoiced_slot_ids'][i])
+            slot.service_approval = None
+            slot.save()
+
     # updating number of consumed session in po
     purchase_order.number_of_session_consumed = purchase_order.number_of_session_consumed - \
-        service_approval.number_of_session + request.data['number_of_session']
+        service_approval.number_of_session + \
+        int(request.data['number_of_session'])
     # ----------
     service_approval.number_of_session = request.data['number_of_session']
     service_approval.invoice_number = request.data['invoice_number']
@@ -1989,6 +2084,7 @@ def getServiceApproval(request):
 def rejectServiceApproval(request, id):
     serviceApproval = ServiceApproval.objects.get(id=id)
     today = datetime.now()
+    today_date = date.today()
     rejection = {
         'reason': request.data['rejection_reason'],
         'date': today
@@ -1998,8 +2094,9 @@ def rejectServiceApproval(request, id):
         rejected = serializer.save()
         serviceApproval.rejected.add(rejected.id)
         if serviceApproval.is_approved == True:
-            print("hello,", serviceApproval.number_of_session)
             po = PurchaseOrder.objects.get(id=serviceApproval.po.id)
+            if today_date < po.valid_till:
+                po.status = "OPEN"
             po.number_of_session_approved = po.number_of_session_approved - \
                 serviceApproval.number_of_session
             po.save()
@@ -2023,11 +2120,26 @@ def approveServiceApproval(request, id):
         return Response({}, status=201)
     service_approval.is_approved = True
     service_approval.response_date = today
+    # updating PO status if all sessions are consumed
+    if po.number_of_session == po.number_of_session_approved + service_approval.number_of_session:
+        po.status = "CLOSED"
+        # updating number of sessions approved in PO
     po.number_of_session_approved = po.number_of_session_approved + \
         service_approval.number_of_session
     po.save()
     service_approval.save()
     return Response({}, status=201)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def updateSessionAttendance(request, slot_id):
+    print(request.data, slot_id)
+    slot = LeanerConfirmedSlots.objects.get(id=slot_id)
+    slot.is_coach_joined = request.data['coach']
+    slot.is_learner_joined = request.data['learner']
+    slot.save()
+    return Response({}, status=200)
 
 
 @api_view(["POST"])
@@ -2052,8 +2164,34 @@ def getRejected(request):
 @permission_classes([AllowAny])
 def getPurchaseOrderByCoach(request, coach_id):
     po = PurchaseOrder.objects.filter(coach__id=coach_id)
+    today = date.today()
+    for po_item in po:
+        if today > po_item.valid_till:
+            po_item.status = "CLOSED"
+            po_item.save()
+    updated_po = PurchaseOrder.objects.filter(coach__id=coach_id)
     serializer = PurchaseOrderDepthOneSerializer(
-        po, many=True)  # change serilizer
+        updated_po, many=True)  # change serilizer
+    return Response({"status": "success", "data": serializer.data}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getPurchaseOrderByStatus(request, status):
+    po = PurchaseOrder.objects.filter(status=status)
+    today = date.today()
+    if status == "OPEN":
+        for po_item in po:
+            if today > po_item.valid_till:
+                po_item.status = "CLOSED"
+                po_item.save()
+        open_po = PurchaseOrder.objects.filter(status="OPEN")
+        open_po_serializer = PurchaseOrderDepthOneSerializer(
+            open_po, many=True)
+        return Response({"status": "success", "data": open_po_serializer.data}, status=200)
+
+    serializer = PurchaseOrderDepthOneSerializer(
+        po, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
