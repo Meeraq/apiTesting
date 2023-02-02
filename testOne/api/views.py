@@ -1964,7 +1964,13 @@ def getpurchaseOrder(request):
 def getUninvoicedLearnerConfirmedSlotOfCoach(request, coach_id):
     slots = LeanerConfirmedSlots.objects.filter(
         slot__coach_id=coach_id, service_approval=None, is_coach_joined="true")
-    serializer = LearnerSerializerInDepthSerializer(slots, many=True)
+    res = []
+    for slot in slots:
+        coach_price = slot.event.coach_price.get(coach=coach_id)
+        price = coach_price.price
+        if price != 0:
+            res.append(slot)
+    serializer = LearnerSerializerInDepthSerializer(res, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
