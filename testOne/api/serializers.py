@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 
 from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
-from base.models import AdminRequest
+from base.models import AdminRequest, StatusUpdateRequest
 from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
 from base.models import Learner, ServiceApproval
@@ -251,17 +251,20 @@ class ServiceApprovalSerializer(serializers.ModelSerializer):
         model = ServiceApproval
         fields = '__all__'
 
+
 class ServiceApprovalDepthOneSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceApproval
         fields = '__all__'
         depth = 1
 
+
 class ServiceApprovalDepthTwoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceApproval
         fields = '__all__'
         depth = 2
+
 
 class RejectedSerializer(serializers.ModelSerializer):
     class Meta:
@@ -273,3 +276,10 @@ class EditServiceApprovalSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceApproval
         fields = '__all__'
+
+
+class StatusUpdateRequestDepthTwoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StatusUpdateRequest
+        fields = '__all__'
+        depth = 2

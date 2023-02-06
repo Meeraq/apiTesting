@@ -22,8 +22,9 @@ from base.models import Events
 from base.models import LeanerConfirmedSlots, CoachPrice
 # ServiceApprovalData  # ServiceApprovalEntry
 from base.models import Batch, Learner, DeleteConfirmedSlotsbyAdmin, ServiceApproval
-from base.models import PurchaseOrder, Rejected
+from base.models import PurchaseOrder, Rejected, StatusUpdateRequest
 from .serializers import (
+    StatusUpdateRequestDepthTwoSerializer,
     AdminReqSerializer,
     PurchaseOrderDepthOneSerializer,
     ServiceApprovalSerializer,
@@ -2028,7 +2029,7 @@ def getAllPurchaseOrders(request):
 def createServiceApproval(request):
     po = PurchaseOrder.objects.get(po_no=request.data['po_no'])
     lastServiceApproval = ServiceApproval.objects.order_by("-id").first()
-    print(lastServiceApproval.id)
+    # print(lastServiceApproval.id)
     approval = {
         # 'invoice_number': request.data['invoice_number'],
         'po': po.id,
@@ -2269,3 +2270,44 @@ def getServiceApprovalbyType(request, type):
     serializer = ServiceApprovalDepthTwoSerializer(
         service_approvals, many=True)
     return Response({"status": "success", "service_approvals": serializer.data}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def requestStatusUpdate(request):
+    learner_confirmed_slot = LeanerConfirmedSlots.objects.get(
+        id=request.data['learnerConfirmedSlot'])
+    status_update_request = StatusUpdateRequest(learner_confirmed_slot=learner_confirmed_slot,
+                                                status='PENDING',
+                                                requested_status=request.data['requested_status'])
+    learner_confirmed_slot.status_update_request="PENDING"
+    learner_confirmed_slot.requested_status = request.data['requested_status']
+    learner_confirmed_slot.save()
+    status_update_request.save()
+    return Response({"status": "success"}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getStatusUpdateRequests(request):
+    status_update_requests = StatusUpdateRequest.objects.all()
+    serializer = StatusUpdateRequestDepthTwoSerializer(
+        status_update_requests, many=True)
+    # if serializer.is_valid():
+    return Response({"message": "success", 'data': serializer.data}, status=200)
+    # else:
+    #     print(serializer.errors)
+    #     return Response({'message': 'failed'}, 400)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def updateSessionStatusRequest(request,id):
+    status_update_request = StatusUpdateRequest.objects.get(id=id)
+    slot = status_update_request.learner_confirmed_slot
+    slot.status_update_request="UPDATED"
+    slot.is_coach_joined = request.data['coach']
+    slot.is_learner_joined = request.data['learner']
+    slot.save()
+    status_update_request.status = "UPDATED"
+    status_update_request.save()
+    return Response({}, status=200)

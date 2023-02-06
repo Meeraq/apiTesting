@@ -104,5 +104,9 @@ urlpatterns = [
     path('get-service-approval-by-type/<str:type>/',
          views.getServiceApprovalbyType),
     path('update-session-attendance/<str:slot_id>/',
-         views.updateSessionAttendance)
+         views.updateSessionAttendance),
+    path('request-status-update/', views.requestStatusUpdate),
+    path('get-status-update-requests/', views.getStatusUpdateRequests),
+   	path('update-session-status-request/<str:id>/',
+   	     views.updateSessionStatusRequest)
 ]

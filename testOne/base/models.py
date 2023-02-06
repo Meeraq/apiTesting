@@ -184,15 +184,26 @@ class LeanerConfirmedSlots(models.Model):
     event = models.ForeignKey(Events, null=True, on_delete=models.SET_NULL)
     status = models.CharField(max_length=200, blank=True, default='null')
     service_approval = models.ForeignKey(
-        ServiceApproval, null=True,blank=True, on_delete=models.SET_NULL)
+        ServiceApproval, null=True, blank=True, on_delete=models.SET_NULL)
     is_coach_joined = models.CharField(
         max_length=100, blank=True, default='null')
     is_learner_joined = models.CharField(
         max_length=100, blank=True, default='null')
     is_reschedule = models.BooleanField(default=False, blank=True)
+    status_update_request = models.CharField(
+        max_length=200, default="", blank=True)
+    requested_status = models.CharField(max_length=200, default="", blank=True)
 
     def __str__(self):
         return self.name
+
+
+class StatusUpdateRequest(models.Model):
+    learner_confirmed_slot = models.ForeignKey(LeanerConfirmedSlots,
+                                               null=True, on_delete=models.SET_NULL)
+    status = models.CharField(max_length=200, default='')
+    requested_status = models.CharField(max_length=200, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class DeleteConfirmedSlotsbyAdmin(models.Model):
