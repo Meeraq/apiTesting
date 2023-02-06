@@ -92,6 +92,8 @@ urlpatterns = [
          views.getPurchaseOrderByStatus),
     path('get-purchase-order-of-coach-by-status/<str:status>/<str:coach_id>/',
          views.getPurchaseOrderofCoachByStatus),
+    path('get-all-purchase-orders/',
+         views.getAllPurchaseOrders),
     path('get-uninvoiced-learner-confirmed-slots/<str:coach_id>/',
          views.getUninvoicedLearnerConfirmedSlotOfCoach),
     path('get-learner-confirmed-slots-by-service-approval/<str:id>/',

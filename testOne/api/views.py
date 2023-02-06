@@ -1897,6 +1897,13 @@ def createPurchaseOrder(request):
         po_no=request.data['po_no'])
     if len(existing_po_list) > 0:
         return Response({"status": "Duplicate PO number"}, status=401)
+
+    # check for the existing open PO here
+    open_po_of_coach = PurchaseOrder.objects.filter(
+        coach=request.data['coach'], status="OPEN")
+    if len(open_po_of_coach) > 0:
+        return Response({"status": "Open PO already exists."}, status=400)
+
     po = {
         'po_no': request.data['po_no'],
         'rate': 500,
@@ -1979,7 +1986,7 @@ def getUninvoicedLearnerConfirmedSlotOfCoach(request, coach_id):
 def getLearnerConfirmedSlotsByServiceApproval(request, id):
     booked_slots = LeanerConfirmedSlots.objects.filter(
         service_approval__id=id)
-    serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
+    serializer = LearnerSerializerInDepthSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
@@ -2001,12 +2008,29 @@ def getPurchaseOrderofCoachByStatus(request, status, coach_id):
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getAllPurchaseOrders(request):
+    po = PurchaseOrder.objects.all()
+    today = date.today()
+    for po_item in po:
+        if today > po_item.valid_till:
+            po_item.status = "CLOSED"
+            po_item.save()
+    po = PurchaseOrder.objects.filter()
+    po_serializer = PurchaseOrderDepthOneSerializer(
+        po, many=True)
+    return Response({"status": "success", "data": po_serializer.data}, status=200)
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def createServiceApproval(request):
     po = PurchaseOrder.objects.get(po_no=request.data['po_no'])
+    lastServiceApproval = ServiceApproval.objects.order_by("-id").first()
+    print(lastServiceApproval.id)
     approval = {
-        'invoice_number': request.data['invoice_number'],
+        # 'invoice_number': request.data['invoice_number'],
         'po': po.id,
         'number_of_session': request.data['number_of_session'],
         'is_approved': False,
@@ -2016,6 +2040,14 @@ def createServiceApproval(request):
     serializer = ServiceApprovalSerializer(data=approval)
     if serializer.is_valid():
         service_approval = serializer.save()
+        # adding req id
+        now = datetime.now()
+        intitial_format = 'SR/'
+        formatted_number = str(service_approval.id).zfill(6)
+        month_and_year = now.strftime("%m/%y")
+        req_id = intitial_format + month_and_year + '/' + formatted_number
+        service_approval.req_id = req_id
+        service_approval.save()
         # updating no. of sessions consumed
         po.number_of_session_consumed = po.number_of_session_consumed + \
             int(request.data['number_of_session'])
@@ -2057,7 +2089,7 @@ def editServiceapproval(request, id):
         int(request.data['number_of_session'])
     # ----------
     service_approval.number_of_session = request.data['number_of_session']
-    service_approval.invoice_number = request.data['invoice_number']
+    # service_approval.invoice_number = request.data['invoice_number']
     service_approval.response_date = None
     service_approval.is_approved = False
     purchase_order.save()
@@ -2153,6 +2185,7 @@ def updateSessionAttendance(request, slot_id):
 def approveServiceApprovalByFinance(request, id):
     service_approval = ServiceApproval.objects.get(id=id)
     date = datetime.strptime(request.data['date'], "%Y-%m-%d").date()
+    service_approval.invoice_number = request.data['invoice_no']
     service_approval.payment_date = date
     service_approval.save()
     return Response({}, status=200)

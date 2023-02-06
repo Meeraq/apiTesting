@@ -160,12 +160,14 @@ class Rejected(models.Model):
 
 
 class ServiceApproval(models.Model):
-    invoice_number = models.CharField(max_length=100, default=0)
+    req_id = models.CharField(max_length=100, default="")
+    invoice_number = models.CharField(max_length=100, default="")
     po = models.ForeignKey(PurchaseOrder, null=True, on_delete=models.SET_NULL)
     number_of_session = models.IntegerField(blank=False)
     is_approved = models.BooleanField(default=False, blank=True)
     response_date = models.DateField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     payment_date = models.DateField(null=True, blank=True)
     rejected = models.ManyToManyField(
         Rejected, related_name='rejected', blank=True)
