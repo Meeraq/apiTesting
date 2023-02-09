@@ -1516,7 +1516,7 @@ def DeletedSession(request):
 @permission_classes([AllowAny])
 def getLearnerConfirmedSlotsByCoachId(request, coach_id):
     booked_slots = LeanerConfirmedSlots.objects.filter(slot__coach_id=coach_id)
-    serializer = ConfirmedLearnerSerializer(booked_slots, many=True)
+    serializer = LearnerSerializerInDepthSerializer(booked_slots, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
