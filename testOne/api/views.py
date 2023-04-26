@@ -36,6 +36,7 @@ from .serializers import (
     UserSerializer,
     ProfileSerializer,
 )
+from testOne import settings
 
 import environ
 env = environ.Env()
@@ -196,7 +197,7 @@ def addcoach(request):
             # message:
             email_message,
             # from:0
-            "info@meeraq.com",
+            settings.DEFAULT_FROM_EMAIL,
             # to:
             [request.data["email"]],
             html_message=email_message,
@@ -650,7 +651,7 @@ def makeSlotRequest(request):
             # message:
             email_message,
             # from:0
-            "info@meeraq.com",
+            settings.DEFAULT_FROM_EMAIL,
             # to:
             [single_coach.email],
             html_message=email_message,
@@ -1157,7 +1158,7 @@ def confirmSlotsByLearner(request, slot_id):
             email = EmailMessage(
                 "Meeraq | Coaching Session",
                 email_message_learner,
-                "info@meeraq.com",  # from email address
+                settings.DEFAULT_FROM_EMAIL,  # from email address
                 [request.data["email"]],  # to email address
                 [coach_data.email],  # bcc email address
                 # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
@@ -1263,7 +1264,7 @@ def deleteConfirmSlotsAdmin(request, slot_id):
     email = EmailMessage(
         "Meeraq | Canceled Coaching Session",
         email_message_learner,
-        "info@meeraq.com",
+        settings.DEFAULT_FROM_EMAIL,
         [booked_slots.email, coach.email],
     )
     email.content_subtype = "html"
@@ -1389,4 +1390,3 @@ def exportLearnerConfirmedSlotsByEventId(request, event_id):
         dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="confirmed slots.xls"'
     return response
-
