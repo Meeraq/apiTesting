@@ -19,11 +19,13 @@ class LearnerConfirmedSlotsResource(resources.ModelResource):
     slot__SESSION_START_TIME = fields.Field(
         attribute="slot__SESSION_START_TIME", column_name="Session Time")
     date = fields.Field(column_name="Session Date")
+    status = fields.Field(attribute="status",
+                          column_name="Session Status")
 
     class Meta:
         model = LeanerConfirmedSlots
         fields = ('slot__COACH_NAME', 'name', 'email', 'phone_no',
-                  'organization', 'slot__SESSION_START_TIME')
+                  'organization', 'slot__SESSION_START_TIME', 'status')
 
     def dehydrate_date(self, LeanerConfirmedSlots):
         date = getattr(LeanerConfirmedSlots.slot, "date")
