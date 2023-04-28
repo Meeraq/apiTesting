@@ -631,6 +631,12 @@ def getProfile(request):
 
 # from django.template.loader import get_template
 
+# it take date str in "yyyy-mm-dd" format and returns in "dd-mm-yyyy"
+def formatDate(date):
+    date_obj = datetime.strptime(date, '%Y-%m-%d')
+    formatted_date = date_obj.strftime('%d-%m-%y')
+    return formatted_date
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -638,11 +644,12 @@ def makeSlotRequest(request):
     adminRequest = AdminRequest(
         name=request.data["request_name"], expire_date=request.data["expiry_date"])
     adminRequest.save()
+    formatted_date = formatDate(request.data["expiry_date"])
     for coach in request.data["coach_id"]:
         single_coach = Coach.objects.get(id=coach)
         email_message = render_to_string(
             "makerequest.html", {
-                "expire_date": request.data["expiry_date"], "coach_name": single_coach.first_name}
+                "expire_date": formatted_date, "coach_name": single_coach.first_name}
         )
 
         send_mail(
