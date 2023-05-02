@@ -4,6 +4,7 @@ from django.dispatch import receiver
 from django_rest_passwordreset.signals import reset_password_token_created
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from testOne import settings
 
 
 class Profile(models.Model):
@@ -98,7 +99,7 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
         # message:
         email_plaintext_message,
         # from:0
-        "info@meeraq.com",
+        settings.DEFAULT_FROM_EMAIL,
         # to:
         [reset_password_token.user.email],
         html_message=email_message
