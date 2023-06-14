@@ -1157,7 +1157,7 @@ def confirmSlotsByLearner(request, slot_id):
 
             email_message_learner = render_to_string(
                 "addevent.html",
-                {"name": request.data["name"], "time": start_time_for_mail,
+                {"name": request.data["name"], "time": start_time_for_mail.strftime("%I:%M %p"),
                     "duration": "30 Min", "date": date, "link": coach_data.meet_link},
             )
             meet_link = coach_data.meet_link
