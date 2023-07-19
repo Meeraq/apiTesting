@@ -1167,7 +1167,7 @@ def confirmSlotsByLearner(request, slot_id):
                 email_message_learner,
                 settings.DEFAULT_FROM_EMAIL,  # from email address
                 [request.data["email"]],  # to email address
-                [coach_data.email],  # bcc email address
+                # [coach_data.email],  # bcc email address
                 # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
             )
             email.content_subtype = "html"
@@ -1178,6 +1178,31 @@ def confirmSlotsByLearner(request, slot_id):
                 os.remove("event.ics")
             else:
                 print("file not found")
+                
+            coach_module_link = "https://coach.meeraq.com/"
+            email_message_coach = render_to_string(
+                "coachmail.html",
+                {"name": coach_data.first_name, "time": start_time_for_mail.strftime("%I:%M %p"),
+                    "duration": "30 Min", "date": date, "link": coach_module_link, "participant_name": request.data['name']})
+
+            createIcs(start, end, coach_module_link)
+            email_for_coach = EmailMessage(
+                "Meeraq | Coaching Session",
+                email_message_coach,
+                settings.DEFAULT_FROM_EMAIL,  # from email address
+                [coach_data.email],  # to email address
+                # [coach_data.email],  # bcc email address
+                # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
+            )
+            email_for_coach.content_subtype = "html"
+            email_for_coach.attach_file("event.ics", "text/calendar")
+            email_for_coach.send()
+
+            if os.path.exists("event.ics"):
+                os.remove("event.ics")
+            else:
+                print("file not found")
+            #  code to send mail ends here
             return Response({"status": "success", "data": serializer.data}, status=200)
         else:
             return Response({"status": "Error", "reason": "Slot is already Booked"}, status=408)

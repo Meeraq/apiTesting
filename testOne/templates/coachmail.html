@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ADD EVENT</title>
+    <style>
+        .larger-text {
+            font-size: 32px;
+        }
+        
+        .session-details span {
+            font-weight: 600;
+        }
+        
+        .benifits {
+            font-weight: 600;
+        }
+        
+        .name {
+            text-transform: capitalize;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="name">Dear {{name}},</div>
+    <br />
+    <span>
+      A coaching session with you has been blocked by our Meeraq participant {{participant_name}}.
+    </span>
+    <br />
+    <span>
+      Please double click to manually add the attached calendar invite unto your personal calendar.
+    </span>
+    <br />
+    <br />
+    <span>
+      At Meeraq, the focus is not only on classroom learning but also on learning retention and implementation. Use your 30 min laser coaching conversation to help your coachee:
+    </span>
+    <br />
+    <ul>
+        <li>
+            Become aware of potential blocks in implementing the learning (belief, values, assumptions etc).
+        </li>
+        <li>
+            What is the plan to overcome the blocks?
+        </li>
+        <li>
+            What is the plan to implement the new learnings?
+        </li>
+        <br />
+        <div class="session-details">
+            <div class="data">📅 <span>Date:</span> {{date}}</div>
+            <div class="data">⌚ <span>Time:</span> {{time}}</div>
+            <div class="data">⏱️ <span>Duration:</span> {{duration}}</div>
+            <div class="data">🔗 <span>Joining Link:</span> {{link}}</div>
+        </div>
+        <br />
+        <br />
+        <div class="benifits">More power to you!</div>
+        <br />
+        <img src="https://www.meeraq.com/logo.png?v=4" alt="Meeraq" />
+</body>
+
+</html>
