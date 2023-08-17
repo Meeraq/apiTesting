@@ -157,3 +157,9 @@ class Learner(models.Model):
 
 class Batch(models.Model):
     batch = models.CharField(max_length=200, default=" ", primary_key=True)
+
+
+
+class EmailTemplate(models.Model):
+    title = models.CharField(max_length=100,default="",blank=True)  # Add title field
+    template_data = models.TextField(max_length=200, default="")

@@ -11,6 +11,7 @@ from base.models import Events, LeanerConfirmedSlots
 from base.models import DeleteConfirmedSlotsbyAdmin
 from base.models import Learner
 from base.models import Batch
+from base.models import EmailTemplate
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -161,5 +162,15 @@ class BatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Batch
         fields = '__all__'
+
+
+
+
+
+class EmailTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailTemplate
+        fields = '__all__'
+
 
 

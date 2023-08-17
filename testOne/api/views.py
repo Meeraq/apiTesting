@@ -20,7 +20,7 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
-from base.models import Batch, Learner
+from base.models import Batch, Learner,EmailTemplate
 from .serializers import (
     AdminReqSerializer,
     BatchSerializer,
@@ -35,8 +35,10 @@ from .serializers import (
     SlotForCoachSerializer,
     UserSerializer,
     ProfileSerializer,
+    EmailTemplateSerializer,
 )
 from testOne import settings
+from django.utils.safestring import mark_safe
 
 import environ
 env = environ.Env()
@@ -1422,3 +1424,103 @@ def exportLearnerConfirmedSlotsByEventId(request, event_id):
         dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="confirmed slots.xls"'
     return response
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def send_mails(request):
+    emails = request.data.get('emails',[])
+    # email_content = request.data['email_content']
+    temp1=request.data.get('htmlContent','')
+    print(temp1)
+    if len(emails) > 0:
+        for email in emails:
+            email_message_learner = render_to_string(
+                "default.html",
+                {
+                    'email_content': mark_safe(temp1),
+                    'email_title': "hello"
+                },
+            )
+            email = EmailMessage(
+                "Meeraq",
+                email_message_learner,
+                settings.DEFAULT_FROM_EMAIL,  # from email address
+                [email],  # to email address
+                # [coach_data.email],  # bcc email address
+                # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
+            )
+            email.content_subtype = "html"
+            email.send()
+            print('hello')
+            # send mail 
+        return Response({"message":"success"},status=200)
+    return Response({'error': "No email found."},status=400)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def addEmailTemplate(request):
+    if request.method=='POST':
+        title = request.data.get('title', None)
+        template_data=request.data.get('templatedata',None)
+        print(title, "Title")
+        print(template_data, "request.data")
+
+        if template_data is not None:
+            try:
+                email_template = EmailTemplate.objects.create(title=title, template_data=template_data)
+                # email_template = EmailTemplate.objects.create(title=title, template_data=template_data)
+                #(template_data=template_data,template_title) 
+                print(email_template, "email template")
+                return Response({'success': True, 'message': 'Template saved successfully.'})
+            except Exception as e:
+                return Response({'success': False, 'message': 'Failed to save template.'})
+
+    return Response({'success': False, 'message': 'Invalid request.'})
+
+
+@api_view(["PUT"])
+@permission_classes([AllowAny])
+def editEmailTemplate(request, template_id):
+    try:
+        email_template = EmailTemplate.objects.get(pk=template_id)
+    except EmailTemplate.DoesNotExist:
+        return Response({'success': False, 'message': 'Template not found.'}, status=404)
+
+    if request.method == 'PUT':
+        title = request.data.get('title', None)
+        template_data = request.data.get('templatedata', None)
+        print(template_data, "request.data")
+
+        if template_data is not None:
+            try:
+                email_template.title = title
+                email_template.template_data = template_data
+                email_template.save()
+                return Response({'success': True, 'message': 'Template updated successfully.'})
+            except Exception as e:
+                return Response({'success': False, 'message': 'Failed to update template.'})
+
+    return Response({'success': False, 'message': 'Invalid request.'})
+
+
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getSavedTemplates(request):
+    emailTemplate= EmailTemplate.objects.all()
+    serilizer = EmailTemplateSerializer(emailTemplate, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
+@api_view(["DELETE"])
+@permission_classes([AllowAny])
+def deleteEmailTemplate(request, template_id):
+    try:
+        delete_template = EmailTemplate.objects.get(pk=template_id)
+        delete_template.delete()
+        return Response({'success': True, 'message': 'Template deleted successfully.'})
+    except EmailTemplate.DoesNotExist:
+        return Response({'success': False, 'message': 'Template not found.'}, status=404)
+    except Exception as e:
+        return Response({'success': False, 'message': 'Failed to delete template.'})
