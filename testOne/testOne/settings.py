@@ -10,14 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-
+import os
 from pathlib import Path
 import environ
-import os
 
 env = environ.Env()
 environ.Env.read_env()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -114,27 +112,18 @@ WSGI_APPLICATION = 'testOne.wsgi.application'
 
 DATABASES = {
     'default': {
-        # "ENGINE": "django.db.backends.mysql",
-        # "NAME": env("DATABASE_NAME"),
-        # "USER": env("DATABASE_USER"),
-        # "PASSWORD": env("DATABASE_PASS"),
-        # "HOST": env("DATABASE_HOST"),
-        # # "PORT": env("DATABASE_PORT"),
-        # 'PORT': env.int('DATABASE_PORT', default='3306'),
-        # "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
-        # }
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'api_testing_prod',
-        'USER': 'root',
-        'PASSWORD': 'Password@123',
-        'HOST': 'localhost',
+        'NAME': env('DATABASE_NAME'),
+        'USER': env('DATABASE_USER'),
+        'PASSWORD': env('DATABASE_PASS'),
+        'HOST': env('DATABASE_HOST'),
         'PORT': '3306',
         'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-    }}
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
+    }
 
-
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -187,7 +176,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    # "sesame.backends.ModelBackend",
+    "sesame.backends.ModelBackend",
 ]
 
 LOGIN_REDIRECT_URL = "/admin/"
