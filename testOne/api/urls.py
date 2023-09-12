@@ -72,4 +72,6 @@ urlpatterns = [
     path("saved_emailsTemplates/", views.getSavedTemplates),
     path("edit_email_template/<int:template_id>/", views.editEmailTemplate),
     path("delete_email_template/<int:template_id>/", views.deleteEmailTemplate),
+    path("emails-data/", views.get_mail_data),
+   
 ]

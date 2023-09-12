@@ -163,3 +163,19 @@ class Batch(models.Model):
 class EmailTemplate(models.Model):
     title = models.CharField(max_length=100,default="",blank=True)  # Add title field
     template_data = models.TextField(max_length=200, default="")
+
+class SentEmail(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    recipients = models.JSONField()  # Use a JSONField to store JSON data.
+    created_at = models.DateTimeField(auto_now_add=True)
+    scheduledfor = models.DateTimeField(null=True,blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    subject = models.CharField(max_length=200)
+
+    def __str__(self):
+        return f"Email to Recipients: {self.recipients}, Subject: {self.subject}, Status: {self.status}"

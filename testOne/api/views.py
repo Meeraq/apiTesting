@@ -20,7 +20,7 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
-from base.models import Batch, Learner, EmailTemplate
+from base.models import Batch, Learner, EmailTemplate,SentEmail
 from .serializers import (
     AdminReqSerializer,
     BatchSerializer,
@@ -36,12 +36,14 @@ from .serializers import (
     UserSerializer,
     ProfileSerializer,
     EmailTemplateSerializer,
+    SentEmailSerializer,
 )
 from testOne import settings
+from django.utils.dateparse import parse_datetime
 from django.utils.safestring import mark_safe
-
+import json 
 import environ
-
+from django.utils import timezone 
 env = environ.Env()
 environ.Env.read_env()
 
@@ -1619,6 +1621,7 @@ def send_test_mails(request):
         return Response({"error": "No email addresses found."}, status=400)
 
 
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def send_mails(request):
@@ -1626,16 +1629,40 @@ def send_mails(request):
     emails = request.data.get("emails", [])
     subject = request.data.get("subject")
     temp1 = request.data.get("htmlContent", "")
+    scheduledFor=request.data.get("scheduledFor","")
 
-    print(learner_names, "learner_name")
-    print(emails, "emails")
 
-    merged_data = list(
-        zip(learner_names, emails)
-    )  # Merge learner_names and emails using zip
-    print(merged_data, "merged_data")
+     # Parse the scheduledFor string to a DateTime object
+    scheduled_for_datetime = parse_datetime(scheduledFor)
+
+    
+
+    merged_data = list(zip(learner_names, emails))
+    
+    recipient_data = [{'name': name, 'email': email} for name, email in merged_data]
+    
+    
 
     if len(merged_data) > 0:
+        existing_instance = SentEmail.objects.filter(
+            recipients=recipient_data,
+            subject=subject,
+            status="pending",
+            ).first()
+        
+        if existing_instance:
+    
+            sent_email_instance = existing_instance
+        else:
+            
+            sent_email_instance = SentEmail(
+                recipients=recipient_data,
+                subject=subject,
+                status="pending",
+                scheduledfor=scheduled_for_datetime,
+            )
+            sent_email_instance.save()
+            
         for learner_name, email in merged_data:
             email_content = temp1.replace("{{learnerName}}", learner_name)
             email_message_learner = render_to_string(
@@ -1655,6 +1682,10 @@ def send_mails(request):
             email.content_subtype = "html"
             email.send()
             print("Email sent to:", email, "for learner:", learner_name)
+
+        # Update status to "completed" since emails were sent successfully
+        sent_email_instance.status = "completed"
+        sent_email_instance.save()
 
         return Response({"message": "Emails sent successfully"}, status=200)
     else:
@@ -1741,3 +1772,13 @@ def deleteEmailTemplate(request, template_id):
         )
     except Exception as e:
         return Response({"success": False, "message": "Failed to delete template."})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_mail_data(request):
+    sent_emails = SentEmail.objects.all()
+    print(sent_emails)
+    serializer = SentEmailSerializer(sent_emails, many=True)
+    return Response(serializer.data)
+
