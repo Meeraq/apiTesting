@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     "django_extensions",
     "import_export",
     "django_rest_passwordreset",
+    "django_celery_beat",
+    "django_celery_results",
 ]
 
 MIDDLEWARE = [
@@ -64,16 +66,16 @@ MIDDLEWARE = [
 ROOT_URLCONF = "testOne.urls"
 
 
+EMAIL_USE_TLS = True
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_PORT = env("EMAIL_PORT")
 EMAIL_HOST = env("EMAIL_HOST")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 # AWS_ACCESS_KEY_ID = 'AKIAVKI2ZWHZQ7VR545S'
 # AWS_SECRET_ACCESS_KEY = '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'
-# EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
-EMAIL_USE_TLS = True
 
 
 REST_FRAMEWORK = {
@@ -181,5 +183,5 @@ LOGIN_REDIRECT_URL = "/admin/"
 SESAME_MAX_AGE = 300  # 300 seconds = 5 minutes
 
 # Celery settings
-# CELERY_BROKER_URL = "redis://localhost:6379"
-# CELERY_RESULT_BACKEND = "redis://localhost:6379"
+CELERY_BROKER_URL = env("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
