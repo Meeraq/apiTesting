@@ -42,124 +42,6 @@ import environ
 env = environ.Env()
 environ.Env.read_env()
 
-# sesame
-# from sesame.utils import get_query_string, get_user
-
-# from sesame.utils import get_query_string, get_user
-
-# flattening array
-
-
-# courses api functions
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def getCourses(request):
-#     courses = Courses.objects.all()
-#     serializer = CourseSerializer(courses, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-# def addCourses(request):
-#     serializer = CourseSerializer(data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#     else:
-#         return Response({'status': '400 Bad request', 'Reason': 'Wrong data sent'})
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def updateCourses(request, _id):
-#     course = Courses.objects.get(id=_id)
-#     serializer = CourseSerializer(instance=course, data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#     else:
-#         return Response({'status': '400 Bad request', 'Reason': 'Wrong data sent'})
-#     return Response(serializer.data)
-
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def getCourseCategory(request):
-#     category = CourseCategorys.objects.all()
-#     serializer = CourseCategorySerializer(category, many=True)
-#     return Response(serializer.data)
-
-# Learner Api Functions
-
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getLearners(request):
-#     learners = Learners.objects.all()
-#     serializer = LearnerSerializer(learners, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-# def addLearners(request):
-#     serializer = LearnerSerializer(data=request.data)
-#     if serializer.is_valid():
-#         newUser = User.objects.create_user(
-#             username=request.data['email'], password='Meeraq@123')
-#         newUser.save()
-#         userToSave = User.objects.get(username=request.data['email'])
-#         newProfile = Profile(user=userToSave, type="learner",
-#                              email=request.data['email'])
-#         newProfile.save()
-#         serializer.save(user_id=newProfile.id)
-#     for user in User.objects.all():
-#         Token.objects.get_or_create(user=user)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def updateLearners(request, _id):
-#     learner = Learners.objects.get(id=_id)
-#     serializer = LearnerSerializer(instance=learner, data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#     return Response(serializer.data)
-
-# batch api
-
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getBatches(request):
-#     batches = Batch.objects.all()
-#     serializer = BatchSerializer(batches, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def addBatches(request):
-#     serializer = BatchSerializer(data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def updateBatches(request, _id):
-#     batch = Batch.objects.get(id=_id)
-#     serializer = BatchSerializer(instance=batch, data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#     return Response(serializer.data)
-
-
-# coach api
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -227,224 +109,6 @@ def updateCoach(request, _id):
         serializer.save()
     return Response(serializer.data)
 
-
-# faculty api
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getfaculty(request):
-#     coaches = Faculty.objects.all()
-#     serializer = FacultySerializer(coaches, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# def addfaculty(request):
-#     serializer = FacultySerializer(data=request.data)
-#     if serializer.is_valid():
-#         newUser = User.objects.create_user(
-#             username=request.data['email'], password='Meeraq@123')
-#         newUser.save()
-#         userToSave = User.objects.get(username=request.data['email'])
-#         newProfile = Profile(user=userToSave, type="faculty",
-#                              email=request.data['email'])
-#         newProfile.save()
-#         serializer.save(user_id=newProfile.id)
-#     else:
-#         print(serializer.errors)
-#         return Response(status='403')
-#     for user in User.objects.all():
-#         token = Token.objects.get_or_create(user=user)
-#     return Response({'status': 200, 'payload': serializer.data, 'token': str(token[0])})
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def updateFaculty(request, _id):
-#     faculty = Faculty.objects.get(id=_id)
-#     serializer = FacultySerializer(instance=faculty, data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#     return Response(serializer.data)
-
-# slot api
-
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getslot(request):
-#     slots = Slot.objects.all()
-#     serializer = SlotSerializer(slots, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def addslot(request):
-#     serializer = SlotSerializer(data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-#     return Response(serializer.data)
-
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getDayTimeslot(request):
-#     slots = DayTimeSlot.objects.all()
-#     serializer = SlotTimeDaySerializer(slots, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def addDayTimeslot(request):
-#     for eachDay in request.data:
-#         coachToSave = Coach.objects.get(id=eachDay['coach'])
-#         newdayTimeSlot = DayTimeSlot(
-#             coach=coachToSave,
-#             day=eachDay['day'],
-#             start_time_id=eachDay['start_time_id'],
-#             end_time_id=eachDay['end_time_id'],
-#             week_id=eachDay['week_id']
-#         )
-#         newdayTimeSlot.save()
-
-#     # only return the slots for the specific coach
-#     slots = DayTimeSlot.objects.filter(coach=coachToSave)
-#     serializer = SlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-# confirm day time slot
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def confirmDayTimeSlot(request):
-#     for eachDay in request.data:
-#         coachToSave = Coach.objects.get(id=eachDay['coach'])
-#         newdayTimeSlot = DayTimeSlot(
-#             coach=coachToSave,
-#             day=eachDay['day'],
-#             start_time_id=eachDay['start_time_id'],
-#             end_time_id=eachDay['end_time_id'],
-#             week_id=eachDay['week_id'],
-#             isConfirmed=True
-#         )
-#         newdayTimeSlot.save()
-#         currTime = int(eachDay['start_time_id'])
-#         endTime = int(eachDay['end_time_id'])
-#         while currTime + 1800000 <= endTime:
-#             learnerSlot = DayTimeSlot(
-#                 coach=coachToSave,
-#                 day=eachDay['day'],
-#                 start_time_id=str(currTime),
-#                 end_time_id=str(currTime + 1800000),
-#                 week_id=eachDay['week_id'],
-#                 isConfirmed=True,
-#                 for_learners=True
-#             )
-#             currTime += 2700000
-#             learnerSlot.save()
-#     # only return the confirmed slots for the specific coach
-#     slots = DayTimeSlot.objects.filter(
-#         coach=coachToSave, isConfirmed=True, for_learners=False)
-#     serializer = SlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def updateDayTimeslot(request, _id):
-#     slot = DayTimeSlot.objects.get(id=_id)
-#     serializer = SlotTimeDaySerializer(instance=slot, data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-
-#     slots = DayTimeSlot.objects.all()
-#     serializer = SlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# @api_view(['DELETE'])
-# @permission_classes([IsAuthenticated])
-# def deleteDayTimeslot(request, _id):
-#     slot = DayTimeSlot.objects.get(id=_id)
-#     slot.delete()
-
-#     slots = DayTimeSlot.objects.all()
-#     serializer = SlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-# # learner slot book
-
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def learnergetDayTimeslot(request):
-#     slots = LearnerdayTimeSlot.objects.all()
-#     serializer = LearnerSlotTimeDaySerializer(slots, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def addLearnerDayTimeslot(request):
-#     for day in request.data:
-#         newdayTimeSlot = LearnerdayTimeSlot(
-#             learner=day['learner'], start_time_id=day['start_time_id'], end_time_id=day['end_time_id'])
-#         newdayTimeSlot.save()
-#     slots = LearnerdayTimeSlot.objects.all()
-#     serializer = LearnerSlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def updateLearnerDayTimeslot(request, _id):
-#     slot = LearnerdayTimeSlot.objects.get(id=_id)
-#     serializer = LearnerSlotTimeDaySerializer(instance=slot, data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()
-
-#     slots = LearnerdayTimeSlot.objects.all()
-#     serializer = LearnerSlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# @api_view(['DELETE'])
-# @permission_classes([IsAuthenticated])
-# def LearnerdeleteDayTimeslot(request, _id):
-#     slot = LearnerdayTimeSlot.objects.get(id=_id)
-#     slot.delete()
-#     slots = LearnerdayTimeSlot.objects.all()
-#     serializer = LearnerSlotTimeDaySerializer(slots, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# sessions
-
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def getSessions(request):
-#     session = Sessions.objects.all()
-#     serializer = SessionSerializer(session, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def addSession(request):
-#     for session in request.data:
-#         print(session)
-#         courseToSave = Courses.objects.get(id=session['course'])
-#         batchToSave = Batch.objects.get(id=session['batch'])
-#         newSession = Sessions(course=courseToSave, batch=batchToSave,
-#                               sessionNumber=session['sessionNumber'], start_day=session['start_day'], end_day=session['end_day'])
-#         newSession.save()
-#     sessions = Sessions.objects.all()
-#     serializer = SessionSerializer(sessions, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
 
 
 @api_view(["POST"])
@@ -537,101 +201,7 @@ def getProfile(request):
     return Response(serializer.data)
 
 
-# getAvailableSlots
-# [
-#      { learnerId, batchId , weekId }
-# ]
 
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def getAvailableSlots(request):
-#     bookedSlot = request.data
-#     print(bookedSlot)
-#     learner = Learners.objects.get(id=bookedSlot['learnerId'])
-#     batch = Batch.objects.get(id=bookedSlot['batchId'])
-#     week_id = bookedSlot['weekId']
-#     getReleventSlotsForThisBatch = DayTimeSlot.objects.filter(
-#         week_id=week_id,
-#         isConfirmed=True,
-#         coachcoachysession__isnull=True,
-#         for_learners=True
-#     )
-#     serializer = SlotTimeDaySerializer(getReleventSlotsForThisBatch, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-#! Sample Input
-# [
-#    { slotId: 123, learnerId: 123, batchId: 2, !!(day: 'Monday', start_time_id: 121212121, end_time_id: 4185454554) },
-# ]
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def pickLearnerSlot(request):
-#     bookedSlot = request.data
-#     learner = Learners.objects.get(id=bookedSlot['learnerId'])
-#     batch = Batch.objects.get(id=bookedSlot['batchId'])
-#     slot = DayTimeSlot.objects.get(id=bookedSlot['slotId'])
-#     print(bookedSlot)
-#     newCoachCoachySession = CoachCoachySession(
-#         learner=learner, batch=batch, slot=slot)
-#     newCoachCoachySession.save()
-#     allSessionsForThisLearner = DayTimeSlot.objects.filter(
-#         coachcoachysession__learner=learner, isConfirmed=True)
-#     serializer = SlotTimeDaySerializer(allSessionsForThisLearner, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-#! Sample Input
-# [
-#    { id: learner's id },
-# ]
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getLearnerSlot(request):
-#     allSessionsForLearner = DayTimeSlot.objects.filter(
-#         ~Q(coachcoachysession=None),
-#         isConfirmed=True,
-#     )
-#     serializer = SlotTimeDaySerializer(allSessionsForLearner, many=True)
-#     return Response({'status': 200, 'data': serializer.data})
-
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def getCoachCoacheeSessions(request):
-#     print("hello")
-#     coachCoacheeSessions = CoachCoachySession.objects.all()
-#     serializer = CoachCoachySessionSerializer(coachCoacheeSessions, many=True)
-#     return Response(serializer.data)
-
-
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-# def loginLearner(request):  # request.data = body
-#     email = request.data['email']
-#     user = User.objects.get(email=email)
-#     print(user.email)
-#     # link = reverse("trial")
-#     # link = request.build_absolute_uri(link)
-#     link = 'http://127.0.0.1:8000/trial/'
-#     link += get_query_string(user)
-#     print(link)
-#     return Response({"login": email})
-
-
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
-# def trialLogin(request):
-#     sesame_id = request.GET.get('sesame', None)
-#     user = get_user(sesame_id)
-#     serializer = UserSerializer(user)
-#     print(serializer.data)
-#     return Response({"message": "hello"})
-
-# from django.template.loader import get_template
-
-# it take date str in "yyyy-mm-dd" format and returns in "dd-mm-yyyy"
 def formatDate(date):
     date_obj = datetime.strptime(date, '%Y-%m-%d')
     formatted_date = date_obj.strftime('%d-%m-%y')
@@ -1422,3 +992,65 @@ def exportLearnerConfirmedSlotsByEventId(request, event_id):
         dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="confirmed slots.xls"'
     return response
+
+    
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getLearnersWithNoSessions(request, _id):
+    try:
+        event = Events.objects.get(_id=_id)
+        batch = event.batch
+        learners = Learner.objects.filter(batch=batch)
+
+        learners_with_no_sessions = []
+
+        for learner in learners:
+            sessions = LeanerConfirmedSlots.objects.filter(email=learner.email, event=event)
+
+            if len(sessions) == 0:
+                learners_with_no_sessions.append(learner.email)
+
+        return Response({
+            "learners_with_no_sessions": learners_with_no_sessions,
+            "total_learners": len(learners_with_no_sessions),
+            "details": "success"
+        }, status=200)
+
+    except Events.DoesNotExist:
+        return Response({"error": "Event not found"}, status=404)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def sendEmailsToLearners(request):
+    data = request.data
+    recipient_emails = data.get("recipient_emails", [])
+    print(recipient_emails,"#$")
+
+    if not recipient_emails:
+        return Response({"error": "Recipient emails not provided"}, status=400)
+
+    event_link = data.get("event_link", "")
+    email_messages = []
+
+    for recipient_email in recipient_emails:
+        email_message = render_to_string(
+            "seteventlink.html",
+            {
+                "event_link": event_link
+            },
+        )
+        email_messages.append((recipient_email, email_message))
+
+        send_mail(
+            "Event link to join sessions on  {title}".format(title="Meeraq"),
+            email_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [recipient_email],
+            html_message=email_message,
+        )
+
+    return Response({
+        "sent_emails": recipient_emails,
+        "total_sent": len(recipient_emails),
+        "details": "success"
+    }, status=200)

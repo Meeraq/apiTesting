@@ -93,5 +93,8 @@ urlpatterns = [
     path('management-token/', views.getManagementToken),
     path('current-booked-slot/', views.getCurrentBookedSlot),
     path('export-confirmed-slot/<str:event_id>',
-         views.exportLearnerConfirmedSlotsByEventId)
+         views.exportLearnerConfirmedSlotsByEventId),
+     path('get-learners-with-no-sessions/<str:_id>/', views.getLearnersWithNoSessions),
+     path('send-emails-to-learners/', views.sendEmailsToLearners),
+
 ]
