@@ -1,4 +1,5 @@
 import uuid
+import requests
 from django.template.loader import render_to_string
 import jwt
 from datetime import datetime, time, timedelta
@@ -1327,6 +1328,10 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
 def learnerDataUpload(request):
     batches = set()
     for learner in request.data['participent']:
+        participent_data = request.data['participent'] 
+        # Print the structure of participent_data
+        print(participent_data,"100")
+        
         is_exist = Learner.objects.filter(
             unique_check=learner['batch']+"|"+learner['email'])
         if len(is_exist) > 0:
@@ -1422,3 +1427,48 @@ def exportLearnerConfirmedSlotsByEventId(request, event_id):
         dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="confirmed slots.xls"'
     return response
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_courses(request):
+    print("hi")
+    api_key = "4048d97cded22462166590c24cccd1ab"
+    subdomain = "meeraq-s-site-18a1"
+
+    api_url = "https://api.thinkific.com/api/public/v1/courses?page=1&limit=200"
+    headers = {
+        "X-Auth-API-Key": api_key,
+        "X-Auth-Subdomain": subdomain,
+        "Content-Type": "application/json",
+    }
+    try:
+        response = requests.get(api_url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            return Response(data)
+        else:
+            return Response({"error": "Failed to fetch data from Thinkific"}, status=response.status_code)
+    except requests.exceptions.RequestException as e:
+        return Response({"error": str(e)}, status=500)
+    
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_enrollments(request, course_id):
+    api_key = "4048d97cded22462166590c24cccd1ab"
+    subdomain = "meeraq-s-site-18a1"
+
+    api_url = f"https://api.thinkific.com/api/public/v1/enrollments/?query[course_id]={course_id}"
+    headers = {
+        "X-Auth-API-Key": api_key,
+        "X-Auth-Subdomain": subdomain,
+        "Content-Type": "application/json",
+    }
+    try:
+        response = requests.get(api_url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            return Response(data)
+        else:
+            return Response({"error": "Failed to fetch data from Thinkific"}, status=response.status_code)
+    except requests.exceptions.RequestException as e:
+        return Response({"error": str(e)}, status=500)
