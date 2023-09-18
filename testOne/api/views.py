@@ -20,7 +20,7 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
-from base.models import Batch, Learner
+from base.models import Batch, Learner,UserToken,CalendarEvent
 from .serializers import (
     AdminReqSerializer,
     BatchSerializer,
@@ -35,7 +35,15 @@ from .serializers import (
     SlotForCoachSerializer,
     UserSerializer,
     ProfileSerializer,
+    UserTokenSerializer,
+    CalendarEventSerializer
 )
+import requests
+from django.http import HttpResponseRedirect
+from django.http import JsonResponse
+from django.utils import timezone
+from urllib.parse import urlencode
+from django.core.exceptions import ObjectDoesNotExist
 from testOne import settings
 
 import environ
@@ -157,6 +165,140 @@ environ.Env.read_env()
 #         serializer.save()
 #     return Response(serializer.data)
 
+
+def convert_to_24hr_format(time_str):
+    time_obj = datetime.strptime(time_str, "%I:%M %p")
+    time_24hr = time_obj.strftime("%H:%M")
+    return time_24hr
+
+
+
+def refresh_microsoft_access_token(user_token):
+    if not user_token:
+        return None
+
+    refresh_token = user_token.refresh_token
+    access_token_expiry = user_token.access_token_expiry
+    auth_code = user_token.authorization_code
+    if not refresh_token:
+        return None
+
+    access_token_expiry = int(access_token_expiry)
+
+    expiration_timestamp = user_token.updated_at + timezone.timedelta(
+        seconds=access_token_expiry
+    )
+
+    if expiration_timestamp <= timezone.now():
+        token_url = f"https://login.microsoftonline.com/{env('MICROSOFT_TENANT_ID')}/oauth2/v2.0/token"
+
+        token_data = {
+            "client_id": env('MICROSOFT_CLIENT_ID'),
+            "refresh_token": refresh_token,
+            "grant_type": "refresh_token",
+            "client_secret": env('MICROSOFT_CLIENT_SECRET'),
+        }
+
+        response = requests.post(token_url, data=token_data)
+        token_json = response.json()
+
+        if "access_token" in token_json:
+            user_token.access_token = token_json["access_token"]
+            user_token.access_token_expiry = token_json.get("expires_in")
+            user_token.updated_at = timezone.now()
+            user_token.save()
+
+            return user_token.access_token
+
+    return user_token.access_token
+
+
+def create_microsoft_calendar_event(
+    access_token, event_details, attendee_email_name, event
+):
+    event_create_url = "https://graph.microsoft.com/v1.0/me/events"
+
+    
+
+    start_datetime = (
+        f"{event_details['startDate']}T{event_details['startTime']}"
+    )
+    end_datetime = (
+        f"{event_details['startDate']}T{event_details['endTime']}"
+    )
+
+    event_details_title = event_details["title"]
+    
+            
+    event_payload = {
+        "subject": event_details_title,
+        "body": {"contentType": "HTML", "content": event_details["description"]},
+        "start": {"dateTime": start_datetime, "timeZone": "UTC"},
+        "end": {"dateTime": end_datetime, "timeZone": "UTC"},
+        "attendees": [{"emailAddress": attendee_email_name, "type": "required"}],
+    }
+    
+    user_token = UserToken.objects.get(access_token=access_token)
+    new_access_token = refresh_microsoft_access_token(user_token)
+    if not new_access_token:
+        new_access_token = access_token
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post(event_create_url, json=event_payload, headers=headers)
+
+    if response.status_code == 201:
+        microsoft_response_data = response.json()
+
+        calendar_event = CalendarEvent(
+            event_id=microsoft_response_data.get("id"),
+            title=event_details_title,
+            description=event_details.get("description"),
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            attendee=attendee_email_name.get("address"),
+            creator=microsoft_response_data.get("organizer", {})
+            .get("emailAddress", {})
+            .get("address", ""),
+            events=event,
+            account_type="microsoft",
+        )
+        calendar_event.save()
+
+        print("Event created successfully.")
+        return True
+    else:
+        print(f"Event creation failed. Status code: {response.status_code}")
+        print(response.text)
+        return False
+
+
+
+def delete_microsoft_calendar_event(access_token, event_id):
+    try:
+        event_delete_url = f"https://graph.microsoft.com/v1.0/me/events/{event_id}"
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+
+        response = requests.delete(event_delete_url, headers=headers)
+
+        if response.status_code == 204:
+            return {"message": "Event deleted successfully"}
+        elif response.status_code == 404:
+            return {"error": "Event not found"}
+        else:
+            return {
+                "error": "Failed to delete event",
+                "status_code": response.status_code,
+            }
+
+    except Exception as e:
+        return {"error": "An error occurred", "details": str(e)}
 
 # coach api
 
@@ -458,6 +600,13 @@ def login_user(request):
             if request.data['type'] == 'coach':
                 userProfile = Coach.objects.get(email=username)
                 token = Token.objects.get_or_create(user=user)
+                user_token = None
+                try:
+                    user_token = UserToken.objects.get(user_mail=username)
+                    refresh_microsoft_access_token(user_token)
+
+                except ObjectDoesNotExist:
+                    print("Does not exist")
                 return Response(
                     {
                         "status": "200",
@@ -1160,6 +1309,43 @@ def confirmSlotsByLearner(request, slot_id):
                 {"name": request.data["name"], "time": start_time_for_mail.strftime("%I:%M %p"),
                     "duration": "30 Min", "date": date, "link": coach_data.meet_link},
             )
+            
+            event_start_time = datetime.strptime(f"{start_time}", "%Y-%m-%d %H:%M:%S").strftime("%H:%M:%S")
+            event_end_time=datetime.strptime(f"{end_time}", "%Y-%m-%d %H:%M:%S").strftime("%H:%M:%S")
+            session_date=datetime.strptime(date, "%d %B %Y").strftime("%Y-%m-%d")
+            
+            
+            try:
+                coachee_user_token = UserToken.objects.get(
+                    user_mail=request.data["email"]
+                )
+                event_detail = {
+                    "title": f"Coaching Session",
+                    "description": f"Session Link: {coach_data.meet_link}",
+                    "startDate": session_date,
+                    "startTime": event_start_time,
+                    "endDate": session_date,
+                    "endTime": event_end_time,
+                    }
+                coachee_access_token = coachee_user_token.access_token
+                
+                coachee_access_token = refresh_microsoft_access_token(
+                        coachee_user_token
+                    )
+
+                create_microsoft_calendar_event(
+                            coachee_access_token,
+                            event_detail,
+                            {
+                                "address": coach_data.email,
+                                "name": coach_data.first_name + " " + coach_data.last_name,
+                            },
+                            event,
+                        )
+
+            except ObjectDoesNotExist:
+                print("Coachee Does not exist")
+
             meet_link = coach_data.meet_link
             createIcs(start, end, meet_link)
             email = EmailMessage(
@@ -1186,6 +1372,40 @@ def confirmSlotsByLearner(request, slot_id):
                     "duration": "30 Min", "date": date, "link": coach_module_link, "participant_name": request.data['name']})
 
             createIcs(start, end, coach_module_link)
+            
+            
+            try:
+                coach_user_token = UserToken.objects.get(
+                    user_mail=coach_data.email
+                )
+                
+                event_detail = {
+                    "title": f"Coaching Session",
+                    "description": f"Session Link: {coach_module_link}",
+                    "startDate": session_date,
+                    "startTime": event_start_time,
+                    "endDate": session_date,
+                    "endTime": event_end_time,
+                    }
+                coach_access_token = coach_user_token.access_token
+                
+                coach_access_token = refresh_microsoft_access_token(
+                        coach_user_token
+                    )
+
+                create_microsoft_calendar_event(
+                            coach_access_token,
+                            event_detail,
+                            {
+                                "address": request.data["email"],
+                                "name": request.data["name"],
+                            },
+                            event,
+                        )
+
+            except ObjectDoesNotExist:
+                print("Coach Does not exist")
+                
             email_for_coach = EmailMessage(
                 "Meeraq | Coaching Session",
                 email_message_coach,
@@ -1327,6 +1547,14 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
 def learnerDataUpload(request):
     batches = set()
     for learner in request.data['participent']:
+        email_message = render_to_string(
+        "authorizationLearner.html",
+        {
+            "coachee_name": learner['first_name'],
+            "email": learner['email'],
+
+        },
+        )
         is_exist = Learner.objects.filter(
             unique_check=learner['batch']+"|"+learner['email'])
         if len(is_exist) > 0:
@@ -1339,6 +1567,17 @@ def learnerDataUpload(request):
                 learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
                                        batch=learner['batch'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
             learner_data.save()
+            send_mail(
+            # title:
+            "Meeraq | Welcome!",
+            # message:
+            email_message,
+            # from:0
+            settings.DEFAULT_FROM_EMAIL,
+            # to:
+            [learner['email']],
+            html_message=email_message,
+            )
             is_batch_exist = Batch.objects.filter(batch=learner['batch'])
             if not is_batch_exist:
                 batches.add(learner['batch'])
@@ -1422,3 +1661,84 @@ def exportLearnerConfirmedSlotsByEventId(request, event_id):
         dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="confirmed slots.xls"'
     return response
+
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def microsoft_auth(request, user_mail_address):
+    oauth2_endpoint = f"https://login.microsoftonline.com/{env('MICROSOFT_TENANT_ID')}/oauth2/v2.0/authorize"
+
+    auth_params = {
+        "client_id": env('MICROSOFT_CLIENT_ID'),
+        "response_type": "code",
+        "redirect_uri": env('MICROSOFT_REDIRECT_URI'),
+        "response_mode": "query",
+        "scope": "openid offline_access User.Read Calendars.ReadWrite profile email",
+        "state": "shashankmeeraq",
+        "login_hint": user_mail_address,
+    }
+
+    auth_url = f"{oauth2_endpoint}?{urlencode(auth_params)}"
+
+    return HttpResponseRedirect(auth_url)
+
+
+@api_view(["POST", "GET"])
+@permission_classes([AllowAny])
+def microsoft_callback(request):
+    try:
+        authorization_code = request.GET.get("code")
+
+        token_url = f"https://login.microsoftonline.com/common/oauth2/v2.0/token"
+        token_data = {
+            "client_id": env('MICROSOFT_CLIENT_ID'),
+            "scope": "User.Read",
+            "code": authorization_code,
+            "redirect_uri": env('MICROSOFT_REDIRECT_URI'),
+            "grant_type": "authorization_code",
+            "client_secret": env('MICROSOFT_CLIENT_SECRET'),
+        }
+
+        response = requests.post(token_url, data=token_data)
+        
+        token_json = response.json()
+        
+        if "access_token" in token_json and "refresh_token" in token_json:
+            access_token = token_json["access_token"]
+            refresh_token = token_json["refresh_token"]
+            expires_in = token_json["expires_in"]
+            auth_code = authorization_code
+            user_email_url = "https://graph.microsoft.com/v1.0/me"
+            headers = {"Authorization": f"Bearer {access_token}"}
+
+            user_email_response = requests.get(user_email_url, headers=headers)
+            
+            if user_email_response.status_code == 200:
+                user_info_data = user_email_response.json()
+                user_email = user_info_data.get("mail", "")
+                
+                user_token, created = UserToken.objects.get_or_create(
+                    user_mail=user_email
+                )
+                user_token.access_token = access_token
+                user_token.refresh_token = refresh_token
+                user_token.access_token_expiry = expires_in
+                user_token.authorization_code = auth_code
+                user_token.account_type = "microsoft"
+                user_token.save()
+            
+            coachexits = Coach.objects.filter(email=user_email)
+            if coachexits:
+                return HttpResponseRedirect(env("coach_url"))
+            return HttpResponseRedirect(env("learner_url"))
+            
+        else:
+            error_json = response.json()
+            return JsonResponse(error_json, status=response.status_code)
+
+    except Exception as e:
+        # Handle exceptions here, you can log the exception for debugging
+        print(f"An exception occurred: {str(e)}")
+        # You might want to return an error response or redirect to an error page.
+        return JsonResponse({"error": "An error occurred"}, status=500)

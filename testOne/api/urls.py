@@ -93,5 +93,7 @@ urlpatterns = [
     path('management-token/', views.getManagementToken),
     path('current-booked-slot/', views.getCurrentBookedSlot),
     path('export-confirmed-slot/<str:event_id>',
-         views.exportLearnerConfirmedSlotsByEventId)
+         views.exportLearnerConfirmedSlotsByEventId),
+    path('microsoft/oauth/<str:user_mail_address>/', views.microsoft_auth),
+    path('microsoft-auth-callback/', views.microsoft_callback),
 ]
