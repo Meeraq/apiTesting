@@ -20,7 +20,7 @@ from base.models import SlotForCoach
 from base.models import ConfirmedSlotsbyCoach
 from base.models import Events
 from base.models import LeanerConfirmedSlots
-from base.models import Batch, Learner
+from base.models import Batch, Learner, EmailTemplate, SentEmail
 from .serializers import (
     AdminReqSerializer,
     BatchSerializer,
@@ -35,10 +35,17 @@ from .serializers import (
     SlotForCoachSerializer,
     UserSerializer,
     ProfileSerializer,
+    EmailTemplateSerializer,
+    SentEmailSerializer,
 )
 from testOne import settings
-
+from django.utils.dateparse import parse_datetime
+from django.utils.safestring import mark_safe
+import json
 import environ
+from django.utils import timezone
+from django_celery_beat.models import PeriodicTask, ClockedSchedule
+
 env = environ.Env()
 environ.Env.read_env()
 
@@ -183,12 +190,13 @@ def addcoach(request):
     )
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data["email"], email=request.data["email"], password=request.data["password"]
+            username=request.data["email"],
+            email=request.data["email"],
+            password=request.data["password"],
         )
         newUser.save()
         userToSave = User.objects.get(username=request.data["email"])
-        newProfile = Profile(user=userToSave, type="coach",
-                             email=request.data["email"])
+        newProfile = Profile(user=userToSave, type="coach", email=request.data["email"])
         newProfile.save()
         serializer.save(user_id=newProfile.id)
         send_mail(
@@ -455,7 +463,7 @@ def login_user(request):
     user = authenticate(username=username, password=password)
     if user is not None:
         if user.profile.type == "coach":
-            if request.data['type'] == 'coach':
+            if request.data["type"] == "coach":
                 userProfile = Coach.objects.get(email=username)
                 token = Token.objects.get_or_create(user=user)
                 return Response(
@@ -469,13 +477,13 @@ def login_user(request):
                         "email": userProfile.email,
                         "usertype": user.profile.type,
                         "id": userProfile.id,
-                        "meet_link": userProfile.meet_link
+                        "meet_link": userProfile.meet_link,
                     }
                 )
             else:
                 return Response({"reason": "No user found"}, status=404)
         elif user.profile.type == "admin":
-            if request.data['type'] == 'admin':
+            if request.data["type"] == "admin":
                 userProfile = User.objects.get(email=username)
                 token = Token.objects.get_or_create(user=user)
                 return Response(
@@ -504,15 +512,16 @@ def registerUser(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         newUser = User.objects.create_user(
-            username=request.data["email"], email=request.data["email"], password=request.data["password"]
+            username=request.data["email"],
+            email=request.data["email"],
+            password=request.data["password"],
         )
         newUser.save()
     else:
         return Response(status="403")
     user = User.objects.get(username=serializer.data["email"])
     userToSave = User.objects.get(username=serializer.data["email"])
-    newProfile = Profile(user=userToSave, type="admin",
-                         email=serializer.data["email"])
+    newProfile = Profile(user=userToSave, type="admin", email=serializer.data["email"])
     newProfile.save()
     token, _ = Token.objects.get_or_create(user=user)
     return Response({"status": 200, "payload": serializer.data, "token": str(token)})
@@ -631,10 +640,11 @@ def getProfile(request):
 
 # from django.template.loader import get_template
 
+
 # it take date str in "yyyy-mm-dd" format and returns in "dd-mm-yyyy"
 def formatDate(date):
-    date_obj = datetime.strptime(date, '%Y-%m-%d')
-    formatted_date = date_obj.strftime('%d-%m-%y')
+    date_obj = datetime.strptime(date, "%Y-%m-%d")
+    formatted_date = date_obj.strftime("%d-%m-%y")
     return formatted_date
 
 
@@ -642,14 +652,15 @@ def formatDate(date):
 @permission_classes([AllowAny])
 def makeSlotRequest(request):
     adminRequest = AdminRequest(
-        name=request.data["request_name"], expire_date=request.data["expiry_date"])
+        name=request.data["request_name"], expire_date=request.data["expiry_date"]
+    )
     adminRequest.save()
     formatted_date = formatDate(request.data["expiry_date"])
     for coach in request.data["coach_id"]:
         single_coach = Coach.objects.get(id=coach)
         email_message = render_to_string(
-            "makerequest.html", {
-                "expire_date": formatted_date, "coach_name": single_coach.first_name}
+            "makerequest.html",
+            {"expire_date": formatted_date, "coach_name": single_coach.first_name},
         )
 
         send_mail(
@@ -666,7 +677,10 @@ def makeSlotRequest(request):
         adminRequest.assigned_coach.add(single_coach)
     for slot in request.data["slots"]:
         newSlot = SlotForCoach(
-            start_time=slot["start_time"], end_time=slot["end_time"], date=slot["date"], request=adminRequest
+            start_time=slot["start_time"],
+            end_time=slot["end_time"],
+            date=slot["date"],
+            request=adminRequest,
         )
         newSlot.save()
     return Response({"details": "success"}, status=200)
@@ -736,7 +750,8 @@ def getSlotofRequest(request, coach_id, type):
                 "name": _request.name,
             }
             newReq = AdminRequest.objects.filter(
-                expire_date=_request.expire_date).first()
+                expire_date=_request.expire_date
+            ).first()
             adminSerializer = AdminReqSerializer(instance=newReq, data=newData)
             if adminSerializer.is_valid():
                 adminSerializer.save()
@@ -748,24 +763,35 @@ def getSlotofRequest(request, coach_id, type):
     for _request in adminRequest:
         confirmedCoaches = _request.confirmed_coach.all()
         if type == "NEW":
-            if _request.isActive == True and (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
+            if _request.isActive == True and (
+                not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)
+            ):
                 request_id_name[_request.id] = _request.name
                 all_slots += SlotForCoach.objects.filter(request=_request)
         if type == "ACTIVE":
-            if _request.isActive == True and checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
+            if _request.isActive == True and checkIfCoachExistsInQuerySet(
+                confirmedCoaches, coach_id
+            ):
                 request_id_name[_request.id] = _request.name
                 all_slots += SlotForCoach.objects.filter(request=_request)
         if type == "PAST":
-            if _request.isActive == False and checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id):
+            if _request.isActive == False and checkIfCoachExistsInQuerySet(
+                confirmedCoaches, coach_id
+            ):
                 request_id_name[_request.id] = _request.name
                 all_slots += SlotForCoach.objects.filter(request=_request)
         if type == "MISSED":
-            if _request.isActive == False and (not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)):
+            if _request.isActive == False and (
+                not checkIfCoachExistsInQuerySet(confirmedCoaches, coach_id)
+            ):
                 request_id_name[_request.id] = _request.name
                 all_slots += SlotForCoach.objects.filter(request=_request)
 
     serializers = SlotForCoachSerializer(all_slots, many=True)
-    return Response({"details": "success", "slots": serializers.data, "requests": request_id_name}, status=200)
+    return Response(
+        {"details": "success", "slots": serializers.data, "requests": request_id_name},
+        status=200,
+    )
 
 
 @api_view(["POST"])
@@ -780,12 +806,13 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
             date=slot["date"],
             coach_id=coach_id,
             request_ID=int(request_id),
-            SESSION_START_TIME=datetime.fromtimestamp(
-                start_timestamp).strftime("%I:%M %p"),
-            SESSION_END_TIME=datetime.fromtimestamp(
-                end_timestamp).strftime("%I:%M %p"),
-            SESSION_DATE=datetime.fromtimestamp(
-                int(start_timestamp)).strftime("%d %B %Y"),
+            SESSION_START_TIME=datetime.fromtimestamp(start_timestamp).strftime(
+                "%I:%M %p"
+            ),
+            SESSION_END_TIME=datetime.fromtimestamp(end_timestamp).strftime("%I:%M %p"),
+            SESSION_DATE=datetime.fromtimestamp(int(start_timestamp)).strftime(
+                "%d %B %Y"
+            ),
             COACH_NAME=Coach.objects.get(id=coach_id).first_name
             + " "
             + Coach.objects.get(id=coach_id).middle_name
@@ -810,9 +837,9 @@ def confirmAvailableSlotsByCoach(request, coach_id, request_id):
 def export(request, request_id):
     coach_slot_file = ConfirmedSlotResource()
     dataset = coach_slot_file.export(
-        ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id))
-    response = HttpResponse(
-        dataset.xls, content_type="application/vnd.ms-excel")
+        ConfirmedSlotsbyCoach.objects.filter(request_ID=request_id)
+    )
+    response = HttpResponse(dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="slots.xls"'
     return response
 
@@ -823,8 +850,7 @@ def export_all(request):
     today = date.today()
     coach_slot_file = ConfirmedSlotResource()
     dataset = coach_slot_file.export(ConfirmedSlotsbyCoach.objects.all())
-    response = HttpResponse(
-        dataset.xls, content_type="application/vnd.ms-excel")
+    response = HttpResponse(dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="allslots.xls"'
     return response
 
@@ -851,20 +877,18 @@ def updateConfirmedSlots(request, slot_id):
     slot = ConfirmedSlotsbyCoach.objects.filter(id=slot_id).first()
     start_timestamp = ((request.data["start_time"]) / 1000) + 19800
     end_timestamp = ((request.data["end_time"]) / 1000) + 19800
-    print(str(request.data['start_time']),
-          type(str(request.data['start_time'])))
+    print(str(request.data["start_time"]), type(str(request.data["start_time"])))
     newSlot = {
-        "start_time": request.data['start_time'],
+        "start_time": request.data["start_time"],
         "end_time": request.data["end_time"],
         "date": request.data["date"],
         "coach_id": slot.coach_id,
         "request_ID": int(slot.request_ID),
-        "SESSION_START_TIME": datetime.fromtimestamp(
-            start_timestamp).strftime("%I:%M %p"),
-        "SESSION_END_TIME": datetime.fromtimestamp(
-            end_timestamp).strftime("%I:%M %p"),
-        "SESSION_DATE": datetime.fromtimestamp(
-            start_timestamp).strftime("%d %B %Y"),
+        "SESSION_START_TIME": datetime.fromtimestamp(start_timestamp).strftime(
+            "%I:%M %p"
+        ),
+        "SESSION_END_TIME": datetime.fromtimestamp(end_timestamp).strftime("%I:%M %p"),
+        "SESSION_DATE": datetime.fromtimestamp(start_timestamp).strftime("%d %B %Y"),
         "COACH_NAME": Coach.objects.get(id=slot.coach_id).first_name
         + " "
         + Coach.objects.get(id=slot.coach_id).middle_name
@@ -875,8 +899,7 @@ def updateConfirmedSlots(request, slot_id):
         "MEETING_LINK": Coach.objects.get(id=slot.coach_id).meet_link,
     }
 
-    serializer = ConfirmedSlotsbyCoachSerializer(
-        instance=slot, data=newSlot)
+    serializer = ConfirmedSlotsbyCoachSerializer(instance=slot, data=newSlot)
     if serializer.is_valid():
         serializer.save()
     return Response({"details": "success", "data": serializer.data}, status=201)
@@ -889,7 +912,9 @@ def deleteConfirmedSlotsbyCoach(request, coach_id, slot_id):
     slot.delete()
     all_slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach_id)
     serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
-    return Response({"status": "success, Data deleted", "data": serializer.data}, status=200)
+    return Response(
+        {"status": "success, Data deleted", "data": serializer.data}, status=200
+    )
 
 
 # update meet link by coach
@@ -937,14 +962,16 @@ def addEvent(request):
         "link": "https://learner.meeraq.com/book-slot/" + str(event_id) + "/",
         "_id": str(event_id),
         "coach": request.data["coach"],
-        "batch": request.data["batch"]
+        "batch": request.data["batch"],
     }
     serializer = EventSerializer(data=event_data)
     if serializer.is_valid():
         serializer.save()
     else:
         print(serializer.errors)
-        return Response({"status": "400 Bad request", "reason": "Wrong data sent"}, status=400)
+        return Response(
+            {"status": "400 Bad request", "reason": "Wrong data sent"}, status=400
+        )
     return Response(status=201)
 
 
@@ -962,7 +989,9 @@ def getEvents(request):
                 event_serilizer.save()
             else:
                 print(event_serilizer.errors)
-                return Response({"status": "error", "reason": "error in expire event"}, status=401)
+                return Response(
+                    {"status": "error", "reason": "error in expire event"}, status=401
+                )
     updated_events = Events.objects.filter(is_delete=False)
     serializer = EventSerializer(updated_events, many=True)
     return Response({"status": "success", "data": serializer.data}, status=200)
@@ -974,7 +1003,9 @@ def editEvents(request, event_id):
     today = date.today()
     event = Events.objects.get(id=event_id)
     expire_check = event.is_expired
-    if datetime.strptime(request.data["expire_date"], "%Y-%m-%d") > datetime.strptime(str(today), "%Y-%m-%d"):
+    if datetime.strptime(request.data["expire_date"], "%Y-%m-%d") > datetime.strptime(
+        str(today), "%Y-%m-%d"
+    ):
         expire_check = False
     event_data = {
         "name": request.data["name"],
@@ -987,13 +1018,15 @@ def editEvents(request, event_id):
         "link": event.link,
         "_id": event._id,
         "coach": request.data["coach"],
-        "is_expired": expire_check
+        "is_expired": expire_check,
     }
     serializer = EventSerializer(instance=event, data=event_data)
     if serializer.is_valid():
         serializer.save()
     else:
-        return Response({"status": "400 Bad request", "reason": "Wrong data sent"}, status=400)
+        return Response(
+            {"status": "400 Bad request", "reason": "Wrong data sent"}, status=400
+        )
     return Response({"status": "success", "data": serializer.data}, status=200)
 
 
@@ -1016,13 +1049,15 @@ def deleteEvents(request, event_id):
         "_id": event._id,
         "coach": coach_id,
         "is_delete": True,
-        "is_expired": True
+        "is_expired": True,
     }
     serializer = EventSerializer(instance=event, data=new_event)
     if serializer.is_valid():
         serializer.save()
     else:
-        return Response({"status": "400 Bad request", "reason": "something went wrong"}, status=400)
+        return Response(
+            {"status": "400 Bad request", "reason": "something went wrong"}, status=400
+        )
     return Response({"status": "success, Data deleted"}, status=200)
 
 
@@ -1031,9 +1066,10 @@ def deleteEvents(request, event_id):
 def getSlotsByEventID(request, event_id):
     event = Events.objects.get(_id=event_id)
     if event.is_delete == True:
-        return Response({"status": "404 not found", "reason": "data not found"}, status=404)
+        return Response(
+            {"status": "404 not found", "reason": "data not found"}, status=404
+        )
     else:
-
         all_slots = []
         for coach in event.coach.all():
             slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach.id)
@@ -1042,7 +1078,14 @@ def getSlotsByEventID(request, event_id):
                     all_slots.append(slot)
         serializer = ConfirmedSlotsbyCoachSerializer(all_slots, many=True)
         eventserializer = EventSerializer(event)
-        return Response({"status": "success", "slots": serializer.data, "event": eventserializer.data}, status=200)
+        return Response(
+            {
+                "status": "success",
+                "slots": serializer.data,
+                "event": eventserializer.data,
+            },
+            status=200,
+        )
 
 
 def createIcs(start_time, end_time, meet_link):
@@ -1063,19 +1106,21 @@ def createIcs(start_time, end_time, meet_link):
 @permission_classes([AllowAny])
 def confirmSlotsByLearner(request, slot_id):
     event = Events.objects.get(_id=request.data["event"])
-    learners = Learner.objects.filter(
-        batch=event.batch, email=request.data["email"])
+    learners = Learner.objects.filter(batch=event.batch, email=request.data["email"])
     if len(learners) == 0:
-        return Response({"status": "Error", "reason": "user may have entered different email"}, status=405)
+        return Response(
+            {"status": "Error", "reason": "user may have entered different email"},
+            status=405,
+        )
     else:
         coach_slot = ConfirmedSlotsbyCoach.objects.get(id=slot_id)
         coach_slot_serializer = ConfirmedSlotsbyCoachSerializer(coach_slot)
         if coach_slot.is_confirmed == False:
             coach_data = Coach.objects.get(id=coach_slot.coach_id)
-            booked_slot_coach = {
-                **coach_slot_serializer.data, "is_confirmed": True}
+            booked_slot_coach = {**coach_slot_serializer.data, "is_confirmed": True}
             coach_serilizer = ConfirmedSlotsbyCoachSerializer(
-                instance=coach_slot, data=booked_slot_coach)
+                instance=coach_slot, data=booked_slot_coach
+            )
             event = Events.objects.get(_id=request.data["event"])
             Booked_slot = {
                 "name": request.data["name"],
@@ -1101,8 +1146,7 @@ def confirmSlotsByLearner(request, slot_id):
                 "_id": event._id,
                 "coach": coach_ids,
             }
-            event_serializer = EventSerializer(
-                instance=event, data=new_event_data)
+            event_serializer = EventSerializer(instance=event, data=new_event_data)
 
             serializer = ConfirmedSlotsbyLearnerSerializer(data=Booked_slot)
             if serializer.is_valid():
@@ -1112,16 +1156,33 @@ def confirmSlotsByLearner(request, slot_id):
                         serializer.save()
                     else:
                         for slot in booked_slots:
-                            if (slot.email.lower() == request.data["email"].lower()) and (event.id == slot.event.id):
-                                return Response({"status": "409 Bad request", "reason": "email already exist"}, status=409)
+                            if (
+                                slot.email.lower() == request.data["email"].lower()
+                            ) and (event.id == slot.event.id):
+                                return Response(
+                                    {
+                                        "status": "409 Bad request",
+                                        "reason": "email already exist",
+                                    },
+                                    status=409,
+                                )
                         if event_serializer.is_valid():
                             event_serializer.save()
                             serializer.save()
                         else:
-                            return Response({"status": "400 bad request", "reason": "Failed to book the slot"}, status=400)
+                            return Response(
+                                {
+                                    "status": "400 bad request",
+                                    "reason": "Failed to book the slot",
+                                },
+                                status=400,
+                            )
             else:
                 print(serializer.errors)
-                return Response({"status": "400 Bad request", "reason": "wrong data sent"}, status=400)
+                return Response(
+                    {"status": "400 Bad request", "reason": "wrong data sent"},
+                    status=400,
+                )
 
             if event_serializer.is_valid():
                 event_serializer.save()
@@ -1130,35 +1191,55 @@ def confirmSlotsByLearner(request, slot_id):
             if coach_serilizer.is_valid():
                 coach_serilizer.save()
             else:
-                return Response({"status": "400 Bad request", "reason": "coach data is wrong"}, status=400)
+                return Response(
+                    {"status": "400 Bad request", "reason": "coach data is wrong"},
+                    status=400,
+                )
 
             start_time = datetime.fromtimestamp(
-                (int(coach_slot.start_time) / 1000))  # converting timestamp to date
+                (int(coach_slot.start_time) / 1000)
+            )  # converting timestamp to date
             start = (
-                (start_time.replace(microsecond=0).astimezone(
-                    utc).replace(tzinfo=None).isoformat() + "Z")
+                (
+                    start_time.replace(microsecond=0)
+                    .astimezone(utc)
+                    .replace(tzinfo=None)
+                    .isoformat()
+                    + "Z"
+                )
                 .replace(":", "")
                 .replace("-", "")
             )
-            end_time = datetime.fromtimestamp(
-                (int(coach_slot.end_time) / 1000))
+            end_time = datetime.fromtimestamp((int(coach_slot.end_time) / 1000))
             end = (
-                (end_time.replace(microsecond=0).astimezone(
-                    utc).replace(tzinfo=None).isoformat() + "Z")
+                (
+                    end_time.replace(microsecond=0)
+                    .astimezone(utc)
+                    .replace(tzinfo=None)
+                    .isoformat()
+                    + "Z"
+                )
                 .replace(":", "")
                 .replace("-", "")
             )
 
             date = datetime.fromtimestamp(
-                (int(coach_slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
+                (int(coach_slot.start_time) / 1000) + 19800
+            ).strftime("%d %B %Y")
 
             start_time_for_mail = datetime.fromtimestamp(
-                (int(coach_slot.start_time) / 1000) + 19800)
+                (int(coach_slot.start_time) / 1000) + 19800
+            )
 
             email_message_learner = render_to_string(
                 "addevent.html",
-                {"name": request.data["name"], "time": start_time_for_mail.strftime("%I:%M %p"),
-                    "duration": "30 Min", "date": date, "link": coach_data.meet_link},
+                {
+                    "name": request.data["name"],
+                    "time": start_time_for_mail.strftime("%I:%M %p"),
+                    "duration": "30 Min",
+                    "date": date,
+                    "link": coach_data.meet_link,
+                },
             )
             meet_link = coach_data.meet_link
             createIcs(start, end, meet_link)
@@ -1178,12 +1259,19 @@ def confirmSlotsByLearner(request, slot_id):
                 os.remove("event.ics")
             else:
                 print("file not found")
-                
+
             coach_module_link = "https://coach.meeraq.com/"
             email_message_coach = render_to_string(
                 "coachmail.html",
-                {"name": coach_data.first_name, "time": start_time_for_mail.strftime("%I:%M %p"),
-                    "duration": "30 Min", "date": date, "link": coach_module_link, "participant_name": request.data['name']})
+                {
+                    "name": coach_data.first_name,
+                    "time": start_time_for_mail.strftime("%I:%M %p"),
+                    "duration": "30 Min",
+                    "date": date,
+                    "link": coach_module_link,
+                    "participant_name": request.data["name"],
+                },
+            )
 
             createIcs(start, end, coach_module_link)
             email_for_coach = EmailMessage(
@@ -1205,7 +1293,9 @@ def confirmSlotsByLearner(request, slot_id):
             #  code to send mail ends here
             return Response({"status": "success", "data": serializer.data}, status=200)
         else:
-            return Response({"status": "Error", "reason": "Slot is already Booked"}, status=408)
+            return Response(
+                {"status": "Error", "reason": "Slot is already Booked"}, status=408
+            )
 
 
 @api_view(["GET"])
@@ -1230,15 +1320,14 @@ def editConfirmSlotsByLearnerBySlotId(request, slot_id):
     booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
     newSlot = {
         "name": booked_slots.name,
-        "status": request.data['status'],
+        "status": request.data["status"],
         "email": booked_slots.email,
         "phone_no": booked_slots.phone_no,
         "organisation": booked_slots.organisation,
         "event": booked_slots.event.id,
-        "slot": booked_slots.slot.id
+        "slot": booked_slots.slot.id,
     }
-    serializer = ConfirmedSlotsbyLearnerSerializer(
-        instance=booked_slots, data=newSlot)
+    serializer = ConfirmedSlotsbyLearnerSerializer(instance=booked_slots, data=newSlot)
 
     if serializer.is_valid():
         serializer.save()
@@ -1266,29 +1355,41 @@ def deleteConfirmSlotsAdmin(request, slot_id):
     booked_slots = LeanerConfirmedSlots.objects.get(id=slot_id)
 
     start_time = datetime.fromtimestamp(
-        (int(booked_slots.slot.start_time) / 1000))  # converting timestamp to date
+        (int(booked_slots.slot.start_time) / 1000)
+    )  # converting timestamp to date
     start = (
-        (start_time.replace(microsecond=0).astimezone(
-            utc).replace(tzinfo=None).isoformat() + "Z")
+        (
+            start_time.replace(microsecond=0)
+            .astimezone(utc)
+            .replace(tzinfo=None)
+            .isoformat()
+            + "Z"
+        )
         .replace(":", "")
         .replace("-", "")
     )
     end_time = datetime.fromtimestamp((int(booked_slots.slot.end_time) / 1000))
     end = (
-        (end_time.replace(microsecond=0).astimezone(
-            utc).replace(tzinfo=None).isoformat() + "Z")
+        (
+            end_time.replace(microsecond=0)
+            .astimezone(utc)
+            .replace(tzinfo=None)
+            .isoformat()
+            + "Z"
+        )
         .replace(":", "")
         .replace("-", "")
     )
 
     date = datetime.fromtimestamp(
-        (int(booked_slots.slot.start_time) / 1000) + 19800).strftime("%d %B %Y")
+        (int(booked_slots.slot.start_time) / 1000) + 19800
+    ).strftime("%d %B %Y")
     start_time_for_mail = datetime.fromtimestamp(
-        (int(booked_slots.slot.start_time) / 1000) + 19800)
+        (int(booked_slots.slot.start_time) / 1000) + 19800
+    )
     email_message_learner = render_to_string(
         "cancelEvent.html",
-        {"time": start_time_for_mail,
-         "date": date},
+        {"time": start_time_for_mail, "date": date},
     )
 
     createCancledIcs(start, end)
@@ -1326,22 +1427,36 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
 @permission_classes([AllowAny])
 def learnerDataUpload(request):
     batches = set()
-    for learner in request.data['participent']:
+    for learner in request.data["participent"]:
         is_exist = Learner.objects.filter(
-            unique_check=learner['batch']+"|"+learner['email'])
+            unique_check=learner["batch"] + "|" + learner["email"]
+        )
         if len(is_exist) > 0:
             continue
         else:
-            if 'phone' in learner.keys():
-                learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
-                                       batch=learner['batch'], phone=learner['phone'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
+            if "phone" in learner.keys():
+                learner_data = Learner(
+                    first_name=learner["first_name"],
+                    last_name=learner["last_name"],
+                    email=learner["email"],
+                    batch=learner["batch"],
+                    phone=learner["phone"],
+                    unique_check=learner["batch"] + "|" + learner["email"],
+                    course=learner["course"],
+                )
             else:
-                learner_data = Learner(first_name=learner['first_name'], last_name=learner['last_name'], email=learner['email'],
-                                       batch=learner['batch'], unique_check=learner['batch']+"|" + learner['email'], course=learner['course'])
+                learner_data = Learner(
+                    first_name=learner["first_name"],
+                    last_name=learner["last_name"],
+                    email=learner["email"],
+                    batch=learner["batch"],
+                    unique_check=learner["batch"] + "|" + learner["email"],
+                    course=learner["course"],
+                )
             learner_data.save()
-            is_batch_exist = Batch.objects.filter(batch=learner['batch'])
+            is_batch_exist = Batch.objects.filter(batch=learner["batch"])
             if not is_batch_exist:
-                batches.add(learner['batch'])
+                batches.add(learner["batch"])
     for batch in batches:
         batch_data = Batch(batch=batch)
         batch_data.save()
@@ -1365,45 +1480,56 @@ def getBatches(request):
 
 
 def generateManagementToken():
-    print('app access key', env('100MS_APP_ACCESS_KEY'))
+    print("app access key", env("100MS_APP_ACCESS_KEY"))
     expires = 24 * 3600
     now = datetime.utcnow()
     exp = now + timedelta(seconds=expires)
-    return jwt.encode(payload={
-        'access_key': env('100MS_APP_ACCESS_KEY'),
-        'type': 'management',
-        'version': 2,
-        'jti': str(uuid.uuid4()),
-        'iat': now,
-        'exp': exp,
-        'nbf': now
-    }, key=env('100MS_APP_SECRET'))
+    return jwt.encode(
+        payload={
+            "access_key": env("100MS_APP_ACCESS_KEY"),
+            "type": "management",
+            "version": 2,
+            "jti": str(uuid.uuid4()),
+            "iat": now,
+            "exp": exp,
+            "nbf": now,
+        },
+        key=env("100MS_APP_SECRET"),
+    )
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def getManagementToken(request):
     management_token = generateManagementToken()
-    return Response({"message": "Success", "management_token": management_token}, status=200)
+    return Response(
+        {"message": "Success", "management_token": management_token}, status=200
+    )
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def getCurrentBookedSlot(request):
-    learner_email = request.data['learner_email']
-    meet_link = "https://coach.meeraq.com/join-session/" + \
-        request.data['room_id']
-    current_time = request.data['time']
+    learner_email = request.data["learner_email"]
+    meet_link = "https://coach.meeraq.com/join-session/" + request.data["room_id"]
+    current_time = request.data["time"]
     today_date = datetime.date(datetime.today())
     try:
         coach = Coach.objects.get(meet_link=meet_link)
         try:
             booked_slot = LeanerConfirmedSlots.objects.get(
-                slot__coach_id=coach.id, email=learner_email, slot__date=today_date)
-            if booked_slot and (current_time > (int(booked_slot.slot.start_time) - 300000)) and (current_time < int(booked_slot.slot.end_time)):
-                booked_slot_serializer = ConfirmedLearnerSerializer(
-                    booked_slot)
-                return Response({"message": "Success", "data": booked_slot_serializer.data}, status=200)
+                slot__coach_id=coach.id, email=learner_email, slot__date=today_date
+            )
+            if (
+                booked_slot
+                and (current_time > (int(booked_slot.slot.start_time) - 300000))
+                and (current_time < int(booked_slot.slot.end_time))
+            ):
+                booked_slot_serializer = ConfirmedLearnerSerializer(booked_slot)
+                return Response(
+                    {"message": "Success", "data": booked_slot_serializer.data},
+                    status=200,
+                )
             else:
                 return Response({"No session found"}, status=401)
         except:
@@ -1417,8 +1543,235 @@ def getCurrentBookedSlot(request):
 def exportLearnerConfirmedSlotsByEventId(request, event_id):
     confirmed_slot_file = LearnerConfirmedSlotsResource()
     dataset = confirmed_slot_file.export(
-        LeanerConfirmedSlots.objects.filter(event=event_id))
-    response = HttpResponse(
-        dataset.xls, content_type="application/vnd.ms-excel")
+        LeanerConfirmedSlots.objects.filter(event=event_id)
+    )
+    response = HttpResponse(dataset.xls, content_type="application/vnd.ms-excel")
     response["Content-Disposition"] = 'attachment; filename="confirmed slots.xls"'
     return response
+
+
+# @api_view(["POST"])
+# @permission_classes([AllowAny])
+# def send_mails(request):
+#     emails = request.data.get('emails',[])
+#     subject = request.data.get('subject')
+#     print(emails, "emailsssssssss")
+#     print(subject, "subjectttttt")
+#     # email_content = request.data['email_content']
+#     temp1=request.data.get('htmlContent','')
+#     if len(emails) > 0:
+#         for email in emails:
+#             email_message_learner = render_to_string(
+#                 "default.html",
+#                 {
+#                     'email_content': mark_safe(temp1),
+#                     'email_title': "hello"
+#                     'subject': (subject)
+#                 },
+#             )
+#             email = EmailMessage(
+#                 "Meeraq",
+#                 email_message_learner,
+#                 settings.DEFAULT_FROM_EMAIL,  # from email address
+#                 [email],  # to email address
+#                 # [coach_data.email],  # bcc email address
+#                 # headers={"Cc": ["info@meeraq.com"]}  # setting cc email address
+#             )
+#             email.content_subtype = "html"
+#             email.send()
+#             print('hello')
+#             # send mail
+#         return Response({"message":"success"},status=200)
+#     return Response({'error': "No email found."},status=400)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def send_test_mails(request):
+    emails = request.data.get("emails", [])
+    subject = request.data.get("subject")
+    # email_content = request.data.get('email_content', '')  # Assuming you're sending email content too
+    temp1 = request.data.get("htmlContent", "")
+
+    print(emails, "emails")
+
+    # if not subject:
+    #     return Response({'error': "Subject is required."}, status=400)
+
+    if len(emails) > 0:
+        for email in emails:
+            email_message_learner = render_to_string(
+                "default.html",
+                {
+                    "email_content": mark_safe(temp1),
+                    "email_title": "hello",
+                    "subject": subject,
+                },
+            )
+            email = EmailMessage(
+                subject,
+                email_message_learner,
+                settings.DEFAULT_FROM_EMAIL,  # from email address
+                [email],  # to email address
+            )
+            email.content_subtype = "html"
+            email.send()
+            print("Email sent to:", email)
+
+        return Response({"message": "Emails sent successfully"}, status=200)
+    else:
+        return Response({"error": "No email addresses found."}, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def send_mails(request):
+    subject = request.data.get("subject")
+    scheduled_for = request.data.get("scheduledFor", "")
+    recipients_data = request.data.get("recipients_data", [])
+    try:
+        template = EmailTemplate.objects.get(id=request.data.get("template_id", ""))
+        if len(recipients_data) > 0:
+            sent_email_instance = SentEmail(
+                recipients=recipients_data,
+                subject=subject,
+                template=template,
+                status="pending",
+                scheduled_for=scheduled_for,
+            )
+            sent_email_instance.save()
+            clocked = ClockedSchedule.objects.create(
+                clocked_time=scheduled_for
+            )  # time is utc one here
+            periodic_task = PeriodicTask.objects.create(
+                name=uuid.uuid1(),
+                task="base.tasks.send_email_to_recipients",
+                args=[sent_email_instance.id],
+                clocked=clocked,
+                one_off=True,
+            )
+            sent_email_instance.periodic_task = periodic_task
+            sent_email_instance.save()
+            return Response({"message": "Emails sent successfully"}, status=200)
+        else:
+            return Response({"error": "No email addresses found."}, status=400)
+    except EmailTemplate.DoesNotExist:
+        return Response({"error": "Failed to schedule emails"}, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def addEmailTemplate(request):
+    if request.method == "POST":
+        title = request.data.get("title", None)
+        template_data = request.data.get("templatedata", None)
+        print(title, "Title")
+        print(template_data, "request.data")
+
+        if template_data is not None:
+            try:
+                email_template = EmailTemplate.objects.create(
+                    title=title, template_data=template_data
+                )
+                # email_template = EmailTemplate.objects.create(title=title, template_data=template_data)
+                # (template_data=template_data,template_title)
+                print(email_template, "email template")
+                return Response(
+                    {"success": True, "message": "Template saved successfully."}
+                )
+            except Exception as e:
+                return Response(
+                    {"success": False, "message": "Failed to save template."}
+                )
+
+    return Response({"success": False, "message": "Invalid request."})
+
+
+@api_view(["PUT"])
+@permission_classes([AllowAny])
+def editEmailTemplate(request, template_id):
+    try:
+        email_template = EmailTemplate.objects.get(pk=template_id)
+    except EmailTemplate.DoesNotExist:
+        return Response(
+            {"success": False, "message": "Template not found."}, status=404
+        )
+
+    if request.method == "PUT":
+        title = request.data.get("title", None)
+        template_data = request.data.get("templatedata", None)
+        print(template_data, "request.data")
+
+        if template_data is not None:
+            try:
+                email_template.title = title
+                email_template.template_data = template_data
+                email_template.save()
+                return Response(
+                    {"success": True, "message": "Template updated successfully."}
+                )
+            except Exception as e:
+                return Response(
+                    {"success": False, "message": "Failed to update template."}
+                )
+
+    return Response({"success": False, "message": "Invalid request."})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def getSavedTemplates(request):
+    emailTemplate = EmailTemplate.objects.all()
+    serilizer = EmailTemplateSerializer(emailTemplate, many=True)
+    return Response({"status": "success", "data": serilizer.data}, status=200)
+
+
+@api_view(["DELETE"])
+@permission_classes([AllowAny])
+def deleteEmailTemplate(request, template_id):
+    try:
+        delete_template = EmailTemplate.objects.get(pk=template_id)
+        delete_template.delete()
+        return Response({"success": True, "message": "Template deleted successfully."})
+    except EmailTemplate.DoesNotExist:
+        return Response(
+            {"success": False, "message": "Template not found."}, status=404
+        )
+    except Exception as e:
+        return Response({"success": False, "message": "Failed to delete template."})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_mail_data(request):
+    sent_emails = SentEmail.objects.all()
+    print(sent_emails)
+    serializer = SentEmailSerializer(sent_emails, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["DELETE"])
+@permission_classes([AllowAny])
+def cancel_scheduled_mail(request, sent_mail_id):
+    try:
+        sent_email = SentEmail.objects.get(id=sent_mail_id)
+    except SentEmail.DoesNotExist:
+        return Response({"error": "Scheduled email not found."}, status=404)
+
+    if sent_email.status == "cancelled":
+        return Response({"error": "Email is already cancelled."}, status=400)
+    if sent_email.status == "completed":
+        return Response({"error": "Email is already sent."}, status=400)
+
+    sent_email.status = "cancelled"
+    sent_email.save()
+
+    return Response({"message": "Email has been successfully cancelled."})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def pending_scheduled_mails_exists(request, email_template_id):
+    sent_emails = SentEmail.objects.filter(template__id=email_template_id)
+    return Response({'exists' : sent_emails.count() > 0},status=200)
+
