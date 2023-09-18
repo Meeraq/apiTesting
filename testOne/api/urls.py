@@ -73,5 +73,9 @@ urlpatterns = [
     path("edit_email_template/<int:template_id>/", views.editEmailTemplate),
     path("delete_email_template/<int:template_id>/", views.deleteEmailTemplate),
     path("emails-data/", views.get_mail_data),
-   
+    path("cancel-schedule-email/<int:sent_mail_id>/", views.cancel_scheduled_mail),
+    path(
+        "pending-scheduled-mails/<int:email_template_id>/",
+        views.pending_scheduled_mails_exists,
+    ),
 ]
