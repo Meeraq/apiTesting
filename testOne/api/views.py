@@ -135,7 +135,7 @@ def create_microsoft_calendar_event(
         new_access_token = access_token
 
     headers = {
-        "Authorization": f"Bearer {access_token}",
+        "Authorization": f"Bearer {new_access_token}",
         "Content-Type": "application/json",
     }
 
