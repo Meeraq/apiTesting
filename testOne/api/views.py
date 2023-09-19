@@ -1431,9 +1431,8 @@ def exportLearnerConfirmedSlotsByEventId(request, event_id):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_courses(request):
-    print("hi")
-    api_key = "4048d97cded22462166590c24cccd1ab"
-    subdomain = "meeraq-s-site-18a1"
+    api_key =   env("THINKIFIC_API_KEY")
+    subdomain = env("THINKIFIC_SUBDOMAIN")
 
     api_url = "https://api.thinkific.com/api/public/v1/courses?page=1&limit=200"
     headers = {
