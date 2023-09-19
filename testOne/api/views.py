@@ -1694,8 +1694,8 @@ def microsoft_callback(request):
                 user_token.account_type = "microsoft"
                 user_token.save()
 
-            coachexits = Coach.objects.filter(email=user_email)
-            if coachexits:
+            coach_exists = Coach.objects.filter(email=user_email)
+            if coach_exists:
                 return HttpResponseRedirect(env("coach_url"))
             return HttpResponseRedirect(env("learner_url"))
 
