@@ -1407,5 +1407,7 @@ def cancel_scheduled_mail(request, sent_mail_id):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def pending_scheduled_mails_exists(request, email_template_id):
-    sent_emails = SentEmail.objects.filter(template__id=email_template_id)
+    sent_emails = SentEmail.objects.filter(
+        template__id=email_template_id, status="pending"
+    )
     return Response({"exists": sent_emails.count() > 0}, status=200)
