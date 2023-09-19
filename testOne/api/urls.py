@@ -80,4 +80,6 @@ urlpatterns = [
     ),
     path("get-learners-with-no-sessions/<str:_id>/", views.getLearnersWithNoSessions),
     path("send-emails-to-learners/", views.sendEmailsToLearners),
+    path("microsoft/oauth/<str:user_mail_address>/", views.microsoft_auth),
+    path("microsoft-auth-callback/", views.microsoft_callback),
 ]
