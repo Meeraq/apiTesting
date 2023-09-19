@@ -1154,29 +1154,27 @@ def getLearnersWithNoSessions(request, _id):
 def sendEmailsToLearners(request):
     data = request.data
     recipient_emails = data.get("recipient_emails", [])
-    print(recipient_emails, "#$")
-
     if not recipient_emails:
         return Response({"error": "Recipient emails not provided"}, status=400)
-
-    event_link = data.get("event_link", "")
-    email_messages = []
-
-    for recipient_email in recipient_emails:
-        email_message = render_to_string(
-            "seteventlink.html",
-            {"event_link": event_link},
-        )
-        email_messages.append((recipient_email, email_message))
-
-        send_mail(
-            "Event link to join sessions on  {title}".format(title="Meeraq"),
-            email_message,
-            settings.DEFAULT_FROM_EMAIL,
-            [recipient_email],
-            html_message=email_message,
-        )
-
+    try:
+        event = Events.objects.get(_id=data.get("event_id", ""))
+    except Exception as e:
+        return Response({"message": "Failed to send link to learners."}, status=400)
+    scheduled_for = data.get("scheduled_for", datetime.now())
+    clocked = ClockedSchedule.objects.create(
+        clocked_time=scheduled_for
+    )  # time is utc one here
+    recipient_emails_json = json.dumps(recipient_emails)
+    print("recipient_emails_json", recipient_emails_json, type(recipient_emails_json))
+    periodic_task = PeriodicTask.objects.create(
+        name=uuid.uuid1(),
+        task="base.tasks.send_event_link_to_learners",
+        args=[event.id],
+        clocked=clocked,
+        one_off=True,
+    )
+    event.sent_to_participants.append({"date": int(datetime.now().timestamp() * 1000)})
+    event.save()
     return Response(
         {
             "sent_emails": recipient_emails,
