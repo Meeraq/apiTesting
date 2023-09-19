@@ -1,10 +1,11 @@
 import string
 from celery import shared_task
-from .models import SentEmail
+from .models import SentEmail, Events, Learner, LeanerConfirmedSlots
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, send_mail
 from django.conf import settings
+import json
 
 
 @shared_task
@@ -49,3 +50,34 @@ def send_email_to_recipients(id):
     except:
         print("error")
         return "error: sent email not found "
+
+
+@shared_task
+def send_event_link_to_learners(id):
+    print("success")
+    event = Events.objects.get(id=id)
+    batch = event.batch
+    learners = Learner.objects.filter(batch=batch)
+    learners_with_no_sessions = []
+    for learner in learners:
+        sessions = LeanerConfirmedSlots.objects.filter(email=learner.email, event=event)
+        if len(sessions) == 0:
+            learners_with_no_sessions.append(learner.email)
+    # print(learner_emails, type(learner_emails))
+    # learner_emails_array = json.loads(learner_emails)
+    for learner_mail in learners_with_no_sessions:
+        try:
+            email_message = render_to_string(
+                "seteventlink.html",
+                {"event_link": event.link},
+            )
+            send_mail(
+                "Event link to join sessions on  {title}".format(title="Meeraq"),
+                email_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [learner_mail],
+                html_message=email_message,
+            )
+        except Exception as e:
+            print("Failed to send to ", learner_mail)
+            pass

@@ -121,6 +121,7 @@ class Events(models.Model):
     batch = models.CharField(max_length=200, blank=True, default=" ")
     is_expired = models.BooleanField(default=False, blank=True)
     is_delete = models.BooleanField(default=False, blank=True)
+    sent_to_participants = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return self.name

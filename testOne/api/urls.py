@@ -78,4 +78,6 @@ urlpatterns = [
         "pending-scheduled-mails/<int:email_template_id>/",
         views.pending_scheduled_mails_exists,
     ),
+    path("get-learners-with-no-sessions/<str:_id>/", views.getLearnersWithNoSessions),
+    path("send-emails-to-learners/", views.sendEmailsToLearners),
 ]
