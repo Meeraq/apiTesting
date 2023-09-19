@@ -82,4 +82,10 @@ urlpatterns = [
     path("send-emails-to-learners/", views.sendEmailsToLearners),
     path("microsoft/oauth/<str:user_mail_address>/", views.microsoft_auth),
     path("microsoft-auth-callback/", views.microsoft_callback),
+    path("get_courses_from_thinkific/", views.get_courses),
+    path(
+        "get_participants_by_course/<int:course_id>/",
+        views.get_enrollments,
+        name="get_enrollments",
+    ),
 ]

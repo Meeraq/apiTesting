@@ -1,4 +1,5 @@
 import uuid
+import requests
 from django.template.loader import render_to_string
 import jwt
 from datetime import datetime, time, timedelta
@@ -1708,3 +1709,55 @@ def microsoft_callback(request):
         print(f"An exception occurred: {str(e)}")
         # You might want to return an error response or redirect to an error page.
         return JsonResponse({"error": "An error occurred"}, status=500)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_courses(request):
+    api_key = env("THINKIFIC_API_KEY")
+    subdomain = env("THINKIFIC_SUBDOMAIN")
+
+    api_url = "https://api.thinkific.com/api/public/v1/courses?page=1&limit=200"
+    headers = {
+        "X-Auth-API-Key": api_key,
+        "X-Auth-Subdomain": subdomain,
+        "Content-Type": "application/json",
+    }
+    try:
+        response = requests.get(api_url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            return Response(data)
+        else:
+            return Response(
+                {"error": "Failed to fetch data from Thinkific"},
+                status=response.status_code,
+            )
+    except requests.exceptions.RequestException as e:
+        return Response({"error": str(e)}, status=500)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_enrollments(request, course_id):
+    api_key = env("THINKIFIC_API_KEY")
+    subdomain = env("THINKIFIC_SUBDOMAIN")
+
+    api_url = f"https://api.thinkific.com/api/public/v1/enrollments/?query[course_id]={course_id}"
+    headers = {
+        "X-Auth-API-Key": api_key,
+        "X-Auth-Subdomain": subdomain,
+        "Content-Type": "application/json",
+    }
+    try:
+        response = requests.get(api_url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            return Response(data)
+        else:
+            return Response(
+                {"error": "Failed to fetch data from Thinkific"},
+                status=response.status_code,
+            )
+    except requests.exceptions.RequestException as e:
+        return Response({"error": str(e)}, status=500)
