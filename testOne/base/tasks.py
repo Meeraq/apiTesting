@@ -1,11 +1,12 @@
 import string
 from celery import shared_task
-from .models import SentEmail, Events, Learner, LeanerConfirmedSlots
+from .models import SentEmail, Events, Learner, LeanerConfirmedSlots, UserToken
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.core.mail import EmailMessage, send_mail
 from django.conf import settings
 import json
+from api.views import refresh_microsoft_access_token
 
 
 @shared_task
@@ -81,3 +82,11 @@ def send_event_link_to_learners(id):
         except Exception as e:
             print("Failed to send to ", learner_mail)
             pass
+
+
+@shared_task
+def refresh_user_tokens():
+    users = UserToken.objects.filter(account_type="microsoft")
+    for user in users:
+        refresh_microsoft_access_token(user)
+        print(f"token refresh for {user.user_mail}")

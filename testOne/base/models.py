@@ -187,3 +187,43 @@ class SentEmail(models.Model):
 
     def __str__(self):
         return f"{self.id} Subject: {self.subject}"
+
+
+class UserToken(models.Model):
+    ACCOUNT_TYPE_CHOICES = [
+        ("google", "Google"),
+        ("microsoft", "Microsoft"),
+    ]
+
+    user_mail = models.CharField(max_length=255, blank=True, null=True)
+    access_token = models.TextField(blank=True)
+    refresh_token = models.TextField(blank=True)
+    access_token_expiry = models.TextField(blank=True)
+    authorization_code = models.TextField(blank=True)
+    account_type = models.CharField(
+        max_length=50, choices=ACCOUNT_TYPE_CHOICES, blank=True
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user_mail
+
+
+class CalendarEvent(models.Model):
+    ACCOUNT_TYPE_CHOICES = [
+        ("google", "Google"),
+        ("microsoft", "Microsoft"),
+    ]
+
+    event_id = models.TextField(blank=True, null=True)
+    title = models.CharField(max_length=255, blank=True, null=True)
+    description = models.CharField(max_length=255, blank=True, null=True)
+    start_datetime = models.CharField(max_length=255, blank=True, null=True)
+    end_datetime = models.CharField(max_length=255, blank=True, null=True)
+    attendee = models.CharField(max_length=255, blank=True, null=True)
+    creator = models.CharField(max_length=255, blank=True, null=True)
+    events = models.ForeignKey(Events, on_delete=models.CASCADE, blank=True, null=True)
+    account_type = models.CharField(
+        max_length=50, choices=ACCOUNT_TYPE_CHOICES, blank=True
+    )

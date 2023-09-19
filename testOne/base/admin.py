@@ -13,6 +13,8 @@ from .models import (
     LeanerConfirmedSlots,
     SentEmail,
     EmailTemplate,
+    UserToken,
+    CalendarEvent,
 )
 from import_export.admin import ImportExportMixin
 
@@ -26,10 +28,8 @@ admin.site.register(Coach)
 admin.site.register(AdminRequest)
 admin.site.register(SentEmail)
 admin.site.register(EmailTemplate)
-# admin.site.register(Slot)
-# admin.site.register(DayTimeSlot)
-# admin.site.register(LearnerdayTimeSlot)
-# admin.site.register(Sessions)
+admin.site.register(UserToken)
+admin.site.register(CalendarEvent)
 
 
 class ExelExport(ImportExportMixin, admin.ModelAdmin):
