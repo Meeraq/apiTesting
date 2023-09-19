@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 import environ
+from datetime import timedelta
+
 
 env = environ.Env()
 environ.Env.read_env()
@@ -185,3 +187,11 @@ SESAME_MAX_AGE = 300  # 300 seconds = 5 minutes
 # Celery settings
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
+
+# scheduling beat
+CELERY_BEAT_SCHEDULE = {
+    "refreshing_user_tokens": {
+        "task": "base.tasks.refresh_user_tokens",  # Replace with your task path
+        "schedule": timedelta(hours=12),  # Set the schedule (e.g., every 5 hours)
+    },
+}
