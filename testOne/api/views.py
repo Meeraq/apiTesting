@@ -1214,6 +1214,14 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
 def learnerDataUpload(request):
     batches = set()
     for learner in request.data["participent"]:
+        email_message = render_to_string(
+            "authorizationLearner.html",
+            {
+                "coachee_name": learner['first_name'],
+                "email": learner['email'],
+
+            },
+        )
         is_exist = Learner.objects.filter(
             unique_check=learner["batch"] + "|" + learner["email"]
         )
@@ -1240,6 +1248,13 @@ def learnerDataUpload(request):
                     course=learner["course"],
                 )
             learner_data.save()
+            send_mail(
+                "Meeraq | Welcome!",
+                email_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [learner["email"]],
+                html_message=email_message,
+            )
             is_batch_exist = Batch.objects.filter(batch=learner["batch"])
             if not is_batch_exist:
                 batches.add(learner["batch"])
