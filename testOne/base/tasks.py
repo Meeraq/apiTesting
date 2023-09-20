@@ -7,6 +7,11 @@ from django.core.mail import EmailMessage, send_mail
 from django.conf import settings
 import json
 from api.views import refresh_microsoft_access_token
+import environ
+
+
+env = environ.Env()
+environ.Env.read_env()
 
 
 @shared_task
@@ -90,3 +95,31 @@ def refresh_user_tokens():
     for user in users:
         refresh_microsoft_access_token(user)
         print(f"token refresh for {user.user_mail}")
+
+
+@shared_task
+def send_authorization_mail_to_learners(learners_json):
+    for learner_json in json.loads(learners_json):
+        try:
+            learner_obj = json.loads(learner_json)
+            email = learner_obj["email"]
+            backend_domain = env("BACKEND_DOMAIN")
+            url = f"{backend_domain}/microsoft/oauth/{email}"
+            email_message = render_to_string(
+                "authorizationLearner.html",
+                {
+                    "coachee_name": learner_obj["name"],
+                    "email": learner_obj["email"],
+                    "microsoft_authentication_url": url,
+                },
+            )
+            send_mail(
+                "Meeraq | Welcome!",
+                email_message,
+                settings.DEFAULT_FROM_EMAIL,
+                [learner_obj["email"]],
+                html_message=email_message,
+            )
+            print(f"send authorization mail to {email}")
+        except Exception as e:
+            print(f"failed to send_authorization_mail_to_learners: {str(e)}")

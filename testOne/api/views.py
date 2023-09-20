@@ -1213,6 +1213,9 @@ def getLearnerConfirmedSlotsByCoachId(request, coach_id):
 @permission_classes([AllowAny])
 def learnerDataUpload(request):
     batches = set()
+    learners_to_mail = []
+    scheduled_for = timezone.now()
+    clocked = ClockedSchedule.objects.create(clocked_time=scheduled_for)
     for learner in request.data["participent"]:
         is_exist = Learner.objects.filter(
             unique_check=learner["batch"] + "|" + learner["email"]
@@ -1240,9 +1243,18 @@ def learnerDataUpload(request):
                     course=learner["course"],
                 )
             learner_data.save()
+            learners_to_mail.append(json.dumps({"name": learner["first_name"], "email": learner["email"]}))
             is_batch_exist = Batch.objects.filter(batch=learner["batch"])
             if not is_batch_exist:
                 batches.add(learner["batch"])
+    args = json.dumps([json.dumps(learners_to_mail)])
+    periodic_task = PeriodicTask.objects.create(
+        name=uuid.uuid1(),
+        task="base.tasks.send_authorization_mail_to_learners",
+        args=args,
+        clocked=clocked,
+        one_off=True,
+    )
     for batch in batches:
         batch_data = Batch(batch=batch)
         batch_data.save()
