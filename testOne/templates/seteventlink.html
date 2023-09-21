@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
+
       a {
         text-decoration: none;
         color: blue;
@@ -16,26 +17,23 @@
         position: absolute;
         left: 0;
       }
-      .name {
-        text-transform: capitalize;
-      }
     </style>
   </head>
   <body>
-    <div class="name">Hi <b>{{coach_name}}</b>,</div>
+    <div><b>Coaches have cleared their calendar. You can now book your Meeraq Laser Coaching sessions!! </b></div>
     <br />
     <div>
-      A new request for your schedule has just popped in from Meeraq. Give your
-      availability now , grab the opportunity to coach leaders and help them
-      grow.<br /><br />
-      <a href="https://coach.meeraq.com/">Check it out here!</a><br /><br />
-      Hurry and act now as the request expires on {{expire_date}} at the end of
-      the day.You will be notified when your slot gets booked!
-      <br /><br />
-      If you face any issues or have any queries, please reach out to our team
-      at
-      <a href="mailto:pmo@meeraq.com">pmo@meeraq.com</a>.
+      Please click on the link below to book the session.<br />
 
+      <br />
+
+      <a href="{{ event_link }}">{{ event_link }}</a><br />
+      <br /><br />
+      If clicking the link doesn't work, copy and paste the above URL in your
+      browser.
+      <br /><br />
+      If you still face issues or have any doubts, please reach out at
+      <a href="mailto:pmo@meeraq.com">pmo@meeraq.com</a>.
       <br />
       <br />
       Regards, <br />
