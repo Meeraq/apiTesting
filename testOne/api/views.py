@@ -89,7 +89,7 @@ def refresh_microsoft_access_token(user_token):
     )
 
     if expiration_timestamp <= timezone.now():
-        token_url = f"https://login.microsoftonline.com/{env('MICROSOFT_TENANT_ID')}/oauth2/v2.0/token"
+        token_url = f"https://login.microsoftonline.com/common/oauth2/v2.0/token"
 
         token_data = {
             "client_id": env("MICROSOFT_CLIENT_ID"),
@@ -1243,7 +1243,9 @@ def learnerDataUpload(request):
                     course=learner["course"],
                 )
             learner_data.save()
-            learners_to_mail.append(json.dumps({"name": learner["first_name"], "email": learner["email"]}))
+            learners_to_mail.append(
+                json.dumps({"name": learner["first_name"], "email": learner["email"]})
+            )
             is_batch_exist = Batch.objects.filter(batch=learner["batch"])
             if not is_batch_exist:
                 batches.add(learner["batch"])
@@ -1645,7 +1647,7 @@ def pending_scheduled_mails_exists(request, email_template_id):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def microsoft_auth(request, user_mail_address):
-    oauth2_endpoint = f"https://login.microsoftonline.com/{env('MICROSOFT_TENANT_ID')}/oauth2/v2.0/authorize"
+    oauth2_endpoint = f"https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
 
     auth_params = {
         "client_id": env("MICROSOFT_CLIENT_ID"),
