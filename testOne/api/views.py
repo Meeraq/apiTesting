@@ -44,7 +44,7 @@ from .serializers import (
     UserSerializer,
     ProfileSerializer,
     EmailTemplateSerializer,
-    SentEmailSerializer,
+    SentEmailDepthOneSerializer,
     UserTokenSerializer,
     CalendarEventSerializer,
 )
@@ -1610,8 +1610,7 @@ def deleteEmailTemplate(request, template_id):
 @permission_classes([AllowAny])
 def get_mail_data(request):
     sent_emails = SentEmail.objects.all()
-    print(sent_emails)
-    serializer = SentEmailSerializer(sent_emails, many=True)
+    serializer = SentEmailDepthOneSerializer(sent_emails, many=True)
     return Response(serializer.data)
 
 
