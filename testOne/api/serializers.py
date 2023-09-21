@@ -138,3 +138,10 @@ class SentEmailSerializer(serializers.ModelSerializer):
     class Meta:
         model = SentEmail
         fields = "__all__"
+
+
+class SentEmailDepthOneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SentEmail
+        fields = "__all__"
+        depth = 1
