@@ -5,7 +5,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
-    
       @media screen and (max-width: 480px) {
         .main-table {
           width: 300px !important;
@@ -94,35 +93,49 @@
                     <p id="isPasted">
                       <strong
                         ><span style="font-size: 14px"
-                          >Dear {{coachee_name}},<br /></span
-                      ></strong>
-                    </p>
-                    <p id="isPasted">
-                      <strong
-                        ><span style="font-size: 14px"><br /></span
-                      ></strong>
-                    </p>
-                    <p id="isPasted">
-                      While you book any coaching session, the
-                      <b>session will be added to your calendar</b> only if you
-                      give the authorization.
-                    </p>
-                    <p id="isPasted"><br /></p>
-                    <p id="isPasted">
-                      <b>Click on the below link </b>and give authorization as
-                      next step.
-                    </p>
-                    <p id="isPasted"><br /></p>
-                    <p id="isPasted"></p>
-                    <p class="child-para">
-                      <a
-                        href="{{microsoft_authentication_url}}"
-                        style="text-decoration: underline"
-                        >Give Authorization to Outlook Calendar</a
+                          >Dear {{learner_name}},</span
+                        ></strong
                       >
                     </p>
-                    <br />Feel free to reach out to pmocoaching@meeraq.com if
-                    your have any queries.<br />
+										<br />
+                    <p id="isPasted">
+                      I hope this message finds you well. We wanted to send you
+                      a friendly reminder about your upcoming session, which is
+                      scheduled for
+                      <b>tomorrow</b>.
+                    </p>
+                    <p id="isPasted">Session Details:<br /></p>
+                    <p id="isPasted"><b> Date: {{date}} </b></p>
+                    <p id="isPasted"><b>Time: {{time}}</b></p>
+                    <p id="isPasted"><b>Duration: {{duration}}</b></p>
+                    <p id="isPasted">
+                      <b>Meeting Link: <a href="{{link}}"> {{link}} </a> </b>
+                    </p>
+                    <div><br /></div>
+                    <div>
+                      We want to ensure that you have all the necessary
+                      information and are well-prepared for the session. Our
+                      Coach is looking forward to meeting with you and providing
+                      you with valuable insights and guidance.<br /><br />
+                      <div>
+                        If you have any questions or need further information
+                        before the session, please do not hesitate to reach out
+                        to us at info@meeraq.com. We are here to assist you and
+                        make your experience as smooth as possible.
+                      </div>
+                    </div>
+                    <div><br /></div>
+                    <div>
+                      <div>
+                        We appreciate your commitment to this session and your
+                        interest in improving yourself. Your participation is
+                        highly valued, and we believe it will be a rewarding
+                        experience for you.
+                      </div>
+                    </div>
+                    <p id="isPasted"><br /></p>
+                    <p class="child-para">Best regards,</p>
+                    <p class="child-para">Team Meeraq.</p>
                     <p></p>
                     <div align="center" id="isPasted">
                       <table
@@ -196,6 +209,7 @@
                         target="_blank"
                         >www.meeraq.com</a
                       >
+                    </span>
                   </td>
                 </tr>
               </tbody>
