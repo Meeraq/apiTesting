@@ -1,6 +1,6 @@
 import string
 from celery import shared_task
-from .models import SentEmail, Events, Learner, LeanerConfirmedSlots, UserToken
+from .models import SentEmail, Events, Learner, LeanerConfirmedSlots, UserToken, Coach
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.core.mail import EmailMessage, send_mail
@@ -8,6 +8,7 @@ from django.conf import settings
 import json
 from api.views import refresh_microsoft_access_token
 import environ
+from datetime import datetime, timedelta
 
 
 env = environ.Env()
@@ -123,3 +124,44 @@ def send_authorization_mail_to_learners(learners_json):
             print(f"send authorization mail to {email}")
         except Exception as e:
             print(f"failed to send_authorization_mail_to_learners: {str(e)}")
+
+
+@shared_task
+def send_session_reminder_one_day_prior():
+    tomorrow_date = datetime.now() + timedelta(days=1)
+    tomorrow_date_str = tomorrow_date.strftime("%Y-%m-%d")
+    slots_for_tomorrow = LeanerConfirmedSlots.objects.filter(
+        slot__date=tomorrow_date_str
+    )
+    for learner_slot in slots_for_tomorrow:
+        try:
+            coach_slot = learner_slot.slot
+            coach_data = Coach.objects.get(id=learner_slot.slot.coach_id)
+            start_time_for_mail = datetime.fromtimestamp(
+                (int(coach_slot.start_time) / 1000) + 19800
+            ).strftime("%I:%M %p")
+            date = datetime.fromtimestamp(
+                (int(coach_slot.start_time) / 1000) + 19800
+            ).strftime("%d %B %Y")
+            duration = "30 Min"
+            meet_link = coach_data.meet_link
+            email_message_learner = render_to_string(
+                "learnerSessionReminder.html",
+                {
+                    "learner_name": learner_slot.name,
+                    "time": start_time_for_mail,
+                    "duration": duration,
+                    "date": date,
+                    "link": meet_link,
+                },
+            )
+            email = EmailMessage(
+                "Meeraq | Coaching Session",
+                email_message_learner,
+                settings.DEFAULT_FROM_EMAIL,  # from email address
+                [learner_slot.email],  # to email address
+            )
+            email.content_subtype = "html"
+            email.send()
+        except Exception as e:
+            print(f"Failed to send reminder for session {str(e)}", learner_slot.id)
