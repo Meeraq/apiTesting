@@ -197,6 +197,6 @@ CELERY_BEAT_SCHEDULE = {
     },
     "send_session_reminder_one_day_prior": {
         "task": "base.tasks.send_session_reminder_one_day_prior",
-        "schedule": crontab(hour=11, minute=0, day_of_week="*"),
+        "schedule": crontab(hour=4, minute=30, day_of_week="*"),
     },
 }
