@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import environ
 from datetime import timedelta
+from celery.schedules import crontab
 
 
 env = environ.Env()
@@ -193,5 +194,9 @@ CELERY_BEAT_SCHEDULE = {
     "refreshing_user_tokens": {
         "task": "base.tasks.refresh_user_tokens",  # Replace with your task path
         "schedule": timedelta(hours=12),  # Set the schedule (e.g., every 5 hours)
+    },
+    "send_session_reminder_one_day_prior": {
+        "task": "base.tasks.send_session_reminder_one_day_prior",
+        "schedule": crontab(hour=11, minute=0, day_of_week="*"),
     },
 }
