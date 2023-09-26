@@ -1755,8 +1755,7 @@ def get_courses(request):
 def get_enrollments(request, course_id):
     api_key = env("THINKIFIC_API_KEY")
     subdomain = env("THINKIFIC_SUBDOMAIN")
-
-    api_url = f"https://api.thinkific.com/api/public/v1/enrollments/?query[course_id]={course_id}"
+    api_url = f"https://api.thinkific.com/api/public/v1/enrollments/?query[course_id]={course_id}&page=1&limit=200"
     headers = {
         "X-Auth-API-Key": api_key,
         "X-Auth-Subdomain": subdomain,
