@@ -9,6 +9,7 @@ import json
 from api.views import refresh_microsoft_access_token
 import environ
 from datetime import datetime, timedelta
+from time import sleep
 
 
 env = environ.Env()
@@ -50,6 +51,7 @@ def send_email_to_recipients(id):
                 print(
                     "Email sent to:", recipient_email, "for recipient:", recipient_name
                 )
+                sleep(6)
             sent_email.status = "completed"
             sent_email.save()
             return "success"
@@ -88,6 +90,7 @@ def send_event_link_to_learners(id):
         except Exception as e:
             print("Failed to send to ", learner_mail)
             pass
+        sleep(6)
 
 
 @shared_task
@@ -124,6 +127,7 @@ def send_authorization_mail_to_learners(learners_json):
             print(f"send authorization mail to {email}")
         except Exception as e:
             print(f"failed to send_authorization_mail_to_learners: {str(e)}")
+        sleep(6)
 
 
 @shared_task
@@ -165,3 +169,4 @@ def send_session_reminder_one_day_prior():
             email.send()
         except Exception as e:
             print(f"Failed to send reminder for session {str(e)}", learner_slot.id)
+        sleep(6)

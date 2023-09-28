@@ -1773,3 +1773,27 @@ def get_enrollments(request, course_id):
             )
     except requests.exceptions.RequestException as e:
         return Response({"error": str(e)}, status=500)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_upcoming_sessions(request):
+    today_date = datetime.now()
+    timestamp_in_milliseconds = str(int(today_date.timestamp() * 1000))
+    upcoming_sessions = LeanerConfirmedSlots.objects.filter(
+        slot__end_time__gte=timestamp_in_milliseconds
+    )
+    serializer = ConfirmedLearnerSerializer(upcoming_sessions, many=True)
+    res = []
+    for learner_slot in serializer.data:
+        try:
+            coach = Coach.objects.get(id=learner_slot["slot"]["coach_id"])
+            event = Events.objects.get(id=learner_slot["event"])
+            batch = event.batch
+            coach_serializer = CoachSerializer(coach)
+            coach_serializer_data = coach_serializer.data
+        except Exception as e:
+            batch = ""
+            coach_serializer_data = {}
+        res.append({**learner_slot, "coach": coach_serializer_data, "batch": batch})
+    return Response({"status": "success", "data": res}, status=200)

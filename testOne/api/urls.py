@@ -88,4 +88,5 @@ urlpatterns = [
         views.get_enrollments,
         name="get_enrollments",
     ),
+    path("upcoming-sessions/", views.get_upcoming_sessions),
 ]
