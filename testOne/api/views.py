@@ -1797,3 +1797,88 @@ def get_upcoming_sessions(request):
             coach_serializer_data = {}
         res.append({**learner_slot, "coach": coach_serializer_data, "batch": batch})
     return Response({"status": "success", "data": res}, status=200)
+
+
+@api_view(["GET"])
+def get_all_confirmed_slots(request):
+    confirmed_slots = ConfirmedSlotsbyCoach.objects.all()
+
+    coach_slots_list = []
+
+    coach_slots_dict = {}
+
+    for slot in confirmed_slots:
+        coach_name = slot.COACH_NAME
+
+        coach_slots_dict = {
+            "coach_name": coach_name,
+            "slots": [
+                {
+                    "start_time": slot.start_time,
+                    "end_time": slot.end_time,
+                    "date": slot.date,
+                    "request_ID": slot.request_ID,
+                    "SESSION_START_TIME": slot.SESSION_START_TIME,
+                    "SESSION_END_TIME": slot.SESSION_END_TIME,
+                    "SESSION_DATE": slot.SESSION_DATE,
+                    "DESCRIPTION": slot.DESCRIPTION,
+                    "CC": slot.CC,
+                    "MEETING_LINK": slot.MEETING_LINK,
+                    "is_confirmed": slot.is_confirmed,
+                    "is_realeased": slot.is_realeased,
+                }
+            ],
+        }
+
+        coach_found = False
+        for coach_item in coach_slots_list:
+            if coach_item["coach_name"] == coach_name:
+                coach_item["slots"].append(coach_slots_dict["slots"][0])
+                coach_found = True
+                break
+
+        if not coach_found:
+            coach_slots_list.append(coach_slots_dict)
+
+    return Response(coach_slots_list)
+
+
+# @api_view(["GET"])
+# def get_all_confirmed_slots(request):
+#     # Query the database to get all coaches
+#     coaches = Coach.objects.all()
+
+#     # Create a dictionary to store confirmed slots grouped by coach name
+#     coach_slots_dict = {}
+
+#     # Iterate through all coaches
+#     for coach in coaches:
+#         coach_name = coach.first_name
+
+#         # Query confirmed slots for the current coach
+#         confirmed_slots = ConfirmedSlotsbyCoach.objects.filter(coach_id=coach.id)
+
+#         # Serialize the confirmed slots
+#         slots_data = [
+#             {
+#                 "start_time": slot.start_time,
+#                 "end_time": slot.end_time,
+#                 "date": slot.date,
+#                 "request_ID": slot.request_ID,
+#                 "SESSION_START_TIME": slot.SESSION_START_TIME,
+#                 "SESSION_END_TIME": slot.SESSION_END_TIME,
+#                 "SESSION_DATE": slot.SESSION_DATE,
+#                 "DESCRIPTION": slot.DESCRIPTION,
+#                 "CC": slot.CC,
+#                 "MEETING_LINK": slot.MEETING_LINK,
+#                 "is_confirmed": slot.is_confirmed,
+#                 "is_realeased": slot.is_realeased,
+#             }
+#             for slot in confirmed_slots
+#         ]
+
+#         # Add the coach to the dictionary, along with their availability slots
+#         coach_slots_dict[coach_name] = slots_data
+
+#     # Return the coach_slots_dict as a JSON response
+#     return Response(coach_slots_dict)
