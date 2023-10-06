@@ -1801,12 +1801,11 @@ def get_upcoming_sessions(request):
 
 @api_view(["GET"])
 def get_all_confirmed_slots(request):
-    confirmed_slots = ConfirmedSlotsbyCoach.objects.all()
-
+    today_date = datetime.now()
+    timestamp_in_milliseconds = str(int(today_date.timestamp() *1000))
+    confirmed_slots = ConfirmedSlotsbyCoach.objects.filter(start_time__gte=timestamp_in_milliseconds)
     coach_slots_list = []
-
     coach_slots_dict = {}
-
     for slot in confirmed_slots:
         coach_name = slot.COACH_NAME
 
