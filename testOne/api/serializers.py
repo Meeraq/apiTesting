@@ -145,3 +145,4 @@ class SentEmailDepthOneSerializer(serializers.ModelSerializer):
         model = SentEmail
         fields = "__all__"
         depth = 1
+
