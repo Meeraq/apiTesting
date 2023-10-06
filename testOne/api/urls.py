@@ -89,4 +89,9 @@ urlpatterns = [
         name="get_enrollments",
     ),
     path("upcoming-sessions/", views.get_upcoming_sessions),
+    path(
+        "confirmed-slots-of-coach/",
+        views.get_all_confirmed_slots,
+        name="all-confirmed-slots",
+    ),
 ]
